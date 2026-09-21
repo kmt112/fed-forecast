@@ -1,0 +1,22 @@
+[project]
+name = "fedcast"
+version = "0.0.1"
+description = "Process-judged FOMC decision forecaster: an LLM inside an engineered harness"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+    "pyyaml>=6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["fedcast*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

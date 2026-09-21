@@ -1,0 +1,10 @@
+# H1 standing directives. Every active item must be addressed explicitly in each trace:
+#   "<id>: checked - found / not found, evidence <snapshot item ids>"
+# Adding, editing or retiring an item is a system change and goes through the eval gate.
+#
+# - id: H1-001
+#   added_on: 2026-09-21
+#   author: tankahming123
+#   directive: "Watch for dissents in the latest statement and who dissented in which direction."
+#   status: active        # active | retired
+items: []
