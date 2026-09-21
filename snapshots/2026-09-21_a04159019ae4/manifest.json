@@ -1,0 +1,84 @@
+{
+ "as_of": "2026-09-21",
+ "hash": "a04159019ae4f6fedbb6032c1ca14fba745567775f2e44267be47ad49346a6a8",
+ "complete": true,
+ "created_at": "2026-09-21T13:06:59+00:00",
+ "missing": {},
+ "items": {
+  "calendar": {
+   "kind": "calendar",
+   "source": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+   "sha256": "3c2e8d7030811da52455b717bdb3ec74a02fff6ddebebe10bfd5340b8f0a5c42"
+  },
+  "effr": {
+   "kind": "effr",
+   "source": "markets.newyorkfed.org/api/rates/unsecured/effr",
+   "sha256": "be25c51fd68cd1411548f8f78531296c8495dd98ff803263b9a00e9e016e6c89"
+  },
+  "fed.minutes.2026-07-29": {
+   "kind": "document",
+   "source": "https://www.federalreserve.gov/monetarypolicy/fomcminutes20260729.htm",
+   "sha256": "da358d6445714606a9fc156168fe419e1f9e7bd95394957de35e892f375d01ae"
+  },
+  "fed.statement.2026-09-16": {
+   "kind": "document",
+   "source": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
+   "sha256": "9ab568d03655dbe52e8fb538f7203929b99bd0a61f3d2ad337134702d7a12416"
+  },
+  "fred.CPILFESL": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=CPILFESL",
+   "sha256": "8cf90c885af0ea3c51384dbff4cd777cc2c9b9d686ae2c8c5de2853ae4a549fc"
+  },
+  "fred.DGS2": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=DGS2",
+   "sha256": "366d5b49f9026ea8b409f59b420cd25ac06686598775f4f2805a610ee817d867"
+  },
+  "fred.ICSA": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=ICSA",
+   "sha256": "920ace17fa51eab8d58f8b0c8888b04cbfb96e2b6485df18dc1f666cf9b9ff03"
+  },
+  "fred.NFCI": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=NFCI",
+   "sha256": "7b24f60078e1518339077fb43200b855f31d2adae347af66c2b3a8cbe323cdc1"
+  },
+  "fred.PAYEMS": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=PAYEMS",
+   "sha256": "a14f97a4380902333475445626bc7d10d3fd2fcf2d471b0951c469537e8c0433"
+  },
+  "fred.PCEPILFE": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=PCEPILFE",
+   "sha256": "74112e63bbdb87abbabaadb5201eb7ec145964d309726754183bfd28d1cfc6f6"
+  },
+  "fred.T5YIE": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=T5YIE",
+   "sha256": "80e341c8d1f740b4782eb6d3c6f33a5466e3e09212d689afbff2af689a537c91"
+  },
+  "fred.UNRATE": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=UNRATE",
+   "sha256": "a4037e95d7bcad474a424609d4129992c61551b9962d18f2238ae870d8398d34"
+  },
+  "futures.ZQU26": {
+   "kind": "futures",
+   "source": "finance.yahoo.com/quote/ZQU26.CBT",
+   "sha256": "bcb1e3ae2ca24ad81a5438516a5bcf36e12750e02f82d6f3f2d8316d56c63a6d"
+  },
+  "futures.ZQV26": {
+   "kind": "futures",
+   "source": "finance.yahoo.com/quote/ZQV26.CBT",
+   "sha256": "8fead59fbe6a7daf572a7591135c68d60ba3307b0bafaec01734884da90787ff"
+  },
+  "futures.ZQX26": {
+   "kind": "futures",
+   "source": "finance.yahoo.com/quote/ZQX26.CBT",
+   "sha256": "c91f0af0cc520b78c61d1d01a6f2282973696409932d610d4cbab43768b75d72"
+  }
+ }
+}

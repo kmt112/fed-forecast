@@ -49,7 +49,7 @@ def fetch_fred(series_id: str, api_key: str, as_of: date, n_obs: int = 36) -> di
         "series_id": series_id, "api_key": api_key, "file_type": "json",
         "realtime_start": as_of.isoformat(), "realtime_end": as_of.isoformat(),
         "sort_order": "desc", "limit": str(n_obs),
-    })
+    }, user_agent=http.PLAIN_UA)
     obs = [{"date": o["date"], "value": None if o["value"] == "." else float(o["value"])}
            for o in data["observations"]]
     return {"series_id": series_id, "vintage": as_of.isoformat(), "observations": obs}
