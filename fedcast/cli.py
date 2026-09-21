@@ -80,6 +80,12 @@ def _cmd_replay(args: argparse.Namespace) -> None:
         raise SystemExit(1)
 
 
+def _cmd_ui(args: argparse.Namespace) -> None:
+    from fedcast.ui.server import serve
+
+    serve(args.port, open_browser=not args.no_browser)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="fedcast")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -93,6 +99,10 @@ def main() -> None:
     f.add_argument("--allow-incomplete", action="store_true")
     f.set_defaults(fn=_cmd_forecast)
     sub.add_parser("replay", help="verify the ledger chain and recompute every entry").set_defaults(fn=_cmd_replay)
+    u = sub.add_parser("ui", help="open the local front end in your browser")
+    u.add_argument("--port", type=int, default=8765)
+    u.add_argument("--no-browser", action="store_true")
+    u.set_defaults(fn=_cmd_ui)
     args = parser.parse_args()
     args.fn(args)
 

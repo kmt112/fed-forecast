@@ -18,6 +18,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["fedcast*"]
 
+[tool.setuptools.package-data]
+"fedcast.ui" = ["index.html"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FedCast</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --surface: #ffffff; --ink: #1d1f23; --muted: #666b75; --line: #e2e0d9;
+    --accent: #1f5f8b; --accent-soft: #dbe8f1; --human: #9a5b13; --human-soft: #f3e4cf;
+    --ok: #2c6e49; --warn: #a4501a; --bad: #a3312c; --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15171a; --surface: #1e2125; --ink: #e9e7e1; --muted: #9aa0aa; --line: #30343a;
+      --accent: #7db8de; --accent-soft: #23394a; --human: #e0a860; --human-soft: #40321f;
+      --ok: #7cc49a; --warn: #e39a62; --bad: #e88580; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 80px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; margin-bottom: 20px; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 17px; margin: 0 0 4px; }
+  h3 { font-size: 14px; margin: 0 0 8px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+  .meeting { color: var(--muted); }
+  .meeting strong { color: var(--ink); }
+  section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 20px; margin-bottom: 16px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .bar-row { display: grid; grid-template-columns: 58px 1fr 52px; align-items: center; gap: 10px; margin: 6px 0; }
+  .bar-row .lbl { color: var(--muted); font-size: 13px; text-align: right; }
+  .bar-row .pct { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+  .track { height: 14px; background: var(--accent-soft); border-radius: 4px; overflow: hidden; }
+  .track.human { background: var(--human-soft); }
+  .fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .4s; }
+  .human .fill { background: var(--human); }
+  .zero .pct, .zero .lbl { opacity: .45; font-weight: 400; }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding-top: 16px;
+    border-top: 1px solid var(--line); }
+  button { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: wait; }
+  button .n { display: inline-block; width: 18px; height: 18px; line-height: 18px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 700; margin-right: 6px;
+    text-align: center; }
+  button.primary .n { background: var(--surface); }
+  button.link { border: 0; padding: 0; color: var(--accent); background: none; font-size: 13px; }
+  #msg { margin-top: 12px; font-size: 14px; min-height: 21px; }
+  #msg.ok { color: var(--ok); } #msg.err { color: var(--bad); } #msg.busy { color: var(--muted); }
+  .flag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 99px; margin-left: 6px;
+    border: 1px solid currentColor; }
+  .flag.ok { color: var(--ok); } .flag.warn { color: var(--warn); } .flag.bad { color: var(--bad); }
+  .meta { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  code { font: 12.5px ui-monospace, Consolas, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+
+  ol.journey { list-style: none; margin: 0; padding: 0; }
+  ol.journey li { display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding-bottom: 18px; position: relative; }
+  ol.journey li::before { content: ""; position: absolute; left: 15px; top: 30px; bottom: 0; width: 1px; background: var(--line); }
+  ol.journey li:last-child::before { display: none; }
+  .num { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+    font-weight: 700; display: grid; place-items: center; font-size: 14px; }
+  li.muted .num { background: var(--bg); color: var(--muted); }
+  .step p { margin: 2px 0 8px; color: var(--muted); font-size: 14px; max-width: 70ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  td, th { text-align: left; padding: 5px 10px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 12.5px; }
+  .kv td:first-child { color: var(--muted); width: 38%; }
+  .kv td:last-child { font-variant-numeric: tabular-nums; }
+  .scroll { overflow-x: auto; }
+
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  select, textarea, input { width: 100%; font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  textarea { min-height: 70px; resize: vertical; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .item { border-top: 1px solid var(--line); padding: 10px 0; font-size: 14px; }
+  .item .head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .item .why { color: var(--muted); margin-top: 2px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 10px 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>FedCast</h1>
+    <div class="meeting" id="meeting"></div>
+  </header>
+
+  <section>
+    <h2>Forecast for the next decision</h2>
+    <p class="sub">Two tracks, always shown together: what the machine says, and what it says after your views.</p>
+    <div class="grid2">
+      <div><h3>Machine only</h3><div id="bars-machine"></div></div>
+      <div><h3>With your views <span id="tilt-note" class="sub"></span></h3><div id="bars-human"></div></div>
+    </div>
+    <div class="meta" id="forecast-meta"></div>
+    <div class="actions">
+      <button id="btn-snapshot"><span class="n">1</span>Take snapshot</button>
+      <button id="btn-forecast" class="primary"><span class="n">2</span>Run forecast</button>
+      <button id="btn-replay"><span class="n">3</span>Verify ledger</button>
+    </div>
+    <div id="msg"></div>
+  </section>
+
+  <section>
+    <h2>How this number was made</h2>
+    <p class="sub">Rebuilt from the ledger entry and its frozen snapshot, using the actual values.</p>
+    <ol class="journey" id="journey"></ol>
+  </section>
+
+  <section>
+    <h2>Your input</h2>
+    <p class="sub">The only two ways to steer the system. Both are typed, recorded, and visible in every forecast they touch.</p>
+    <div class="grid2">
+      <div>
+        <h3>Add a view: "I think it should lean this way"</h3>
+        <form id="view-form">
+          <div class="row2">
+            <div><label for="v-dir">Direction</label>
+              <select id="v-dir"><option value="hawkish">Hawkish (toward a hike)</option><option value="dovish">Dovish (toward a cut)</option></select></div>
+            <div><label for="v-str">Strength</label>
+              <select id="v-str"><option value="1">Mild: moves 3 pp</option><option value="2" selected>Firm: moves 6 pp</option><option value="3">Strong: moves 10 pp (the cap)</option></select></div>
+          </div>
+          <label for="v-why">Why you think so (kept for the post-meeting review; does not change the size of the tilt)</label>
+          <textarea id="v-why" required minlength="20"></textarea>
+          <label for="v-exp">Expires on</label>
+          <input id="v-exp" type="date" required>
+          <div style="margin-top:12px"><button class="primary" type="submit">Save view</button></div>
+        </form>
+        <div id="views"></div>
+      </div>
+      <div>
+        <h3>Add a watch-out: "watch for XYZ in future"</h3>
+        <form id="watch-form">
+          <label for="w-text">What should every future run check for?</label>
+          <textarea id="w-text" required minlength="10"></textarea>
+          <div style="margin-top:12px"><button class="primary" type="submit">Save watch-out</button></div>
+        </form>
+        <div id="watchlist"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ledger <span id="chain-flag"></span></h2>
+    <p class="sub">Every forecast ever recorded. Append-only; entries are chained so edits and deletions show.</p>
+    <div class="scroll"><table id="ledger"></table></div>
+  </section>
+
+  <section>
+    <h2>Process scorecard</h2>
+    <p class="sub">The yardstick the tool is judged by. Fixed before any forecasting code was written; changes need a logged amendment.</p>
+    <div class="scroll"><table id="scorecard"></table></div>
+  </section>
+</main>
+
+<script>
+const OUTCOMES = ["-50", "-25", "0", "25", "50"];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const label = o => o === "0" ? "hold" : (o > 0 ? "+" : "") + o + " bp";
+const pct = p => (p * 100).toFixed(1) + "%";
+
+function bars(el, probs, human) {
+  el.innerHTML = probs ? OUTCOMES.map(o => {
+    const p = probs[o] || 0;
+    return `<div class="bar-row ${p === 0 ? "zero" : ""}"><span class="lbl">${label(o)}</span>
+      <div class="track ${human ? "human" : ""}"><div class="fill" style="width:${p * 100}%"></div></div>
+      <span class="pct">${pct(p)}</span></div>`;
+  }).join("") : `<div class="empty">No forecast yet. Take a snapshot, then run a forecast.</div>`;
+}
+
+function kv(rows) {
+  return rows && rows.length ? `<table class="kv">${rows.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>` : "";
+}
+
+function render(s) {
+  const snap = s.snapshot, latest = s.latest;
+  if (snap) {
+    const days = Math.round((new Date(snap.next_meeting) - new Date(s.today)) / 864e5);
+    $("meeting").innerHTML = `Next decision <strong>${esc(snap.next_meeting)}</strong> · ${days} days away`;
+    if (!$("v-exp").value) $("v-exp").value = snap.next_meeting;
+  } else $("meeting").textContent = "No snapshot yet";
+
+  const fc = latest && latest.entry.forecast;
+  bars($("bars-machine"), fc && fc.machine_only, false);
+  bars($("bars-human"), fc && fc.human_adjusted, true);
+  $("tilt-note").textContent = fc ? `(net tilt ${(fc.human.net_budget * 100 >= 0 ? "+" : "") + (fc.human.net_budget * 100).toFixed(0)} pp)` : "";
+
+  let meta = "";
+  if (fc) meta += `Ledger entry #${latest.entry.seq} · snapshot <code>${esc(fc.snapshot_hash.slice(0, 12))}</code> · code <code>${esc(latest.entry.code_version)}</code>`;
+  if (latest && latest.stale) meta += `<span class="flag warn">a newer snapshot exists: run a forecast to use it</span>`;
+  if (snap && !snap.complete) meta += `<span class="flag bad">latest snapshot is missing ${Object.keys(snap.missing).length} sources</span>`;
+  const pending = s.views.filter(v => v.active && fc && !fc.human.views_applied.some(a => a.id === v.id));
+  if (pending.length) meta += `<span class="flag warn">${pending.length} saved view${pending.length > 1 ? "s" : ""} not yet applied: run a forecast</span>`;
+  $("forecast-meta").innerHTML = meta;
+
+  $("journey").innerHTML = latest && latest.journey ? latest.journey.map(st => `
+    <li class="${st.muted ? "muted" : ""}"><div class="num">${st.n}</div><div class="step">
+      <h3>${esc(st.title)}</h3><p>${esc(st.body)}</p>${kv(st.rows)}
+      ${st.note ? `<p style="margin-top:8px">${esc(st.note)}</p>` : ""}
+      ${st.evidence ? `<p style="margin-top:8px">Evidence: ${st.evidence.map(e => `<code>${esc(e)}</code>`).join(" ")}</p>` : ""}
+    </div></li>`).join("") : `<div class="empty">Run a forecast to see its journey.</div>`;
+
+  $("views").innerHTML = s.views.length ? s.views.slice().reverse().map(v => `
+    <div class="item"><div class="head"><span><strong>${esc(v.id)}</strong> · ${esc(v.direction)}, strength ${v.strength}
+      <span class="flag ${v.active ? "ok" : ""}">${v.active ? "active until " + esc(v.expires_on) : "expired " + esc(v.expires_on)}</span></span>
+      ${v.active ? `<button class="link" data-expire="${esc(v.id)}">Expire now</button>` : ""}</div>
+      <div class="why">${esc(v.rationale)}</div></div>`).join("") : `<div class="empty">No views yet.</div>`;
+
+  $("watchlist").innerHTML = s.watchlist.length ? s.watchlist.slice().reverse().map(w => `
+    <div class="item"><div class="head"><span><strong>${esc(w.id)}</strong> <span class="flag ok">${esc(w.status)}</span></span>
+      <span class="sub" style="margin:0">${esc(w.added_on)}</span></div><div class="why">${esc(w.directive)}</div></div>`).join("")
+    : `<div class="empty">No watch-outs yet. They bind the LLM analysts, which arrive in the next phase.</div>`;
+
+  $("chain-flag").innerHTML = s.chain_ok ? `<span class="flag ok">chain intact</span>` : `<span class="flag bad">chain broken</span>`;
+  const top = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return `${label(o)} ${pct(p[o])}`; };
+  $("ledger").innerHTML = `<tr><th>#</th><th>Recorded (UTC)</th><th>Meeting</th><th>Machine: most likely</th><th>With views: most likely</th><th>Views</th><th>Snapshot</th><th>Code</th></tr>` +
+    (s.ledger.length ? s.ledger.slice().reverse().map(e => `<tr><td>${e.seq}</td><td>${esc(e.created_at.replace("T", " ").slice(0, 16))}</td>
+      <td>${esc(e.meeting)}</td><td>${top(e.machine_only)}</td><td>${top(e.human_adjusted)}</td><td>${e.n_views}</td>
+      <td><code>${esc(e.snapshot)}</code></td><td><code>${esc(e.code)}</code></td></tr>`).join("") : `<tr><td colspan="8" class="empty">Empty.</td></tr>`);
+
+  const mark = d => d.threshold === 0 ? "exactly 0" : (d.unit === "pct" && d.threshold === 100) ? "100%"
+    : `${d.direction === "max" ? "at most" : "at least"} ${d.threshold}${unit(d)}`;
+  const unit = d => ({pp: " pp", pct: "%", count: "", score: " / 5"}[d.unit]);
+  $("scorecard").innerHTML = `<tr><th></th><th>Dimension</th><th>How it is measured</th><th>Pass mark</th><th>Status today</th></tr>` +
+    s.scorecard.map(d => `<tr><td>${esc(d.id)}</td><td><strong>${esc(d.name)}</strong></td><td>${esc(d.metric)}</td>
+      <td style="white-space:nowrap">${mark(d)}</td><td>${esc(d.status)}</td></tr>`).join("");
+}
+
+function say(text, cls) { const m = $("msg"); m.textContent = text; m.className = cls; }
+
+async function post(path, body, busyText) {
+  document.querySelectorAll("button").forEach(b => b.disabled = true);
+  say(busyText, "busy");
+  try {
+    const r = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json", "X-FedCast": "1"}, body: JSON.stringify(body || {})});
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || "Request failed");
+    render(data.state); say(data.message, "ok");
+    return true;
+  } catch (e) { say(e.message, "err"); return false; }
+  finally { document.querySelectorAll("button").forEach(b => b.disabled = false); }
+}
+
+$("btn-snapshot").onclick = () => post("/api/snapshot", {}, "Fetching live data from the Fed, FRED, the New York Fed and futures quotes…");
+$("btn-forecast").onclick = () => post("/api/forecast", {}, "Running models…");
+$("btn-replay").onclick = () => post("/api/replay", {}, "Recomputing every ledger entry…");
+$("view-form").onsubmit = async e => { e.preventDefault();
+  if (await post("/api/views", {direction: $("v-dir").value, strength: $("v-str").value, rationale: $("v-why").value, expires_on: $("v-exp").value}, "Saving view…")) $("v-why").value = ""; };
+$("watch-form").onsubmit = async e => { e.preventDefault();
+  if (await post("/api/watchlist", {directive: $("w-text").value}, "Saving watch-out…")) $("w-text").value = ""; };
+$("views").onclick = e => { const id = e.target.dataset.expire; if (id) post("/api/views/expire", {id}, "Expiring view…"); };
+
+fetch("/api/state").then(r => r.json()).then(render).catch(e => say(e.message, "err"));
+</script>
+</body>
+</html>
