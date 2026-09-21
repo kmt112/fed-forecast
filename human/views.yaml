@@ -1,0 +1,12 @@
+# H2 views. Each one tilts the human_adjusted forecast by a bounded amount until it expires.
+# strength: 1 = mild (3 pp), 2 = firm (6 pp), 3 = strong (10 pp). Total tilt is capped at 10 pp.
+# The rationale is recorded for the audit trail and post-meeting review; it does not change the number.
+#
+# - id: H2-001
+#   author: tankahming123
+#   created_at: 2026-09-21T09:00:00
+#   expires_on: 2026-10-28
+#   direction: hawkish        # hawkish | dovish
+#   strength: 2
+#   rationale: "Why you hold this view, in a sentence or two."
+views: []
