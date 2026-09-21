@@ -32,6 +32,16 @@ def implied_change_bp(meeting_date: date, meeting_month_price: float, rate_befor
     return (rate_after - rate_before) * 100.0
 
 
+def implied_change_next_month_bp(next_month_price: float, rate_before: float) -> float:
+    """Expected change when the month after the meeting has no meeting of its own.
+
+    That contract's whole month trades at the post-meeting rate, so it reads the new rate
+    directly. Preferred for late-month meetings, where the meeting-month method divides
+    by a handful of days and amplifies tick noise.
+    """
+    return ((100.0 - next_month_price) - rate_before) * 100.0
+
+
 def bucket_probabilities(change_bp: float) -> dict[int, float]:
     """Split an expected change across the two adjacent 25bp outcomes.
 

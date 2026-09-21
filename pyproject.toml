@@ -20,3 +20,6 @@ include = ["fedcast*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[project.scripts]
+fedcast = "fedcast.cli:main"

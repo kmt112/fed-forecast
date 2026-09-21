@@ -35,3 +35,11 @@ def test_beyond_grid_loads_end_bucket():
 def test_meeting_on_last_day_is_rejected():
     with pytest.raises(ValueError):
         implied_change_bp(date(2026, 9, 30), 96.0, 4.0)
+
+
+def test_html_to_text_strips_comments_and_tags():
+    from fedcast.data.sources import html_to_text
+
+    page = ('<div id="article"><!--<span>x</span> --> --><p>The Committee decided&nbsp;to <strong>raise</strong>'
+            ' the target range.</p><script>var a=1;</script></div><div id="lastUpdate">Last Update</div>')
+    assert html_to_text(page) == "The Committee decided to raise the target range."
