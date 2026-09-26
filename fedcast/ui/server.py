@@ -16,7 +16,7 @@ from pathlib import Path
 
 import yaml
 
-from fedcast import config, forecast, journey, ledger, snapshot
+from fedcast import config, dag, forecast, journey, ledger, snapshot
 from fedcast.human.store import load_views
 from fedcast.human.views import View
 from fedcast.scorecard import SCORECARD, TILT_BY_STRENGTH, TILT_CAP
@@ -86,16 +86,18 @@ def state() -> dict:
                       "human_adjusted": e["forecast"]["human_adjusted"],
                       "n_views": len(e["forecast"]["human"]["views_applied"])} for e in entries]
 
+    out["views"] = [{**v.model_dump(mode="json"), "active": v.is_active(today)} for v in load_views(VIEWS)]
+    out["watchlist"] = _load_watchlist()
+
     out["latest"] = None
     if entries:
         last = entries[-1]
         snap = _snapshot_by_hash(last["forecast"]["snapshot_hash"])
-        out["latest"] = {"entry": last, "journey": journey.build(last, snap) if snap else None}
+        out["latest"] = {"entry": last, "journey": journey.build(last, snap) if snap else None,
+                         "dag": dag.build(last, snap, out["watchlist"]) if snap else None}
         if out["snapshot"]:
             out["latest"]["stale"] = not out["snapshot"]["name"].endswith(last["forecast"]["snapshot_hash"][:12])
 
-    out["views"] = [{**v.model_dump(mode="json"), "active": v.is_active(today)} for v in load_views(VIEWS)]
-    out["watchlist"] = _load_watchlist()
     out["scorecard"] = [{**asdict(d), "status": _SCORECARD_STATUS.get(d.id, "Not measured yet: needs the LLM agents")}
                         for d in SCORECARD]
     return out
@@ -127,6 +129,7 @@ def act_forecast(_: dict) -> dict:
 
 def act_replay(_: dict) -> dict:
     n = ledger.verify(LEDGER)
+    current = forecast._code_version()
     results = []
     for e in ledger.read(LEDGER):
         want = e["forecast"]
@@ -135,10 +138,13 @@ def act_replay(_: dict) -> dict:
         if snap:
             views = [View(**v) for v in want["human"]["views_applied"]]
             ok = json.loads(json.dumps(forecast.compute(snap, views))) == want
-        results.append({"seq": e["seq"], "ok": ok})
+        results.append({"seq": e["seq"], "ok": ok, "older_code": e["code_version"] != current})
     good = sum(r["ok"] for r in results)
-    return {"message": f"Hash chain intact over {n} entries. {good} of {n} recompute to an exact match.",
-            "results": results}
+    older = sum(1 for r in results if not r["ok"] and r["older_code"])
+    msg = f"Tamper check passed: the chain of {n} entries is intact. {good} of {n} recompute to an exact match."
+    if older:
+        msg += f" {older} recorded under earlier code no longer reproduce with today's code (methodology changed since)."
+    return {"message": msg, "results": results}
 
 
 def act_add_view(body: dict) -> dict:

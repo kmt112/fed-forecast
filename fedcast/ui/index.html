@@ -75,6 +75,32 @@
   .kv td:last-child { font-variant-numeric: tabular-nums; }
   .scroll { overflow-x: auto; }
 
+  #dag svg { display: block; font-family: inherit; }
+  #dag .node rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; cursor: pointer; }
+  #dag .node.live rect { stroke: var(--accent); }
+  #dag .node.frozen rect { stroke-dasharray: 5 3; }
+  #dag .node.planned rect { stroke-dasharray: 2 3; }
+  #dag .node.human rect { stroke: var(--human); }
+  #dag .node.output rect { fill: var(--accent-soft); }
+  #dag .node.sel rect { stroke-width: 3; }
+  #dag .node:hover rect { fill: var(--bg); }
+  #dag .nl { font-size: 12.5px; font-weight: 600; fill: var(--ink); pointer-events: none; }
+  #dag .ns { font-size: 11px; fill: var(--muted); pointer-events: none; }
+  #dag .planned .nl { fill: var(--muted); }
+  #dag .edge { fill: none; stroke: var(--line); stroke-width: 1.5; }
+  #dag .edge.live { stroke: var(--accent); opacity: .55; }
+  #dag .edge.planned { stroke-dasharray: 3 4; }
+  #dag .edge.hot { stroke: var(--human); stroke-width: 3; opacity: 1; }
+  #dag .colh { font-size: 11px; fill: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); margin: 6px 0 12px; }
+  .legend i { display: inline-block; width: 22px; height: 12px; border: 1.5px solid var(--accent); border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+  .legend i.frozen { border-style: dashed; border-color: var(--line); }
+  .legend i.planned { border-style: dotted; border-color: var(--line); }
+  .legend i.human { border-color: var(--human); }
+  #dag-detail { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
+  #dag-detail p { color: var(--muted); font-size: 14px; max-width: 75ch; margin: 4px 0 8px; }
+  .links button { margin: 2px 6px 2px 0; }
+  details summary { cursor: pointer; color: var(--accent); font-size: 14px; }
   label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
   select, textarea, input { width: 100%; font: inherit; color: var(--ink); background: var(--bg);
     border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
@@ -102,17 +128,21 @@
     </div>
     <div class="meta" id="forecast-meta"></div>
     <div class="actions">
-      <button id="btn-snapshot"><span class="n">1</span>Take snapshot</button>
-      <button id="btn-forecast" class="primary"><span class="n">2</span>Run forecast</button>
-      <button id="btn-replay"><span class="n">3</span>Verify ledger</button>
+      <button id="btn-snapshot" title="Fetch live data from the Fed, FRED, the New York Fed and futures quotes, and freeze it as a fingerprinted bundle."><span class="n">1</span>Take snapshot</button>
+      <button id="btn-forecast" class="primary" title="Run the models and your views on the latest snapshot and record the result in the ledger."><span class="n">2</span>Run forecast</button>
+      <button id="btn-replay" title="Two checks: (1) tamper check, each entry carries the fingerprint of the one before; (2) recompute every entry from its frozen snapshot and demand the exact same numbers."><span class="n">3</span>Verify ledger</button>
     </div>
     <div id="msg"></div>
   </section>
 
   <section>
-    <h2>How this number was made</h2>
-    <p class="sub">Rebuilt from the ledger entry and its frozen snapshot, using the actual values.</p>
-    <ol class="journey" id="journey"></ol>
+    <h2>What feeds the number</h2>
+    <p class="sub">Every factor and the path it takes to the forecast, built from the ledger entry and its frozen snapshot. Click a box.</p>
+    <div class="legend"><span><i></i>live: in today's number</span><span><i class="frozen"></i>frozen: in the snapshot, not yet used</span><span><i class="planned"></i>planned: not built yet</span><span><i class="human"></i>your input</span></div>
+    <div id="dag"></div>
+    <div id="dag-detail"></div>
+    <details style="margin-top:16px"><summary>Step-by-step narrative</summary>
+      <ol class="journey" id="journey" style="margin-top:12px"></ol></details>
   </section>
 
   <section>
@@ -202,6 +232,7 @@ function render(s) {
   if (pending.length) meta += `<span class="flag warn">${pending.length} saved view${pending.length > 1 ? "s" : ""} not yet applied: run a forecast</span>`;
   $("forecast-meta").innerHTML = meta;
 
+  renderDag(latest && latest.dag);
   $("journey").innerHTML = latest && latest.journey ? latest.journey.map(st => `
     <li class="${st.muted ? "muted" : ""}"><div class="num">${st.n}</div><div class="step">
       <h3>${esc(st.title)}</h3><p>${esc(st.body)}</p>${kv(st.rows)}
@@ -234,6 +265,50 @@ function render(s) {
     s.scorecard.map(d => `<tr><td>${esc(d.id)}</td><td><strong>${esc(d.name)}</strong></td><td>${esc(d.metric)}</td>
       <td style="white-space:nowrap">${mark(d)}</td><td>${esc(d.status)}</td></tr>`).join("");
 }
+
+let lastDag = null, dagSelected = null;
+function renderDag(dag) {
+  lastDag = dag;
+  const el = $("dag"), det = $("dag-detail");
+  if (!dag) { el.innerHTML = `<div class="empty">Run a forecast to see what feeds it.</div>`; det.innerHTML = ""; return; }
+  const COLW = 178, W = 150, H = 46, GAP = 12, PAD = 14, TOP = 22;
+  const cols = {};
+  dag.nodes.forEach(n => (cols[n.col] = cols[n.col] || []).push(n));
+  const ncol = dag.columns.length;
+  const maxRows = Math.max(...Object.values(cols).map(c => c.length));
+  const height = PAD * 2 + maxRows * (H + GAP) - GAP;
+  const pos = {};
+  Object.entries(cols).forEach(([c, list]) => {
+    const y0 = (height - (list.length * (H + GAP) - GAP)) / 2;
+    list.forEach((n, i) => pos[n.id] = {x: PAD + c * COLW, y: y0 + i * (H + GAP)});
+  });
+  const width = PAD * 2 + (ncol - 1) * COLW + W;
+  const sel = dagSelected && dag.nodes.some(n => n.id === dagSelected) ? dagSelected : null;
+  const edges = dag.edges.map(e => {
+    const a = pos[e.from], b = pos[e.to];
+    const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = (x1 + x2) / 2;
+    const hot = sel && (e.from === sel || e.to === sel);
+    return `<path d="M${x1} ${y1} C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}" class="edge ${e.status} ${hot ? "hot" : ""}"/>`;
+  });
+  const hotLast = edges.filter(p => !p.includes("hot")).concat(edges.filter(p => p.includes("hot"))).join("");
+  const nodes = dag.nodes.map(n => { const p = pos[n.id];
+    return `<g class="node ${n.status} ${n.kind} ${sel === n.id ? "sel" : ""}" data-id="${esc(n.id)}" transform="translate(${p.x},${p.y})">
+      <rect width="${W}" height="${H}" rx="8"/><text class="nl" x="10" y="19">${esc(n.label)}</text><text class="ns" x="10" y="35">${esc(n.summary)}</text></g>`; }).join("");
+  const heads = dag.columns.map((t, i) => `<text class="colh" x="${PAD + i * COLW}" y="13">${esc(t)}</text>`).join("");
+  el.innerHTML = `<div class="scroll"><svg width="${width}" height="${height + TOP}" viewBox="0 0 ${width} ${height + TOP}">${heads}<g transform="translate(0,${TOP})">${hotLast}${nodes}</g></svg></div>`;
+
+  const n = dag.nodes.find(x => x.id === sel);
+  if (!n) { det.innerHTML = `<div class="empty">Click any box to see its reasoning, the values it used, and what it feeds.</div>`; return; }
+  const name = id => dag.nodes.find(x => x.id === id).label;
+  const fedBy = dag.edges.filter(e => e.to === n.id), feeds = dag.edges.filter(e => e.from === n.id);
+  const linkList = (list, key) => list.length ? list.map(e => `<button class="link" data-go="${esc(e[key])}">${esc(name(e[key]))}${e.status === "planned" ? " (planned)" : ""}</button>`).join(" · ") : "—";
+  const status = {live: ["ok", "live: in today's number"], frozen: ["warn", "frozen: in the snapshot, not yet used"], planned: ["", "planned: not built yet"]}[n.status];
+  det.innerHTML = `<h3>${esc(n.label)} <span class="flag ${status[0]}">${status[1]}</span></h3><p>${esc(n.detail.body)}</p>${kv(n.detail.rows)}
+    ${n.detail.evidence.length ? `<p style="margin-top:8px">Evidence: ${n.detail.evidence.map(e => `<code>${esc(e)}</code>`).join(" ")}</p>` : ""}
+    <div class="links" style="font-size:13.5px;margin-top:8px"><div>Fed by: ${linkList(fedBy, "from")}</div><div>Feeds: ${linkList(feeds, "to")}</div></div>`;
+}
+$("dag").onclick = e => { const g = e.target.closest("[data-id]"); if (g) { dagSelected = g.dataset.id; renderDag(lastDag); } };
+$("dag-detail").onclick = e => { const id = e.target.dataset.go; if (id) { dagSelected = id; renderDag(lastDag); } };
 
 function say(text, cls) { const m = $("msg"); m.textContent = text; m.className = cls; }
 

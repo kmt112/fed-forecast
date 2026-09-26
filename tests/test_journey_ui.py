@@ -71,3 +71,18 @@ def test_ui_actions_write_typed_inputs(tmp_path, monkeypatch):
 
     server.act_add_directive({"directive": "Watch for dissents and their direction"})
     assert server._load_watchlist()[0]["id"] == "H1-001"
+
+
+def test_dag_only_marks_live_what_is_in_the_number():
+    from fedcast import dag
+
+    g = dag.build(entry_for(full_snapshot(), []), full_snapshot(), [{"id": "H1-001", "directive": "x", "status": "active"}])
+    by_id = {n["id"]: n for n in g["nodes"]}
+    assert all(e["from"] in by_id and e["to"] in by_id for e in g["edges"])
+    assert all(by_id[e["from"]]["col"] < by_id[e["to"]]["col"] for e in g["edges"]), "edges must only flow forward"
+    assert by_id["fred.Labour data"]["status"] == "frozen" and by_id["model.taylor"]["status"] == "planned"
+    for e in g["edges"]:  # nothing non-live may feed a live node through a live edge
+        if by_id[e["to"]]["status"] == "live" and e["status"] == "live":
+            assert by_id[e["from"]]["status"] == "live"
+    assert "100 − 96.07 = 3.930%" in json.dumps(g, ensure_ascii=False)
+    assert by_id["out"]["summary"] == "hold 80%"
