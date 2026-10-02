@@ -276,7 +276,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const label = o => o === "0" ? "hold" : (o > 0 ? "+" : "") + o + " bp";
 const pct = p => (p * 100).toFixed(1) + "%";
-const top = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return [label(o), p[o] || 0]; };
+const topOf = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return [label(o), p[o] || 0]; };
 
 // --- navigation ------------------------------------------------------------------------
 const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard"};
@@ -312,7 +312,7 @@ function render(s) {
     <div>Latest snapshot<br><b>${esc(snap.as_of)}</b> · ${snap.n_items} items${snap.complete ? "" : " · incomplete"}</div>
     <div>Ledger<br><b>${s.ledger.length} entr${s.ledger.length === 1 ? "y" : "ies"}</b> · chain ${s.chain_ok ? "intact" : "broken"}</div>` : `<div>No snapshot yet</div>`;
 
-  const [mo, mp] = fc ? top(fc.machine_only) : ["—", 0], [ho, hp] = fc ? top(fc.human_adjusted) : ["—", 0];
+  const [mo, mp] = fc ? topOf(fc.machine_only) : ["—", 0], [ho, hp] = fc ? topOf(fc.human_adjusted) : ["—", 0];
   $("tiles").innerHTML = `<div class="tile"><div class="lbl">Next decision</div><div class="val">${snap ? esc(snap.next_meeting) : "—"}<small>${days !== null ? days + " days" : ""}</small></div></div>
     <div class="tile"><div class="lbl">Machine: most likely</div><div class="val">${esc(mo)}<small>${fc ? pct(mp) : ""}</small></div></div>
     <div class="tile"><div class="lbl">With your views</div><div class="val">${esc(ho)}<small>${fc ? pct(hp) : ""}</small></div></div>
@@ -360,7 +360,7 @@ function render(s) {
       <div class="doc-text">${esc(d.text)}${d.chars > 400 ? "…" : ""}</div></div>`).join("") : `<div class="empty">No documents yet.</div>`;
 
   $("chain-flag").innerHTML = s.chain_ok ? `<span class="flag ok">chain intact</span>` : `<span class="flag bad">chain broken</span>`;
-  const t = p => { const [o, v] = top(p); return `${o} ${pct(v)}`; };
+  const t = p => { const [o, v] = topOf(p); return `${o} ${pct(v)}`; };
   $("ledger").innerHTML = `<tr><th>#</th><th>Recorded (UTC)</th><th>Meeting</th><th>Machine: most likely</th><th>With views: most likely</th><th>Views</th><th>Snapshot</th><th>Code</th></tr>` +
     (s.ledger.length ? s.ledger.slice().reverse().map(e => `<tr><td>${e.seq}</td><td>${esc(e.created_at.replace("T", " ").slice(0, 16))}</td>
       <td>${esc(e.meeting)}</td><td>${t(e.machine_only)}</td><td>${t(e.human_adjusted)}</td><td>${e.n_views}</td>
