@@ -82,6 +82,36 @@ def _cmd_replay(args: argparse.Namespace) -> None:
         raise SystemExit(1)
 
 
+def _cmd_analyse(args: argparse.Namespace) -> None:
+    import yaml
+
+    from fedcast.llm import analyst
+    from fedcast.llm.backend import ClaudeCodeBackend, ReplayBackend
+
+    path = Path(args.snapshot) if args.snapshot else snapshot.latest(config.SNAPSHOT_DIR)
+    snap = snapshot.load(path)
+    watchlist = (yaml.safe_load((config.ROOT / "human" / "watchlist.yaml").read_text(encoding="utf-8")) or {}).get("items") or []
+    live = ClaudeCodeBackend(model=args.model)
+    backend = ReplayBackend(config.ROOT / "analyses" / "replay", live) if args.replay else live
+    if args.arm == "naive":
+        rec = analyst.run_naive(snap, backend, runs=args.runs)
+    else:
+        rec = analyst.run_comms(snap, backend, watchlist, runs=args.runs)
+    out = analyst.save(rec)
+    print(f"{rec['analyst']} (arm {rec['arm']}) on snapshot {snap.hash[:12]} via {rec['backend']}: {args.runs} run(s)")
+    for k, v in rec["summary"].items():
+        print(f"  {k}: {v}")
+    if rec["analyst"] == "communications":
+        v = rec["runs"][-1]["verification"]
+        print("  last run claims:")
+        for c in v["claims"]:
+            flag = "ok " if c["verified"] else "UNVERIFIED"
+            print(f"    [{flag}] ({c['lean']}) {c['text'][:90]}  <- {c['item']}"
+                  + (f"  leaked {c['leaked_numbers']}" if c["leaked_numbers"] else ""))
+        print(f"  summary: {rec['runs'][-1]['completion']['output'].get('summary', '')[:300]}")
+    print(f"saved {out.relative_to(config.ROOT)}")
+
+
 def _cmd_ui(args: argparse.Namespace) -> None:
     from fedcast.ui.server import serve
 
@@ -101,6 +131,13 @@ def main() -> None:
     f.add_argument("--allow-incomplete", action="store_true")
     f.set_defaults(fn=_cmd_forecast)
     sub.add_parser("replay", help="verify the ledger chain and recompute every entry").set_defaults(fn=_cmd_replay)
+    a = sub.add_parser("analyse", help="run an LLM analyst on a snapshot and verify its claims")
+    a.add_argument("--arm", choices=["comms", "naive"], default="comms", help="comms = harnessed analyst (arm D); naive = control (arm A)")
+    a.add_argument("--runs", type=int, default=1, help="repeat N times to measure repeatability (S1)")
+    a.add_argument("--snapshot", help="snapshot directory (default: latest)")
+    a.add_argument("--model", help="claude model id (default: the CLI's default)")
+    a.add_argument("--replay", action="store_true", help="serve recorded completions when available, record new ones")
+    a.set_defaults(fn=_cmd_analyse)
     u = sub.add_parser("ui", help="open the local front end in your browser")
     u.add_argument("--port", type=int, default=8765)
     u.add_argument("--no-browser", action="store_true")

@@ -140,7 +140,15 @@ How human input touches each scorecard dimension:
 | S9 Auditability | — | Every human input ledgered; any forecast replays with and without it |
 | **S10 Human-input discipline (new)** | — | 100% of human influence arrives via H1–H4; 0 untyped overrides; all views entered before the pre-registration cutoff |
 
-## 8. Known risks / honest caveats
+## 8. LLM layer (built 2026-10-02)
+
+`fedcast/llm/backend.py` — `ClaudeCodeBackend` (claude -p, --json-schema, --tools "" so no tool can be used),
+`ReplayBackend` (hash-keyed recordings), `FakeBackend` (tests). `fedcast/llm/analyst.py` — the communications
+analyst (arm D: snapshot + schema + citations + code verifier + watch-outs + bounded tilt) and the naive control
+(arm A). `fedcast analyse --arm comms|naive --runs N`. Analyses are saved under `analyses/<snapshot>/` and shown in
+the graph as *computed*; the analyst enters the pool only after passing S1–S3/S10 and an amendment sets its weight.
+
+## 9. Known risks / honest caveats
 - **`claude -p` has no temperature/seed control** → repeatability must come from harness design
   (that is the point), and S1 is measured, not assumed. API backend later allows temperature=0 comparison.
 - **Subscription rate limits** make N=10 × 6 arms slow → ReplayBackend caching + run ablations in batches.

@@ -24,6 +24,7 @@ from fedcast.human import prediction_markets as pm_store
 from fedcast.human.extract import SUPPORTED, extract_text
 from fedcast.human.store import load_views
 from fedcast.human.views import View
+from fedcast.llm import analyst as analyst_mod
 from fedcast.scorecard import SCORECARD, TILT_BY_STRENGTH, TILT_CAP
 
 LEDGER = config.ROOT / "ledger" / "forecasts.jsonl"
@@ -105,8 +106,10 @@ def state() -> dict:
     if entries:
         last = entries[-1]
         snap = _snapshot_by_hash(last["forecast"]["snapshot_hash"])
+        analyses = {a: analyst_mod.latest(last["forecast"]["snapshot_hash"], a) for a in ("communications", "naive")}
         out["latest"] = {"entry": last, "journey": journey.build(last, snap) if snap else None,
-                         "dag": dag.build(last, snap, out["watchlist"]) if snap else None}
+                         "dag": dag.build(last, snap, out["watchlist"], analyses) if snap else None,
+                         "analyses": {k: (v["summary"] if v else None) for k, v in analyses.items()}}
         if out["snapshot"]:
             out["latest"]["stale"] = not out["snapshot"]["name"].endswith(last["forecast"]["snapshot_hash"][:12])
 

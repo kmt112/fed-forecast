@@ -96,7 +96,8 @@ def _try(fn, snap: Snapshot):
         return None
 
 
-def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> dict:
+def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
+          analyses: dict | None = None) -> dict:
     fc = entry["forecast"]
     m = fc["models"]["market_implied"]
     tr = fc["models"].get("taylor_rule")
@@ -532,19 +533,53 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
          "Keeps every model honest about surprises.",
          "Tables from past meetings. Not built yet.",
          ["sig.history"]),
-        ("model.llm", "LLM analysts",
-         "Specialist analysts (inflation, labour, financial conditions, communications), a hawk-versus-dove "
-         "debate and an independent verifier, run on Claude.",
-         "Reading text and weighing arguments is what the quant models cannot do; the harness keeps that reading "
-         "honest.",
-         "Every claim must quote a snapshot item and the verifier string-matches the quote; every watch-out must "
-         "be addressed; the output is a bounded, cited tilt, never the final number. Not built yet.",
-         ["sig.tone", "sig.inflation", "sig.labour", "watchouts", "documents"]),
     ]
     for mid, label, what, why, how, srcs in planned_models:
         nodes.append(_node(mid, 2, label, "planned", "model", "planned", what=what, why=why, how=how))
         for s in srcs:
             link(s, mid, "planned")
+
+    llm_what = ("Specialist analysts (communications first; inflation, labour and financial conditions to follow), "
+                "a hawk-versus-dove debate and an independent verifier, run on Claude through the Claude Code CLI with "
+                "all tools disabled, so the model can read nothing but the prompt.")
+    llm_why = ("Reading text and weighing arguments is what the quant models cannot do; the harness keeps that reading "
+               "honest: every claim must quote a snapshot item and the verifier string-matches the quote, numbers "
+               "outside the quoted item count as leakage, every watch-out must be addressed by id, and the output is "
+               "a bounded tilt in basis points, never the final number.")
+    comm = (analyses or {}).get("communications")
+    naive = (analyses or {}).get("naive")
+    llm_srcs = ["sig.tone", "sig.inflation", "sig.labour", "watchouts", "documents"]
+    if comm:
+        sm = comm["summary"]
+        last = comm["runs"][-1]["verification"]
+        rows = [["Runs on this snapshot", f"{sm['runs']} via {comm['backend']} ({comm['prompt_version']})"],
+                ["Tilt (bounded ±10 bp)", f"mean {sm['tilt_mean_bp']:+.1f} bp" + (f", std {sm['tilt_std_bp']:.1f} bp (S1)" if sm["tilt_std_bp"] is not None else "")],
+                ["Groundedness (S2)", f"{sm['groundedness_pct_mean']:.0f}% of claims quote-verified"],
+                ["Leakage (S3)", f"{sm['leakage_total']} number(s) not in the quoted evidence"],
+                ["Watch-outs (S10)", f"{sm['watchouts_missing_total']} missing"],
+                ["Last run", f"{last['n_verified']}/{last['n_claims']} claims verified; "
+                             + comm["runs"][-1]["completion"]["output"].get("summary", "")[:240]]]
+        if naive:
+            ns = naive["summary"]
+            rows.append(["Naive control (arm A), same snapshot date",
+                         f"{ns['runs']} run(s): " + ", ".join(f"{_label(int(k))} {v * 100:.0f}%" for k, v in ns["mean_probabilities"].items() if v >= 0.005)
+                         + (f"; max std {ns['max_std_pp']:.1f} pp" if ns["max_std_pp"] is not None else "")
+                         + f"; {ns['leakage_total']} numbers from memory, 0% groundedness"])
+        nodes.append(_node("model.llm", 2, "LLM analysts", f"tilt {sm['tilt_mean_bp']:+.0f} bp, {sm['groundedness_pct_mean']:.0f}% grounded",
+                           "model", "computed", what=llm_what, why=llm_why,
+                           how="The communications analyst reads the statement diff, both statements, the minutes, your "
+                               "documents and the watch-outs, and returns claims with verbatim quotes, a watch-out "
+                               "report and a tilt. Code verifies every quote. Computed and scored; not in the number until "
+                               "it passes the eval gate (S1-S3, S10 thresholds) and a weight is set by amendment.",
+                           rows=rows))
+        for s_ in llm_srcs:
+            link(s_, "model.llm", "computed")
+    else:
+        nodes.append(_node("model.llm", 2, "LLM analysts", "not run yet", "model", "planned", what=llm_what, why=llm_why,
+                           how="Run `fedcast analyse` (needs the claude CLI signed in). Not in today's number."))
+        for s_ in llm_srcs:
+            link(s_, "model.llm", "planned")
+    link("model.llm", "pool", "planned")
 
     # --- columns 3-5: pool, human input, forecast ------------------------------------------
     weights = fc["pool_weights"]
