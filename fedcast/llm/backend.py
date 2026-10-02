@@ -32,15 +32,17 @@ class Completion:
     meta: dict = field(default_factory=dict)
 
 
-def prompt_hash(system: str, prompt: str, schema: dict) -> str:
-    payload = json.dumps({"system": system, "prompt": prompt, "schema": schema}, sort_keys=True)
+def prompt_hash(system: str, prompt: str, schema: dict, run: int = 0) -> str:
+    """Identity of one call. `run` distinguishes deliberate repeats of the same prompt (repeatability runs),
+    so a replay serves each repeat its own recording instead of the first one five times."""
+    payload = json.dumps({"system": system, "prompt": prompt, "schema": schema, "run": run}, sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
 class LLMBackend(Protocol):
     name: str
 
-    def complete(self, system: str, prompt: str, schema: dict) -> Completion: ...
+    def complete(self, system: str, prompt: str, schema: dict, run: int = 0) -> Completion: ...
 
 
 _FENCE = re.compile(r"^```(?:json)?\s*|\s*```$", re.S)
@@ -61,7 +63,7 @@ class ClaudeCodeBackend:
         self.model = model
         self.timeout_s = timeout_s
 
-    def complete(self, system: str, prompt: str, schema: dict) -> Completion:
+    def complete(self, system: str, prompt: str, schema: dict, run: int = 0) -> Completion:
         cmd = ["claude", "-p", "--output-format", "json", "--json-schema", json.dumps(schema),
                "--tools", "", "--no-session-persistence", "--system-prompt", system]
         if self.model:
@@ -78,7 +80,7 @@ class ClaudeCodeBackend:
         output = env.get("structured_output") or parse_json_text(env.get("result", ""))
         model = next(iter(env.get("modelUsage") or {}), self.model or "")
         return Completion(output=output, backend=self.name, model=model, duration_s=round(time.time() - t0, 1),
-                          prompt_hash=prompt_hash(system, prompt, schema), raw=env.get("result", ""),
+                          prompt_hash=prompt_hash(system, prompt, schema, run), raw=env.get("result", ""),
                           meta={"session_id": env.get("session_id"), "cost_usd": env.get("total_cost_usd"),
                                 "num_turns": env.get("num_turns"), "usage": env.get("usage")})
 
@@ -90,8 +92,8 @@ class ReplayBackend:
         self.folder = folder
         self.inner = inner
 
-    def complete(self, system: str, prompt: str, schema: dict) -> Completion:
-        key = prompt_hash(system, prompt, schema)
+    def complete(self, system: str, prompt: str, schema: dict, run: int = 0) -> Completion:
+        key = prompt_hash(system, prompt, schema, run)
         path = self.folder / f"{key}.json"
         if path.exists():
             rec = json.loads(path.read_text(encoding="utf-8"))
@@ -99,10 +101,10 @@ class ReplayBackend:
                               duration_s=0.0, prompt_hash=key, raw=rec.get("raw", ""), meta=rec.get("meta", {}))
         if self.inner is None:
             raise LookupError(f"no recorded completion for {key} and no inner backend to call")
-        c = self.inner.complete(system, prompt, schema)
+        c = self.inner.complete(system, prompt, schema, run)
         self.folder.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"output": c.output, "backend": c.backend, "model": c.model, "raw": c.raw,
-                                    "meta": c.meta, "system": system, "prompt": prompt, "schema": schema},
+                                    "meta": c.meta, "system": system, "prompt": prompt, "schema": schema, "run": run},
                                    indent=1, ensure_ascii=False), encoding="utf-8")
         return c
 
@@ -114,8 +116,8 @@ class FakeBackend:
         self.answers = answers if isinstance(answers, list) else [answers]
         self.calls: list[tuple[str, str, dict]] = []
 
-    def complete(self, system: str, prompt: str, schema: dict) -> Completion:
+    def complete(self, system: str, prompt: str, schema: dict, run: int = 0) -> Completion:
         self.calls.append((system, prompt, schema))
         output = self.answers[min(len(self.calls) - 1, len(self.answers) - 1)]
         return Completion(output=json.loads(json.dumps(output)), backend=self.name, model="fake",
-                          prompt_hash=prompt_hash(system, prompt, schema))
+                          prompt_hash=prompt_hash(system, prompt, schema, run))

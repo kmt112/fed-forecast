@@ -17,6 +17,8 @@ from __future__ import annotations
 import json
 import re
 import statistics
+import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -120,9 +122,14 @@ def verify(output: dict, snap: Snapshot, watchlist: list[dict]) -> dict:
 def run_comms(snap: Snapshot, backend: LLMBackend, watchlist: list[dict], runs: int = 1) -> dict:
     prompt = build_prompt(snap, watchlist)
     results = []
-    for _ in range(runs):
-        c = backend.complete(SYSTEM, prompt, SCHEMA)
-        results.append({"completion": _dump(c), "verification": verify(c.output, snap, watchlist)})
+    for i in range(runs):
+        t0 = time.time()
+        print(f"  run {i + 1}/{runs}: calling {backend.name}…", file=sys.stderr, flush=True)
+        c = backend.complete(SYSTEM, prompt, SCHEMA, run=i)
+        v = verify(c.output, snap, watchlist)
+        print(f"  run {i + 1}/{runs}: done in {time.time() - t0:.0f}s, tilt {v['tilt_bp']:+.0f} bp, "
+              f"{v['n_verified']}/{v['n_claims']} claims verified", file=sys.stderr, flush=True)
+        results.append({"completion": _dump(c), "verification": v})
     tilts = [r["verification"]["tilt_bp"] for r in results]
     rec = {
         "analyst": "communications", "arm": "D", "prompt_version": PROMPT_VERSION,
@@ -146,8 +153,11 @@ def run_naive(snap: Snapshot, backend: LLMBackend, runs: int = 1) -> dict:
               "Give a probability for each outcome in basis points of change (-50, -25, 0, 25, 50), summing to 1, "
               "and a short reasoning.")
     results = []
-    for _ in range(runs):
-        c = backend.complete("You are a Fed watcher. Output only JSON matching the schema.", prompt, NAIVE_SCHEMA)
+    for i in range(runs):
+        t0 = time.time()
+        print(f"  run {i + 1}/{runs}: calling {backend.name}…", file=sys.stderr, flush=True)
+        c = backend.complete("You are a Fed watcher. Output only JSON matching the schema.", prompt, NAIVE_SCHEMA, run=i)
+        print(f"  run {i + 1}/{runs}: done in {time.time() - t0:.0f}s", file=sys.stderr, flush=True)
         probs = {str(o): float(c.output["probabilities"].get(str(o), 0.0)) for o in OUTCOMES_BP}
         z = sum(probs.values()) or 1.0
         probs = {k: v / z for k, v in probs.items()}
