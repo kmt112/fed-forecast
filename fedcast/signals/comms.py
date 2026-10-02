@@ -44,7 +44,8 @@ def vote(text: str) -> dict:
 
 def lexicon(text: str) -> dict:
     low = body(text).lower()
-    count = lambda t: len(re.findall(r"" + re.escape(t) + r"", low))  # whole words only: "ease" must not match "release"
+    # whole words only: "ease" must not match "release"
+    count = lambda t: len(re.findall("(?<![a-z])" + re.escape(t) + "(?![a-z])", low))
     hawk = {t: count(t) for t in HAWKISH if count(t)}
     dove = {t: count(t) for t in DOVISH if count(t)}
     h, d = sum(hawk.values()), sum(dove.values())
