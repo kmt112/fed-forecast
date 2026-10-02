@@ -53,11 +53,11 @@ def build(as_of: date) -> Snapshot:
         else:
             snap.missing[f"fred.{sid}"] = "FRED_API_KEY not set in .env"
 
-    last_statement = next((m for m in reversed(past) if m.statement_url), None)
+    statements = [m for m in past if m.statement_url][-2:]  # latest and previous, for the word diff
     last_minutes = next((m for m in reversed(past) if m.minutes_url), None)
-    if last_statement:
-        attempt(f"fed.statement.{last_statement.decision_date}", "document", last_statement.statement_url,
-                lambda: sources.fetch_document(last_statement.statement_url))
+    for st in statements:
+        attempt(f"fed.statement.{st.decision_date}", "document", st.statement_url,
+                lambda st=st: sources.fetch_document(st.statement_url))
     if last_minutes:
         attempt(f"fed.minutes.{last_minutes.decision_date}", "document", last_minutes.minutes_url,
                 lambda: sources.fetch_document(last_minutes.minutes_url))

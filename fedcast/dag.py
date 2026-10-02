@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from fedcast import OUTCOMES_BP, config
 from fedcast.journey import _dist, _label
-from fedcast.signals import inflation, labour
+from fedcast.signals import comms, financial, inflation, labour
 from fedcast.snapshot import Snapshot
 
 COLUMNS = ("Frozen evidence", "Signals", "Models", "Pool", "Your input", "Forecast")
@@ -111,6 +111,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
 
     infl = _try(inflation.compute, snap) if has("fred.PCEPILFE") and has("fred.CPILFESL") else None
     lab = _try(labour.compute, snap) if all(has(e) for e in labour.EVIDENCE) else None
+    fin = _try(financial.compute, snap) if all(has(e) for e in financial.EVIDENCE) else None
+    tone = _try(comms.compute, snap)
     sig_status = "live" if tr else "computed"  # the signals are in the number once the Taylor rule runs
 
     # --- column 0: frozen evidence ------------------------------------------------------
@@ -174,7 +176,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
                   for i in others],
             evidence=others))
 
-    group_signal = {"Inflation data": infl, "Labour data": lab}
+    group_signal = {"Inflation data": infl, "Labour data": lab, "Market data": fin}
     for label, series in FRED_GROUPS.items():
         rows, ids = [], []
         for sid in series:
@@ -188,8 +190,9 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
         if ids:
             what, why, how = _GROUP_TEXT[label]
             used = group_signal.get(label) is not None
-            status = sig_status if used else "idle"
-            reader = {"Inflation data": "inflation gap", "Labour data": "labour slack"}.get(label, "")
+            status = ("computed" if label == "Market data" else sig_status) if used else "idle"
+            reader = {"Inflation data": "inflation gap", "Labour data": "labour slack",
+                      "Market data": "financial conditions"}.get(label, "")
             nodes.append(_node(
                 f"fred.{label}", 0, label, f"{len(ids)} series, {'read by ' + reader if used else 'not yet used'}",
                 "source", status, what=what, why=why,
@@ -210,10 +213,17 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
                    "'several' or 'a few' participants leaned, and what would change their minds. That reveals "
                    "the direction of travel before it reaches the statement.")
             how = "Planned: count the participant-weighting phrases and let the analyst quote the key passages."
+        read = kind == "statement" and tone is not None and d in tone["evidence"]
+        rows = [["Opens with", text[:320].strip() + "…"]]
+        if read:
+            v = comms.vote(text)
+            rows.insert(0, ["Vote", f"{v['for']} – {v['against']}" + (f", against: {v['dissenters']}" if v["dissenters"] else "")])
         nodes.append(_node(
-            d, 0, f"Fed {kind} {d[-10:]}", f"{len(text.split())} words, not yet used", "source", "idle",
-            what=f"The full text of the FOMC {kind}, frozen as published.", why=why, how=how + " No model reads it yet.",
-            rows=[["Opens with", text[:320].strip() + "…"]], evidence=[d]))
+            d, 0, f"Fed {kind} {d[-10:]}", f"{len(text.split())} words, {'read by tone' if read else 'not yet used'}",
+            "source", "computed" if read else "idle",
+            what=f"The full text of the FOMC {kind}, frozen as published.", why=why,
+            how=how + (" Read by the communication-tone signal." if read else " No model reads it yet."),
+            rows=rows, evidence=[d]))
 
     n_watch = len([w for w in (watchlist or []) if w.get("status") == "active"])
     nodes.append(_node(
@@ -322,27 +332,65 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
                            why=_LAB_WHY, how="Needs unemployment, payrolls and claims in the snapshot."))
         link("fred.Labour data", "sig.labour", "planned")
 
-    dgs2 = snap.get("fred.DGS2")["observations"] if has("fred.DGS2") else []
-    fin_rows = []
-    if dgs2:
-        y = next(o["value"] for o in dgs2 if o["value"] is not None)
-        fin_rows = [["2-year yield minus policy rate",
-                     f"{y:.2f}% − {m['rate_before']:.2f}% = {(y - m['rate_before']) * 100:+.0f} bp"]]
+    fin_what = "What the bond market expects and how tight financial conditions are."
+    fin_why = ("The 2-year yield is close to the average policy rate expected over two years, so a wide positive gap to "
+               "today's rate means the market expects more hikes, which corroborates or contradicts the futures. "
+               "Breakevens show whether inflation expectations stay anchored near 2%, which the Fed treats as a "
+               "precondition for easing. A loose NFCI despite high rates tells the Fed its tightening is not biting.")
+    if fin:
+        t2, be, nf = fin["two_year"], fin["breakeven"], fin["nfci"]
+        rows = [["2-year yield minus policy rate", f"{t2['yield']:.2f}% − {fin['policy_rate']:.2f}% = {t2['gap_bp']:+.0f} bp ({t2['date']})"],
+                ["2-year yield, 4-week change", f"{t2['change_4wk_bp']:+.0f} bp since {t2['ago_date']}"],
+                ["5-year breakeven inflation", f"{be['level']:.2f}% ({be['vs_goal_pp']:+.2f} pp vs 2% goal; 4-week change {be['change_4wk_pp']:+.2f})"],
+                ["Chicago Fed NFCI", f"{nf['level']:+.2f} ({nf['date']}; 0 = average, negative = loose; 4-week change {nf['change_4wk']:+.2f})"],
+                ["Reading", financial.direction(fin)]]
+        nodes.append(_node("sig.financial", 1, "Financial conditions", f"2y gap {t2['gap_bp']:+.0f} bp", "signal", "computed",
+                           what=fin_what, why=fin_why,
+                           how="Computed from the snapshot by fedcast/signals/financial.py: the 2-year gap in bp, the "
+                               "breakeven against the goal, the NFCI level, each with a 4-week change. It does not feed "
+                               "a live model yet (the ordered probit and the analysts will read it), so it is not in "
+                               "today's number.", rows=rows, evidence=fin["evidence"]))
+        link("fred.Market data", "sig.financial", "computed")
+        link("effr", "sig.financial", "computed")
+    else:
+        nodes.append(_node("sig.financial", 1, "Financial conditions", "planned", "signal", "planned", what=fin_what,
+                           why=fin_why, how="Needs the 2-year yield, breakevens and NFCI in the snapshot."))
+        link("fred.Market data", "sig.financial", "planned")
+
+    tone_what = ("A hawkish-to-dovish reading of what the committee has said, concentrating on the vote and on what "
+                 "changed since the previous statement.")
+    tone_why = ("The Fed telegraphs. Wording changes in the statement, the balance of views in the minutes and the "
+                "Chair's press-conference answers move markets precisely because they precede decisions. The vote "
+                "shows how united the committee is, and dissents show which way the pressure runs.")
+    if tone:
+        v, lx = tone["vote"], tone["lexicon"]
+        rows = [["Latest statement", tone["latest"]],
+                ["Vote", f"{v['for']} – {v['against']}" + (f", against: {v['dissenters']}" if v["dissenters"] else "")],
+                ["Lexicon score", f"{lx['score']:+.2f} (hawkish terms {sum(lx['hawkish'].values())}, dovish {sum(lx['dovish'].values())})"],
+                ["Hawkish terms found", ", ".join(f"{k} ×{n}" for k, n in lx["hawkish"].items()) or "none"],
+                ["Dovish terms found", ", ".join(f"{k} ×{n}" for k, n in lx["dovish"].items()) or "none"]]
+        if tone["diff"]:
+            d_ = tone["diff"]
+            rows += [["Compared with", tone["previous"] + f" (similarity {d_['similarity']:.0%})"],
+                     ["Phrases added", " | ".join(d_["added"][:8]) or "none"],
+                     ["Phrases removed", " | ".join(d_["removed"][:8]) or "none"]]
+        else:
+            rows.append(["Compared with", "previous statement not in this snapshot yet: take a new snapshot to get the diff"])
+        rows.append(["Reading", comms.direction(tone)])
+        nodes.append(_node("sig.tone", 1, "Communication tone", comms.direction(tone).split(",")[0], "signal", "computed",
+                           what=tone_what, why=tone_why,
+                           how="Deterministic baseline from fedcast/signals/comms.py: the vote parsed from the statement, "
+                               "a word-level diff against the previous statement (boilerplate stripped), and a lexicon "
+                               "score from counts of hawkish and dovish terms. Crude by design: it is the floor the LLM "
+                               "communications analyst must beat and the check it is held against. Not in today's number.",
+                           rows=rows, evidence=tone["evidence"]))
+        for e in tone["evidence"]:
+            link(e, "sig.tone", "computed")
+    else:
+        nodes.append(_node("sig.tone", 1, "Communication tone", "planned", "signal", "planned", what=tone_what,
+                           why=tone_why, how="Needs a statement in the snapshot."))
+
     planned_signals = [
-        ("sig.financial", "Financial conditions",
-         "What the bond market expects and how tight financial conditions are.",
-         "The 2-year yield is close to the average policy rate expected over two years, so a wide positive gap to "
-         "today's rate means the market expects more hikes, which corroborates or contradicts the futures. "
-         "Breakevens show whether inflation expectations stay anchored near 2%, which the Fed treats as a "
-         "precondition for easing. A loose NFCI despite high rates tells the Fed its tightening is not biting.",
-         "Gaps and levels from the three series. Not computed yet.", fin_rows, ["fred.Market data"]),
-        ("sig.tone", "Communication tone",
-         "A hawkish-to-dovish reading of what the committee has said, concentrating on what changed.",
-         "The Fed telegraphs. Wording changes in the statement, the balance of views in the minutes and the Chair's "
-         "press-conference answers move markets precisely because they precede decisions.",
-         "Planned: deterministic word diff of statement against the previous one, a lexicon score as a baseline, and "
-         "an LLM analyst reading that must quote every claim. Not computed yet.",
-         [], [d for d in snap.items if d.startswith("fed.")]),
         ("sig.history", "Base rates",
          "How often, historically, the Fed has moved, held or surprised in situations like this one.",
          "It is the antidote to overconfidence. If the market prices a move at 50% five weeks out, the question "
