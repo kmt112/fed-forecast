@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import json
 import re
+from email.parser import BytesParser
+from email.policy import default as email_policy
 import traceback
 from dataclasses import asdict
 from datetime import date, datetime, timedelta
@@ -18,6 +20,7 @@ import yaml
 
 from fedcast import config, dag, forecast, journey, ledger, snapshot
 from fedcast.human import documents as docs_store
+from fedcast.human.extract import SUPPORTED, extract_text
 from fedcast.human.store import load_views
 from fedcast.human.views import View
 from fedcast.scorecard import SCORECARD, TILT_BY_STRENGTH, TILT_CAP
@@ -199,6 +202,35 @@ def act_add_document(body: dict) -> dict:
     return {"message": f"Document {doc.id} saved. Take a new snapshot to freeze it into the evidence."}
 
 
+def act_upload_document(fields: dict, filename: str, data: bytes) -> dict:
+    if len(data) > 20_000_000:
+        raise ValueError("file is larger than 20 MB")
+    text = extract_text(filename, data)
+    docs = docs_store.load_documents(DOCS)
+    doc = docs_store.Document(id=docs_store.next_id(docs), title=(fields.get("title") or filename).strip(),
+                              author=AUTHOR, added_on=date.today(),
+                              source=(fields.get("source") or f"uploaded file {filename}").strip(),
+                              relevance=fields.get("relevance") or "unsure", text=text)
+    docs_store.save(DOCS, doc)
+    (DOCS / "files").mkdir(parents=True, exist_ok=True)
+    (DOCS / "files" / f"{doc.id}{Path(filename).suffix.lower()}").write_bytes(data)
+    return {"message": f"Document {doc.id} saved: {len(text):,} characters extracted from {filename}. "
+                       "Take a new snapshot to freeze it into the evidence."}
+
+
+def _parse_multipart(content_type: str, body: bytes) -> tuple[dict, str | None, bytes | None]:
+    msg = BytesParser(policy=email_policy).parsebytes(
+        b"Content-Type: " + content_type.encode() + b"\r\nMIME-Version: 1.0\r\n\r\n" + body)
+    fields, filename, data = {}, None, None
+    for part in msg.iter_parts():
+        name = part.get_param("name", header="content-disposition")
+        if part.get_filename():
+            filename, data = part.get_filename(), part.get_payload(decode=True)
+        elif name:
+            fields[name] = part.get_payload(decode=True).decode("utf-8", errors="replace")
+    return fields, filename, data
+
+
 def act_withdraw_document(body: dict) -> dict:
     docs = {d.id: d for d in docs_store.load_documents(DOCS)}
     if body["id"] not in docs:
@@ -209,7 +241,7 @@ def act_withdraw_document(body: dict) -> dict:
 
 ACTIONS = {"/api/snapshot": act_snapshot, "/api/forecast": act_forecast, "/api/replay": act_replay,
            "/api/views": act_add_view, "/api/views/expire": act_expire_view, "/api/watchlist": act_add_directive,
-           "/api/documents": act_add_document, "/api/documents/withdraw": act_withdraw_document}
+           "/api/documents": act_add_document, "/api/documents/upload": act_add_document, "/api/documents/withdraw": act_withdraw_document}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -243,8 +275,15 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(404, {"error": "not found"})
         try:
             length = int(self.headers.get("Content-Length") or 0)
-            body = json.loads(self.rfile.read(length) or b"{}")
-            result = action(body)
+            raw = self.rfile.read(length)
+            ctype = self.headers.get("Content-Type") or ""
+            if ctype.startswith("multipart/form-data"):
+                fields, filename, data = _parse_multipart(ctype, raw)
+                if not filename:
+                    raise ValueError("no file in the upload")
+                result = act_upload_document(fields, filename, data)
+            else:
+                result = action(json.loads(raw or b"{}"))
             self._send(200, {**result, "state": state()})
         except Exception as exc:
             traceback.print_exc()

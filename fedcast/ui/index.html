@@ -98,7 +98,8 @@
   .legend i.planned { border-style: dotted; border-color: var(--line); }
   .legend i.human { border-color: var(--human); }
   #dag-detail { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
-  #dag-detail p { color: var(--muted); font-size: 14px; max-width: 75ch; margin: 4px 0 8px; }
+  #dag-detail p { color: var(--muted); font-size: 14px; max-width: 78ch; margin: 4px 0 8px; }
+  #dag-detail .plbl { color: var(--ink); font-weight: 600; }
   .links button { margin: 2px 6px 2px 0; }
   ol.rules { margin: 0 0 8px; padding-left: 20px; font-size: 14px; }
   ol.rules li { margin: 4px 0; color: var(--muted); }
@@ -186,8 +187,10 @@
       </div>
       <label for="d-rel">How related is it to the next decision?</label>
       <select id="d-rel"><option value="related">Related: it bears on this meeting</option><option value="unsure" selected>Unsure: let the analysts judge</option><option value="unrelated">Unrelated: background only</option></select>
-      <label for="d-text">Text</label>
-      <textarea id="d-text" required minlength="20" style="min-height:120px"></textarea>
+      <label for="d-file">Upload a file (.pdf, .docx, .txt, .md): the text is extracted by code and stored verbatim</label>
+      <input id="d-file" type="file" accept=".pdf,.docx,.txt,.md">
+      <label for="d-text">Or paste the text</label>
+      <textarea id="d-text" minlength="20" style="min-height:120px"></textarea>
       <div style="margin-top:12px"><button class="primary" type="submit">Save document</button></div>
     </form>
     <div id="documents"></div>
@@ -341,7 +344,10 @@ function renderDag(dag) {
   const fedBy = dag.edges.filter(e => e.to === n.id), feeds = dag.edges.filter(e => e.from === n.id);
   const linkList = (list, key) => list.length ? list.map(e => `<button class="link" data-go="${esc(e[key])}">${esc(name(e[key]))}${e.status === "planned" ? " (planned)" : ""}</button>`).join(" · ") : "—";
   const status = {live: ["ok", "live: in today's number"], frozen: ["warn", "frozen: in the snapshot, not yet used"], planned: ["", "planned: not built yet"]}[n.status];
-  det.innerHTML = `<h3>${esc(n.label)} <span class="flag ${status[0]}">${status[1]}</span></h3><p>${esc(n.detail.body)}</p>${kv(n.detail.rows)}
+  const para = (lbl, txt) => txt ? `<p><strong class="plbl">${lbl}</strong> ${esc(txt)}</p>` : "";
+  det.innerHTML = `<h3>${esc(n.label)} <span class="flag ${status[0]}">${status[1]}</span></h3>
+    ${para("What it is.", n.detail.body)}${para("Why it matters for the decision.", n.detail.why)}${para("How it is computed.", n.detail.how)}
+    ${n.detail.rows.length ? `<p><strong class="plbl">${n.status === "live" ? "Values used." : "Today's values, for reference."}</strong></p>` : ""}${kv(n.detail.rows)}
     ${n.detail.evidence.length ? `<p style="margin-top:8px">Evidence: ${n.detail.evidence.map(e => `<code>${esc(e)}</code>`).join(" ")}</p>` : ""}
     <div class="links" style="font-size:13.5px;margin-top:8px"><div>Fed by: ${linkList(fedBy, "from")}</div><div>Feeds: ${linkList(feeds, "to")}</div></div>`;
 }
@@ -354,7 +360,8 @@ async function post(path, body, busyText) {
   document.querySelectorAll("button").forEach(b => b.disabled = true);
   say(busyText, "busy");
   try {
-    const r = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json", "X-FedCast": "1"}, body: JSON.stringify(body || {})});
+    const isForm = body instanceof FormData;
+    const r = await fetch(path, {method: "POST", headers: isForm ? {"X-FedCast": "1"} : {"Content-Type": "application/json", "X-FedCast": "1"}, body: isForm ? body : JSON.stringify(body || {})});
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || "Request failed");
     render(data.state); say(data.message, "ok");
@@ -371,7 +378,16 @@ $("view-form").onsubmit = async e => { e.preventDefault();
 $("watch-form").onsubmit = async e => { e.preventDefault();
   if (await post("/api/watchlist", {directive: $("w-text").value}, "Saving watch-out…")) $("w-text").value = ""; };
 $("doc-form").onsubmit = async e => { e.preventDefault();
-  if (await post("/api/documents", {title: $("d-title").value, source: $("d-src").value, relevance: $("d-rel").value, text: $("d-text").value}, "Saving document…")) { $("d-title").value = ""; $("d-src").value = ""; $("d-text").value = ""; } };
+  const file = $("d-file").files[0];
+  let ok;
+  if (file) {
+    const fd = new FormData();
+    fd.append("title", $("d-title").value); fd.append("source", $("d-src").value); fd.append("relevance", $("d-rel").value); fd.append("file", file);
+    ok = await post("/api/documents/upload", fd, `Extracting text from ${file.name}…`);
+  } else if ($("d-text").value.trim().length >= 20) {
+    ok = await post("/api/documents", {title: $("d-title").value, source: $("d-src").value, relevance: $("d-rel").value, text: $("d-text").value}, "Saving document…");
+  } else { say("Choose a file or paste at least 20 characters of text.", "err"); return; }
+  if (ok) { $("d-title").value = ""; $("d-src").value = ""; $("d-text").value = ""; $("d-file").value = ""; } };
 $("documents").onclick = e => { const id = e.target.dataset.withdraw; if (id) post("/api/documents/withdraw", {id}, "Withdrawing…"); };
 $("views").onclick = e => { const id = e.target.dataset.expire; if (id) post("/api/views/expire", {id}, "Expiring view…"); };
 
