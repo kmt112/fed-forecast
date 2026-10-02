@@ -7,6 +7,7 @@ from datetime import date
 
 from fedcast import config
 from fedcast.data import fomc_calendar, sources
+from fedcast.human.documents import load_documents
 from fedcast.snapshot import Item, Snapshot
 
 
@@ -60,4 +61,8 @@ def build(as_of: date) -> Snapshot:
     if last_minutes:
         attempt(f"fed.minutes.{last_minutes.decision_date}", "document", last_minutes.minutes_url,
                 lambda: sources.fetch_document(last_minutes.minutes_url))
+    for doc in load_documents(config.ROOT / "human" / "documents"):
+        if doc.status == "active":
+            snap.add(Item.make(f"human.doc.{doc.id}", "human_document", f"human/documents/{doc.id}.md",
+                               doc.model_dump(mode="json")))
     return snap

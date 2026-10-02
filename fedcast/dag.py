@@ -102,6 +102,14 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
                        "analyst trace. The analysts are not built yet, so nothing acts on them today.",
                        [[w["id"], w["directive"]] for w in (watchlist or [])]))
 
+    docs = sorted(i for i in snap.items if i.startswith("human.doc."))
+    nodes.append(_node("documents", 0, "Your documents", f"{len(docs)} in snapshot" if docs else "none yet", "human",
+                       "frozen" if docs else "planned",
+                       "Your own write-ups, notes and analyses, frozen into the snapshot as human-sourced evidence. "
+                       "Only the LLM analysts will read them, quoting like any other item; the quant models never see "
+                       "them and they never move the number directly (enter a view for that).",
+                       [[snap.get(d)["id"], f"{snap.get(d)['title']} ({snap.get(d)['relevance']})"] for d in docs], docs))
+
     # --- column 1: signals ---------------------------------------------------------------
     nodes.append(_node("sig.rate_before", 1, "Rate before meeting", f"{m['rate_before']:.2f}%", "signal", "live",
                        "The latest EFFR is taken as the rate that holds until the decision.",
@@ -155,7 +163,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
         ("model.base", "Historical base rates", "Frequencies of cut/hold/hike in comparable situations.",
          ["sig.history"]),
         ("model.llm", "LLM analysts", "Specialist analysts, a hawk-vs-dove debate and a verifier; output is a "
-         "bounded, cited signal, never the final number.", ["sig.tone", "sig.inflation", "sig.labour", "watchouts"]),
+         "bounded, cited signal, never the final number.", ["sig.tone", "sig.inflation", "sig.labour", "watchouts", "documents"]),
     ]
     for mid, label, what, srcs in planned_models:
         nodes.append(_node(mid, 2, label, "planned", "model", "planned",

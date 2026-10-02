@@ -100,7 +100,10 @@
   #dag-detail { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
   #dag-detail p { color: var(--muted); font-size: 14px; max-width: 75ch; margin: 4px 0 8px; }
   .links button { margin: 2px 6px 2px 0; }
-  details summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+  ol.rules { margin: 0 0 8px; padding-left: 20px; font-size: 14px; }
+  ol.rules li { margin: 4px 0; color: var(--muted); }
+  ol.rules li strong { color: var(--ink); }
+  .doc-text { white-space: pre-wrap; color: var(--muted); font-size: 13px; margin-top: 4px; max-height: 90px; overflow: hidden; }
   label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
   select, textarea, input { width: 100%; font: inherit; color: var(--ink); background: var(--bg);
     border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
@@ -141,8 +144,6 @@
     <div class="legend"><span><i></i>live: in today's number</span><span><i class="frozen"></i>frozen: in the snapshot, not yet used</span><span><i class="planned"></i>planned: not built yet</span><span><i class="human"></i>your input</span></div>
     <div id="dag"></div>
     <div id="dag-detail"></div>
-    <details style="margin-top:16px"><summary>Step-by-step narrative</summary>
-      <ol class="journey" id="journey" style="margin-top:12px"></ol></details>
   </section>
 
   <section>
@@ -176,6 +177,34 @@
         <div id="watchlist"></div>
       </div>
     </div>
+    <h3 style="margin-top:22px">Add your own data: a write-up, note or analysis</h3>
+    <p class="sub">Frozen into the next snapshot as evidence tagged "yours". The analysts must quote it like any other item; it never moves the number by itself.</p>
+    <form id="doc-form">
+      <div class="row2">
+        <div><label for="d-title">Title</label><input id="d-title" required minlength="3"></div>
+        <div><label for="d-src">Source (own analysis, a colleague, a URL, a report)</label><input id="d-src"></div>
+      </div>
+      <label for="d-rel">How related is it to the next decision?</label>
+      <select id="d-rel"><option value="related">Related: it bears on this meeting</option><option value="unsure" selected>Unsure: let the analysts judge</option><option value="unrelated">Unrelated: background only</option></select>
+      <label for="d-text">Text</label>
+      <textarea id="d-text" required minlength="20" style="min-height:120px"></textarea>
+      <div style="margin-top:12px"><button class="primary" type="submit">Save document</button></div>
+    </form>
+    <div id="documents"></div>
+  </section>
+
+  <section>
+    <h2>Methodology</h2>
+    <p class="sub">The fixed rules every forecast follows, then the step-by-step account of the current entry.</p>
+    <ol class="rules">
+      <li><strong>Freeze the evidence.</strong> Everything is fetched into one fingerprinted snapshot. Nothing outside it may be read: no internet, no memory.</li>
+      <li><strong>Compute in code.</strong> Signals and models are plain code; each one lists the snapshot items it used.</li>
+      <li><strong>Pool with fixed weights.</strong> No language model writes the final number; at most it proposes a bounded, cited nudge.</li>
+      <li><strong>Apply typed human input.</strong> Views tilt the number by a capped amount. Documents and watch-outs are evidence for the analysts, never a direct nudge.</li>
+      <li><strong>Record and verify.</strong> Every forecast goes into an append-only, hash-chained ledger and must recompute exactly from its snapshot.</li>
+    </ol>
+    <h3 style="margin-top:18px">Step by step for the current entry</h3>
+    <ol class="journey" id="journey"></ol>
   </section>
 
   <section>
@@ -250,6 +279,15 @@ function render(s) {
     <div class="item"><div class="head"><span><strong>${esc(w.id)}</strong> <span class="flag ok">${esc(w.status)}</span></span>
       <span class="sub" style="margin:0">${esc(w.added_on)}</span></div><div class="why">${esc(w.directive)}</div></div>`).join("")
     : `<div class="empty">No watch-outs yet. They bind the LLM analysts, which arrive in the next phase.</div>`;
+
+  $("documents").innerHTML = s.documents.length ? s.documents.slice().reverse().map(d => `
+    <div class="item"><div class="head"><span><strong>${esc(d.id)}</strong> · ${esc(d.title)} · ${esc(d.relevance)}
+      ${d.status !== "active" ? `<span class="flag">withdrawn</span>` : d.in_snapshot ? `<span class="flag ok">in latest snapshot</span>` : `<span class="flag warn">not in a snapshot yet</span>`}</span>
+      ${d.status === "active" ? `<button class="link" data-withdraw="${esc(d.id)}">Withdraw</button>` : ""}</div>
+      <div class="why">${esc(d.added_on)}${d.source ? " · " + esc(d.source) : ""} · ${d.chars} chars</div>
+      <div class="doc-text">${esc(d.text)}${d.chars > 400 ? "…" : ""}</div></div>`).join("") : `<div class="empty">No documents yet.</div>`;
+  const pendingDocs = s.documents.filter(d => d.status === "active" && !d.in_snapshot).length;
+  if (pendingDocs) $("forecast-meta").innerHTML += `<span class="flag warn">${pendingDocs} document${pendingDocs > 1 ? "s" : ""} not frozen yet: take a snapshot</span>`;
 
   $("chain-flag").innerHTML = s.chain_ok ? `<span class="flag ok">chain intact</span>` : `<span class="flag bad">chain broken</span>`;
   const top = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return `${label(o)} ${pct(p[o])}`; };
@@ -332,6 +370,9 @@ $("view-form").onsubmit = async e => { e.preventDefault();
   if (await post("/api/views", {direction: $("v-dir").value, strength: $("v-str").value, rationale: $("v-why").value, expires_on: $("v-exp").value}, "Saving view…")) $("v-why").value = ""; };
 $("watch-form").onsubmit = async e => { e.preventDefault();
   if (await post("/api/watchlist", {directive: $("w-text").value}, "Saving watch-out…")) $("w-text").value = ""; };
+$("doc-form").onsubmit = async e => { e.preventDefault();
+  if (await post("/api/documents", {title: $("d-title").value, source: $("d-src").value, relevance: $("d-rel").value, text: $("d-text").value}, "Saving document…")) { $("d-title").value = ""; $("d-src").value = ""; $("d-text").value = ""; } };
+$("documents").onclick = e => { const id = e.target.dataset.withdraw; if (id) post("/api/documents/withdraw", {id}, "Withdrawing…"); };
 $("views").onclick = e => { const id = e.target.dataset.expire; if (id) post("/api/views/expire", {id}, "Expiring view…"); };
 
 fetch("/api/state").then(r => r.json()).then(render).catch(e => say(e.message, "err"));

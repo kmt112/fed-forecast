@@ -104,6 +104,7 @@ bound, replay and score. Free-text that silently moves the number is the one thi
 | H1 Standing directive | "Watch out for XYZ in future" | Entry in versioned `watchlist.yaml` | Agents must address each item explicitly in the trace ("XYZ: checked — found / not found, evidence …"). Adding one goes through the eval gate. |
 | H2 View | "The Chair is more hawkish than the market thinks — lean that way" | Structured view in the snapshot: direction, strength (1–3), rationale, author, timestamp, expiry (default: next meeting) | Treated as citable evidence with a bounded tilt (cap ±10 pp total probability mass moved). Aggregator applies it in code, not the LLM. |
 | H3 Correction | "This trace misread the minutes" | Permanent regression case in `evals/golden/` | Every human catch becomes a test that all future versions must pass. |
+| H5 Document | "Here is my write-up on bank lending standards" | Markdown file in `human/documents/`, frozen into the next snapshot as a `human_document` item | Evidence for the LLM analysts only, tagged human-sourced; must be quoted like any item; never read by quant models; never moves the number directly. |
 | H4 Governance | "S1 threshold is too loose" | Logged amendment with rationale | Changes scorecard constants; never retroactive. |
 
 **Two-track forecasts.** Every run publishes both `machine_only` and `human_adjusted`

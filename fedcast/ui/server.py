@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 
 from fedcast import config, dag, forecast, journey, ledger, snapshot
+from fedcast.human import documents as docs_store
 from fedcast.human.store import load_views
 from fedcast.human.views import View
 from fedcast.scorecard import SCORECARD, TILT_BY_STRENGTH, TILT_CAP
@@ -24,6 +25,7 @@ from fedcast.scorecard import SCORECARD, TILT_BY_STRENGTH, TILT_CAP
 LEDGER = config.ROOT / "ledger" / "forecasts.jsonl"
 VIEWS = config.ROOT / "human" / "views.yaml"
 WATCHLIST = config.ROOT / "human" / "watchlist.yaml"
+DOCS = config.ROOT / "human" / "documents"
 INDEX = Path(__file__).parent / "index.html"
 AUTHOR = "tankahming123"
 
@@ -88,6 +90,11 @@ def state() -> dict:
 
     out["views"] = [{**v.model_dump(mode="json"), "active": v.is_active(today)} for v in load_views(VIEWS)]
     out["watchlist"] = _load_watchlist()
+    frozen_ids = set()
+    if out["snapshot"]:
+        frozen_ids = {k.split("human.doc.", 1)[1] for k in manifest["items"] if k.startswith("human.doc.")}
+    out["documents"] = [{**d.model_dump(mode="json"), "text": d.text[:400], "chars": len(d.text),
+                         "in_snapshot": d.id in frozen_ids} for d in docs_store.load_documents(DOCS)]
 
     out["latest"] = None
     if entries:
@@ -183,8 +190,26 @@ def act_add_directive(body: dict) -> dict:
     return {"message": f"Directive {item['id']} saved. The LLM analysts will have to address it once they exist."}
 
 
+def act_add_document(body: dict) -> dict:
+    docs = docs_store.load_documents(DOCS)
+    doc = docs_store.Document(id=docs_store.next_id(docs), title=str(body["title"]).strip(), author=AUTHOR,
+                              added_on=date.today(), source=str(body.get("source") or "").strip(),
+                              relevance=body.get("relevance") or "unsure", text=str(body["text"]).strip())
+    docs_store.save(DOCS, doc)
+    return {"message": f"Document {doc.id} saved. Take a new snapshot to freeze it into the evidence."}
+
+
+def act_withdraw_document(body: dict) -> dict:
+    docs = {d.id: d for d in docs_store.load_documents(DOCS)}
+    if body["id"] not in docs:
+        raise ValueError("unknown document " + str(body["id"]))
+    docs_store.save(DOCS, docs[body["id"]].model_copy(update={"status": "withdrawn"}), overwrite=True)
+    return {"message": f"Document {body['id']} withdrawn. It stays on file but will not enter new snapshots."}
+
+
 ACTIONS = {"/api/snapshot": act_snapshot, "/api/forecast": act_forecast, "/api/replay": act_replay,
-           "/api/views": act_add_view, "/api/views/expire": act_expire_view, "/api/watchlist": act_add_directive}
+           "/api/views": act_add_view, "/api/views/expire": act_expire_view, "/api/watchlist": act_add_directive,
+           "/api/documents": act_add_document, "/api/documents/withdraw": act_withdraw_document}
 
 
 class Handler(BaseHTTPRequestHandler):
