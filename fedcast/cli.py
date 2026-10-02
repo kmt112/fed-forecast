@@ -62,6 +62,7 @@ def _cmd_forecast(args: argparse.Namespace) -> None:
 
 def _cmd_replay(args: argparse.Namespace) -> None:
     n = ledger.verify(LEDGER)
+    current = forecast._code_version()
     failures = 0
     for e in ledger.read(LEDGER):
         want = e["forecast"]
@@ -74,7 +75,8 @@ def _cmd_replay(args: argparse.Namespace) -> None:
         got = json.loads(json.dumps(forecast.compute(snapshot.load(dirs[0]), views)))
         ok = got == want
         failures += not ok
-        print(f"  #{e['seq']} {'ok  ' if ok else 'FAIL'} {want['meeting']} snapshot {want['snapshot_hash'][:12]}")
+        note = "" if ok or e["code_version"] == current else f"  (recorded under code {e['code_version']}, now {current})"
+        print(f"  #{e['seq']} {'ok  ' if ok else 'FAIL'} {want['meeting']} snapshot {want['snapshot_hash'][:12]}{note}")
     print(f"hash chain intact over {n} entries; {n - failures}/{n} replay bit-for-bit")
     if failures:
         raise SystemExit(1)
