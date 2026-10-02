@@ -89,4 +89,4 @@ def test_dag_only_marks_live_what_is_in_the_number():
     for e in g["edges"]:
         if by_id[e["from"]]["status"] == "computed":
             assert by_id[e["to"]]["status"] != "live"
-    assert by_id["out"]["summary"] == "hold 80%"
+    assert by_id["out"]["summary"] == "hold 76%"  # 80% less three 1.5% surprise floors, renormalised

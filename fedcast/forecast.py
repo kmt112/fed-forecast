@@ -12,10 +12,11 @@ from datetime import datetime, timezone
 from fedcast import OUTCOMES_BP, aggregate, config
 from fedcast.human.views import View, apply_tilt, net_budget
 from fedcast.models.baseline import market_implied
-from fedcast.scorecard import spec_hash
+from fedcast.models.taylor import taylor_rule
+from fedcast.scorecard import POOL_WEIGHTS, SURPRISE_FLOOR, spec_hash
 from fedcast.snapshot import Snapshot
 
-MODELS = (market_implied,)
+MODELS = (market_implied, taylor_rule)
 
 
 def _code_version() -> str:
@@ -31,7 +32,14 @@ def _code_version() -> str:
 
 def compute(snap: Snapshot, views: list[View]) -> dict:
     """The deterministic core. Same inputs -> identical output."""
-    outputs = [m(snap) for m in MODELS]
+    outputs, skipped = [], {}
+    for model in MODELS:
+        try:
+            outputs.append(model(snap))
+        except (ValueError, KeyError) as exc:  # a model that cannot run on this snapshot is recorded, not hidden
+            skipped[model.__name__] = f"{type(exc).__name__}: {exc}"
+    if not outputs:
+        raise ValueError("no model could run on this snapshot: " + "; ".join(skipped.values()))
     machine = aggregate.pool({o["model"]: o["probabilities"] for o in outputs})
 
     active = [v for v in views if v.is_active(snap.as_of)]
@@ -45,7 +53,9 @@ def compute(snap: Snapshot, views: list[View]) -> dict:
         "snapshot_complete": snap.complete,
         "models": {o["model"]: {k: v for k, v in o.items() if k not in ("model", "snapshot_hash")}
                    for o in outputs},
-        "pool_weights": aggregate.POOL_WEIGHTS,
+        "models_skipped": skipped,
+        "pool_weights": POOL_WEIGHTS,
+        "surprise_floor": SURPRISE_FLOOR,
         "machine_only": machine,
         "human": {"views_applied": [v.model_dump(mode="json") for v in active], "net_budget": budget},
         "human_adjusted": adjusted,

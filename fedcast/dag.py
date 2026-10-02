@@ -1,19 +1,18 @@
 """Factor graph behind one ledger entry: what feeds what, with the values actually used.
 
-Built from the ledger entry and its snapshot only. Evidence that is frozen but not yet read
-by anything is `idle`; one computed from the snapshot but not yet in the number is `computed`;
-components not yet built are `planned`. The graph therefore
-never implies an influence that is not in the number.
+Built from the ledger entry and its snapshot only. Node status: `live` is in the number; `computed`
+is calculated from the snapshot but not yet in the number; `idle` is in the snapshot but nothing reads
+it; `planned` is not built. The graph therefore never implies an influence that is not in the number.
 
-Each node carries three explanations: `what` it is, `why` it bears on the decision, and
-`how` it is (or will be) computed, so the page can teach as well as show.
+Each node carries three explanations: `what` it is, `why` it bears on the decision, and `how` it is
+(or will be) computed, so the page can teach as well as show.
 """
 
 from __future__ import annotations
 
 from fedcast import OUTCOMES_BP, config
 from fedcast.journey import _dist, _label
-from fedcast.signals import inflation
+from fedcast.signals import inflation, labour
 from fedcast.snapshot import Snapshot
 
 COLUMNS = ("Frozen evidence", "Signals", "Models", "Pool", "Your input", "Forecast")
@@ -51,6 +50,29 @@ _GROUP_TEXT = {
         "Daily and weekly series, read as levels and as gaps to the policy rate."),
 }
 
+_INFL_WHAT = ("How far realised core PCE inflation is above or below the Fed's 2% goal, with 3- and 6-month "
+              "windows showing which way it is heading.")
+_INFL_WHY = ("It is realised inflation against the mandate, not a forecast against another forecast. The Fed's "
+             "reaction function (the Taylor principle) says the policy rate should rise more than one-for-one "
+             "when inflation is above target, so a positive gap argues for restrictive policy: hold or hike. A "
+             "closing gap is what permits cuts. On its own the gap says nothing about this meeting; it has to be "
+             "read against where the rate already is. If the current rate is already above what the rule implies "
+             "for this gap, the gap argues for holding, not hiking. That reading is the Taylor rule's job. "
+             "Market-expected inflation (breakevens) is a different thing and lives under market data.")
+_LAB_WHAT = ("How much spare capacity the labour market has: unemployment against its sustainable level, payroll "
+             "growth against the pace needed to absorb new workers, claims against their trend.")
+_LAB_WHY = ("Rising slack is the second mandate calling for easier policy, and it can override inflation that is "
+            "still above target, as in 2024. A tight market removes that pressure and lets inflation dominate. The "
+            "Sahm rule (3-month average unemployment half a point above its 12-month low) is the classic recession "
+            "trigger. In the Taylor rules the unemployment gap enters with a coefficient of 1 or 2, so a tenth of a "
+            "point of slack is worth 10 to 20 bp of rule rate.")
+_TAY_WHAT = ("A family of formulas for where the policy rate 'should' be given the inflation gap and labour slack: "
+             "the four rules the Fed itself reports in its Monetary Policy Report (Taylor 1993, balanced approach, "
+             "balanced approach with shortfalls, and the first-difference rule).")
+_TAY_WHY = ("The Fed does not follow any rule mechanically, but its decisions have tracked this family for thirty "
+            "years, and the distance between the rule rate and the actual rate is the pressure to move. Reporting "
+            "several variants shows how much the answer depends on the rule chosen, which is itself information.")
+
 
 def _p(probs: dict, outcome: int) -> float:
     return float(probs.get(str(outcome), probs.get(outcome, 0.0)))
@@ -62,23 +84,22 @@ def _top(probs: dict) -> str:
 
 
 def _node(id: str, col: int, label: str, summary: str, kind: str, status: str, what: str,
-          why: str = "", how: str = "", rows: list | None = None, evidence: list | None = None,
-          today: str = "") -> dict:
+          why: str = "", how: str = "", rows: list | None = None, evidence: list | None = None) -> dict:
     return {"id": id, "col": col, "label": label, "summary": summary, "kind": kind, "status": status,
-            "detail": {"body": what, "why": why, "how": how, "today": today,
-                       "rows": rows or [], "evidence": evidence or []}}
+            "detail": {"body": what, "why": why, "how": how, "rows": rows or [], "evidence": evidence or []}}
 
 
-def _ann(obs: list[dict], k: int) -> float | None:
-    vals = [o["value"] for o in obs if o["value"] is not None]
-    if len(vals) <= k:
+def _try(fn, snap: Snapshot):
+    try:
+        return fn(snap)
+    except (ValueError, KeyError):
         return None
-    return ((vals[0] / vals[k]) ** (12 / k) - 1) * 100
 
 
 def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> dict:
     fc = entry["forecast"]
     m = fc["models"]["market_implied"]
+    tr = fc["models"].get("taylor_rule")
     nodes: list[dict] = []
     edges: list[dict] = []
 
@@ -88,12 +109,9 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
     def has(item_id: str) -> bool:
         return item_id in snap.items
 
-    infl = None
-    if has("fred.PCEPILFE") and has("fred.CPILFESL"):
-        try:
-            infl = inflation.compute(snap)
-        except ValueError:
-            infl = None
+    infl = _try(inflation.compute, snap) if has("fred.PCEPILFE") and has("fred.CPILFESL") else None
+    lab = _try(labour.compute, snap) if all(has(e) for e in labour.EVIDENCE) else None
+    sig_status = "live" if tr else "computed"  # the signals are in the number once the Taylor rule runs
 
     # --- column 0: frozen evidence ------------------------------------------------------
     cal = snap.get("calendar")
@@ -142,36 +160,41 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
         evidence=[contract_id]))
     others = sorted(i for i in snap.items if i.startswith("futures.") and i != contract_id)
     if others:
+        months = ", ".join(snap.get(i)["contract_month"] for i in others)
         nodes.append(_node(
             "futures.other", 0, "Adjacent contracts", f"{len(others)} months, unused", "source", "idle",
-            what="The adjacent fed-funds futures contract months (the same CME instrument, not prediction markets), "
-                 "kept for the record.",
-            why="They let the chosen contract be cross-checked: the meeting-month contract implies the same move "
-                "by a noisier route, and the contract two months out shows what is priced for the meeting after.",
+            what=f"The neighbouring months of the same CME fed-funds futures contract ({months}); the forecast reads "
+                 f"{contract['contract_month']}. These are not prediction markets: Polymarket or Kalshi contracts on "
+                 "the Fed decision are a genuinely different source, worth adding later as their own evidence item, "
+                 "with the caveat that they are thin and fee-distorted compared with the futures.",
+            why="They let the chosen contract be cross-checked: the meeting-month contract implies the same move by "
+                "a noisier route, and the contract two months out shows what is priced for the meeting after.",
             how="Not read by any model yet.",
             rows=[[i.split(".")[1], f"price {snap.get(i)['price']} (implies {100 - snap.get(i)['price']:.3f}%)"]
                   for i in others],
             evidence=others))
 
+    group_signal = {"Inflation data": infl, "Labour data": lab}
     for label, series in FRED_GROUPS.items():
         rows, ids = [], []
         for sid in series:
             iid = f"fred.{sid}"
             if not has(iid):
                 continue
-            obs = snap.get(iid)["observations"]
-            latest = next((o for o in obs if o["value"] is not None), None)
+            latest = next((o for o in snap.get(iid)["observations"] if o["value"] is not None), None)
             rows.append([f"{sid}: {config.FRED_SERIES[sid]}",
                          f"{latest['value']:g} ({latest['date']})" if latest else "no data"])
             ids.append(iid)
         if ids:
             what, why, how = _GROUP_TEXT[label]
-            used = label == "Inflation data" and infl is not None
-            nodes.append(_node(f"fred.{label}", 0, label,
-                               f"{len(ids)} series, {'read by inflation gap' if used else 'not yet used'}", "source",
-                               "computed" if used else "idle", what=what, why=why,
-                               how=how + (" Read by the inflation-gap signal." if used else " Nothing reads this yet."),
-                               rows=rows, evidence=ids))
+            used = group_signal.get(label) is not None
+            status = sig_status if used else "idle"
+            reader = {"Inflation data": "inflation gap", "Labour data": "labour slack"}.get(label, "")
+            nodes.append(_node(
+                f"fred.{label}", 0, label, f"{len(ids)} series, {'read by ' + reader if used else 'not yet used'}",
+                "source", status, what=what, why=why,
+                how=how + (f" Read by the {reader} signal." if used else " Nothing reads this yet."),
+                rows=rows, evidence=ids))
 
     for d in sorted(i for i in snap.items if i.startswith("fed.")):
         text = snap.get(d)["text"]
@@ -207,7 +230,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
         "documents", 0, "Your documents", f"{len(docs)} in snapshot" if docs else "none yet", "human",
         "idle" if docs else "planned",
         what="Your own write-ups, notes, uploaded reports and analyses, frozen into the snapshot as evidence "
-             "tagged human-sourced. The verbatim text is what is stored; no summary stands in for it.",
+             "tagged human-sourced. The verbatim text is what is stored as the source; a summary made from it "
+             "may be stored too, typed as derived, naming the model and prompt that made it and pointing back here.",
         why="Analysts you trust, or your own reading, may know things the data feeds cannot show. Entering that "
             "as evidence keeps it visible and quotable rather than letting it move the number silently.",
         how="Only the LLM analysts will read these, quoting them like any other item; the quant models never see "
@@ -248,35 +272,70 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
     for src in (contract_id, "effr", "calendar"):
         link(src, "sig.change")
 
-    unrate = snap.get("fred.UNRATE")["observations"] if has("fred.UNRATE") else []
+    if infl:
+        rows = [["Core PCE, 12-month (anchor)", f"{infl['anchor_12m']:.2f}% → gap to 2% goal {infl['gap_pp']:+.2f} pp"],
+                ["Momentum: 3-month annualised", f"{infl['momentum']['3m']:.2f}%"],
+                ["Momentum: 6-month annualised", f"{infl['momentum']['6m']:.2f}%"],
+                ["Core PCE data through", infl["pce_through"]],
+                ["Core CPI, 12-month / 3-month",
+                 f"{infl['cpi']['12m']:.2f}% / {infl['cpi']['3m']:.2f}% (through {infl['cpi']['through']})"]]
+        if infl["nowcast"]:
+            nc = infl["nowcast"]
+            rows.append([f"Nowcast to {nc['month']}", f"{nc['anchor_12m']:.2f}% → gap {nc['gap_pp']:+.2f} pp ({nc['method']})"])
+        rows.append(["Reading", inflation.direction(infl)])
+        nodes.append(_node(
+            "sig.inflation", 1, "Inflation gap", f"gap {infl['gap_pp']:+.2f} pp", "signal", sig_status,
+            what=_INFL_WHAT, why=_INFL_WHY,
+            how="Computed from the snapshot by fedcast/signals/inflation.py: 12-month core PCE is the anchor, 3- and "
+                "6-month annualised rates are momentum, and because PCE lags CPI by a month the latest core-CPI "
+                "monthly change carries PCE forward as a labelled nowcast. "
+                + ("The 12-month anchor feeds the Taylor rule, so it is in today's number."
+                   if tr else "It does not feed a live model yet, so it is not in today's number."),
+            rows=rows, evidence=infl["evidence"]))
+        link("fred.Inflation data", "sig.inflation", sig_status)
+    else:
+        nodes.append(_node("sig.inflation", 1, "Inflation gap", "planned", "signal", "planned", what=_INFL_WHAT,
+                           why=_INFL_WHY, how="Needs core PCE and core CPI in the snapshot."))
+        link("fred.Inflation data", "sig.inflation", "planned")
+
+    if lab:
+        rows = [["Unemployment", f"{lab['unemployment']:.1f}% (a year ago {lab['unemployment_year_ago']:.1f}%)"],
+                ["Gap to sustainable level", f"{lab['unemployment']:.1f} − {lab['u_star']:.1f} = {lab['gap_pp']:+.2f} pp"
+                                             + (" (slack)" if lab["gap_pp"] > 0 else " (tight)" if lab["gap_pp"] < 0 else "")],
+                ["Sahm indicator", f"{lab['sahm']:.2f} (trigger 0.50)"],
+                ["Payrolls, 3-month average", f"{lab['payrolls_3m_avg_k']:+.0f}k/month vs {lab['breakeven_payrolls_k']:.0f}k breakeven"
+                                              f" (12-month {lab['payrolls_12m_avg_k']:+.0f}k)"],
+                ["Initial claims, 4-week average", f"{lab['claims_4wk_k']:.0f}k vs 26-week {lab['claims_26wk_k']:.0f}k"],
+                ["Data through", f"unemployment {lab['through']['unemployment']}, claims {lab['through']['claims']}"],
+                ["Reading", labour.direction(lab)]]
+        nodes.append(_node(
+            "sig.labour", 1, "Labour slack", f"gap {lab['gap_pp']:+.2f} pp", "signal", sig_status,
+            what=_LAB_WHAT, why=_LAB_WHY,
+            how="Computed from the snapshot by fedcast/signals/labour.py with a 4.2% sustainable unemployment "
+                "assumption and a 75k/month breakeven payroll pace, both pre-registered. "
+                + ("The unemployment level and its year-ago value feed the Taylor rules, so it is in today's number."
+                   if tr else "It does not feed a live model yet."),
+            rows=rows, evidence=lab["evidence"]))
+        link("fred.Labour data", "sig.labour", sig_status)
+    else:
+        nodes.append(_node("sig.labour", 1, "Labour slack", "planned", "signal", "planned", what=_LAB_WHAT,
+                           why=_LAB_WHY, how="Needs unemployment, payrolls and claims in the snapshot."))
+        link("fred.Labour data", "sig.labour", "planned")
+
     dgs2 = snap.get("fred.DGS2")["observations"] if has("fred.DGS2") else []
-    lab_rows, fin_rows = [], []
-    if unrate:
-        u = [o["value"] for o in unrate if o["value"] is not None]
-        lab_rows = [["Unemployment", f"{u[0]:.1f}% (a year ago {u[12]:.1f}%)" if len(u) > 12 else f"{u[0]:.1f}%"]]
+    fin_rows = []
     if dgs2:
         y = next(o["value"] for o in dgs2 if o["value"] is not None)
-        fin_rows = [["2-year yield minus policy rate", f"{y:.2f}% − {m['rate_before']:.2f}% = {(y - m['rate_before']) * 100:+.0f} bp"]]
-
+        fin_rows = [["2-year yield minus policy rate",
+                     f"{y:.2f}% − {m['rate_before']:.2f}% = {(y - m['rate_before']) * 100:+.0f} bp"]]
     planned_signals = [
-        ("sig.labour", "Labour slack",
-         "How much spare capacity the labour market has: unemployment against its sustainable level, payroll "
-         "growth against the pace needed to absorb new workers, claims against their trend.",
-         "Rising slack is the second mandate calling for easier policy, and it can override inflation that is "
-         "still above target, as in 2024. A tight market removes that pressure and lets inflation dominate. The "
-         "Sahm rule (3-month average unemployment half a point above its 12-month low) is the classic "
-         "recession trigger.",
-         "Unemployment gap to a ~4.2% sustainable level; 3-month payroll average against a breakeven pace; 4-week "
-         "claims against the 26-week average. Not computed yet, so it has no effect on today's number.",
-         lab_rows, ["fred.Labour data"]),
         ("sig.financial", "Financial conditions",
          "What the bond market expects and how tight financial conditions are.",
          "The 2-year yield is close to the average policy rate expected over two years, so a wide positive gap to "
          "today's rate means the market expects more hikes, which corroborates or contradicts the futures. "
          "Breakevens show whether inflation expectations stay anchored near 2%, which the Fed treats as a "
          "precondition for easing. A loose NFCI despite high rates tells the Fed its tightening is not biting.",
-         "Gaps and levels from the three series. Not computed yet.",
-         fin_rows, ["fred.Market data"]),
+         "Gaps and levels from the three series. Not computed yet.", fin_rows, ["fred.Market data"]),
         ("sig.tone", "Communication tone",
          "A hawkish-to-dovish reading of what the committee has said, concentrating on what changed.",
          "The Fed telegraphs. Wording changes in the statement, the balance of views in the minutes and the Chair's "
@@ -288,48 +347,12 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
          "How often, historically, the Fed has moved, held or surprised in situations like this one.",
          "It is the antidote to overconfidence. If the market prices a move at 50% five weeks out, the question "
          "is how often such pricing was followed by a move. It also measures how often the Fed did something the "
-         "market priced at 0%, which is why no outcome should ever be given exactly 0%.",
-         "Planned: tables from past meetings; a surprise floor derived from them. Not computed yet.",
+         "market priced at 0%, which is why no outcome is ever given exactly 0%.",
+         "Planned: tables from past meetings, replacing the interim 1.5% surprise floor. Not computed yet.",
          [], ["calendar"]),
     ]
-    infl_what = ("How far realised core PCE inflation is above or below the Fed's 2% goal, with 3- and 6-month "
-                 "windows showing which way it is heading.")
-    infl_why = ("It is realised inflation against the mandate, not a forecast against another forecast. The Fed's "
-                "reaction function (the Taylor principle) says the policy rate should rise more than one-for-one "
-                "when inflation is above target, so a positive gap argues for restrictive policy: hold or hike. A "
-                "closing gap is what permits cuts. On its own the gap says nothing about this meeting; it has to be "
-                "read against where the rate already is. If the current rate is already above what the rule implies "
-                "for this gap, the gap argues for holding, not hiking. That reading is the Taylor rule's job. "
-                "Market-expected inflation (breakevens) is a different thing and lives under market data.")
-    if infl:
-        rows = [["Core PCE, 12-month (anchor)", f"{infl['anchor_12m']:.2f}% → gap to 2% goal {infl['gap_pp']:+.2f} pp"],
-                ["Momentum: 3-month annualised", f"{infl['momentum']['3m']:.2f}%"],
-                ["Momentum: 6-month annualised", f"{infl['momentum']['6m']:.2f}%"],
-                ["Core PCE data through", infl["pce_through"]],
-                ["Core CPI, 12-month / 3-month",
-                 f"{infl['cpi']['12m']:.2f}% / {infl['cpi']['3m']:.2f}% (through {infl['cpi']['through']})"]]
-        if infl["nowcast"]:
-            nc = infl["nowcast"]
-            rows.append([f"Nowcast to {nc['month']}", f"{nc['anchor_12m']:.2f}% → gap {nc['gap_pp']:+.2f} pp "
-                                                       f"({nc['method']})"])
-        rows.append(["Reading", inflation.direction(infl)])
-        nodes.append(_node(
-            "sig.inflation", 1, "Inflation gap", f"gap {infl['gap_pp']:+.2f} pp", "signal", "computed",
-            what=infl_what, why=infl_why,
-            how="Computed from the snapshot by fedcast/signals/inflation.py: 12-month core PCE is the anchor, 3- and "
-                "6-month annualised rates are momentum, and because PCE lags CPI by a month the latest core-CPI "
-                "monthly change carries PCE forward as a labelled nowcast. It does not feed a live model yet: the "
-                "Taylor rule, next to be built, will read it. So it is not in today's number.",
-            rows=rows, evidence=infl["evidence"]))
-        link("fred.Inflation data", "sig.inflation", "computed")
-    else:
-        nodes.append(_node("sig.inflation", 1, "Inflation gap", "planned", "signal", "planned", what=infl_what,
-                           why=infl_why, how="Needs core PCE and core CPI in the snapshot."))
-        link("fred.Inflation data", "sig.inflation", "planned")
-
     for sid, label, what, why, how, rows, srcs in planned_signals:
-        nodes.append(_node(sid, 1, label, "planned", "signal", "planned", what=what, why=why, how=how,
-                           rows=rows, today=""))
+        nodes.append(_node(sid, 1, label, "planned", "signal", "planned", what=what, why=why, how=how, rows=rows))
         for s in srcs:
             link(s, sid, "planned")
 
@@ -340,22 +363,37 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
         why="The market's expectation is the anchor every other model is read against.",
         how=f"The Fed moves in 25 bp steps, so an expected change of {m['expected_change_bp']:+.1f} bp "
             f"({m['expected_change_bp'] / 25:+.2f} of a step) is shared between the two nearest outcomes. This is "
-            "an interpolation, not a calibrated probability: it leaves the other outcomes at exactly 0%, which "
-            "the planned surprise floor will correct.",
+            "an interpolation, not a calibrated probability; the pool's surprise floor keeps the other outcomes "
+            "above 0%.",
         rows=[["Distribution", _dist(m["probabilities"])], ["Method", m["method"]]], evidence=m["evidence"]))
     link("sig.change", "model.market")
 
+    if tr:
+        rows = [["Inputs", f"inflation {tr['inputs']['inflation_12m']:.2f}%, unemployment {tr['inputs']['unemployment']:.1f}% "
+                           f"(year ago {tr['inputs']['unemployment_year_ago']:.1f}%), rate {tr['rate_before']:.2f}%"]]
+        rows += [[f"{v} rule, prescribed change", f"{bp:+.1f} bp"] for v, bp in tr["by_variant_bp"].items()]
+        rows += [["All variants × parameter grid", f"mean {tr['expected_change_bp']:+.1f} bp, spread {tr['spread_bp']:.0f} bp, "
+                                                   f"σ {tr['sigma_bp']:.0f} bp"],
+                 ["Distribution", _dist(tr["probabilities"])]]
+        nodes.append(_node(
+            "model.taylor", 2, "Taylor-rule family", _top(tr["probabilities"]), "model", "live",
+            what=_TAY_WHAT, why=_TAY_WHY,
+            how="Each level rule gives a rule rate; the prescribed change for one meeting is 15% of the distance to "
+                "it (partial adjustment, ρ = 0.85). The first-difference rule gives a change directly, halved from a "
+                "quarter to a meeting. All four run over a grid of neutral real rates (0.5, 1.0, 1.5%) and "
+                "sustainable unemployment (4.0, 4.2, 4.4%). The mean prescription and its spread, plus a 15 bp floor, "
+                "define a normal distribution whose mass in each 25 bp bucket is the model's probability.",
+            rows=rows, evidence=tr["evidence"]))
+        for s in ("sig.inflation", "sig.labour", "sig.rate_before"):
+            link(s, "model.taylor")
+    else:
+        nodes.append(_node(
+            "model.taylor", 2, "Taylor-rule family", "not run", "model", "planned", what=_TAY_WHAT, why=_TAY_WHY,
+            how="Could not run on this snapshot: " + fc.get("models_skipped", {}).get("taylor_rule", "needs the inflation and labour signals.")))
+        for s in ("sig.inflation", "sig.labour", "sig.rate_before"):
+            link(s, "model.taylor", "planned")
+
     planned_models = [
-        ("model.taylor", "Taylor rule",
-         "A formula for where the policy rate 'should' be given the inflation gap and labour slack.",
-         "The Fed does not follow it mechanically, but its decisions have tracked it for thirty years, and the "
-         "distance between the rule rate and the actual rate is the pressure to move. Worked today: neutral real "
-         "rate 1.0 + inflation 3.34 + 0.5 × gap 1.34 + 0.5 × output gap ≈ 5.1%; with the usual policy inertia "
-         "(85% of today's rate, 15% of the rule) ≈ 4.06%, i.e. about +18 bp, leaning hike. Using 3-month "
-         "inflation instead gives about +12 bp.",
-         "Inertial rule with ranges for the unknowable inputs (neutral rate, sustainable unemployment), turned into "
-         "outcome probabilities through a spread rather than a point. Not built yet; weight 0 in the pool.",
-         ["sig.inflation", "sig.labour", "sig.rate_before"]),
         ("model.probit", "Ordered probit",
          "A statistical model of past decisions as a function of the signals.",
          "It lets the data say how the Fed actually weighted inflation, slack and market pricing, rather than "
@@ -384,15 +422,20 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
 
     # --- columns 3-5: pool, human input, forecast ------------------------------------------
     weights = fc["pool_weights"]
+    floor = fc.get("surprise_floor", 0.0)
+    live_models = [n for n in weights if n in fc["models"]]
     nodes.append(_node(
         "pool", 3, "Pool (machine only)", _top(fc["machine_only"]), "pool", "live",
         what="The combined machine forecast.",
-        why="One number has to come out, and it must be produced by code so it can be replayed and audited.",
-        how="Weighted average of every live model with fixed, recorded weights. "
-            + ("Only one model is live, so the pool equals it." if len(weights) == 1 else "")
-            + " Planned: the market-implied model as anchor, the others as bounded adjustments.",
-        rows=[[name, f"weight {w:g}"] for name, w in weights.items()] + [["machine_only", _dist(fc["machine_only"])]]))
+        why="One number has to come out, and it must be produced by code so it can be replayed and audited. The "
+            "market is the anchor; the other models corroborate or dissent at smaller weights.",
+        how=f"Weighted average of the live models with fixed, recorded weights, then no outcome is allowed below the "
+            f"{floor * 100:.1f}% surprise floor and the result is renormalised. Models that could not run are dropped "
+            "and the remaining weights rescaled.",
+        rows=[[name, f"weight {w:g}" + ("" if name in live_models else " (not run)")] for name, w in weights.items()]
+             + [["Surprise floor", f"{floor * 100:.1f}% per outcome"], ["machine_only", _dist(fc["machine_only"])]]))
     link("model.market", "pool")
+    link("model.taylor", "pool", "live" if tr else "planned")
     for mid, *_ in planned_models:
         link(mid, "pool", "planned")
 

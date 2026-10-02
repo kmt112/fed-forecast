@@ -55,7 +55,7 @@ SCORECARD: tuple[Dimension, ...] = (
               "Ledger entries that replay (bit-for-bit deterministic parts, within S1 for LLM parts)",
               100.0, "pct", "min"),
     Dimension("S10", "Human-input discipline",
-              "Share of human influence arriving via typed channels H1-H4 before the cutoff",
+              "Share of human influence arriving via typed channels H1-H5 before the cutoff",
               100.0, "pct", "min"),
 )
 
@@ -63,11 +63,20 @@ SCORECARD: tuple[Dimension, ...] = (
 TILT_CAP = 0.10  # max total probability that may change hands due to human views
 TILT_BY_STRENGTH = {1: 0.03, 2: 0.06, 3: 0.10}
 
+# Pooling (amendment #1, 2026-10-02): the market is the anchor; the Taylor-rule family corroborates or
+# dissents at a fifth of the weight. Models absent from a run are dropped and the rest renormalised.
+POOL_WEIGHTS: dict[str, float] = {"market_implied": 0.8, "taylor_rule": 0.2}
+# No outcome is ever below this after pooling: the Fed occasionally does what nobody priced, and a
+# 0% bucket cannot be moved by a view or scored sensibly. Interim value until the base-rate table exists.
+SURPRISE_FLOOR = 0.015
+
 
 def spec_hash() -> str:
     payload = {
         "scorecard": [asdict(d) for d in SCORECARD],
         "tilt_cap": TILT_CAP,
         "tilt_by_strength": TILT_BY_STRENGTH,
+        "pool_weights": POOL_WEIGHTS,
+        "surprise_floor": SURPRISE_FLOOR,
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
