@@ -80,9 +80,13 @@ def test_dag_only_marks_live_what_is_in_the_number():
     by_id = {n["id"]: n for n in g["nodes"]}
     assert all(e["from"] in by_id and e["to"] in by_id for e in g["edges"])
     assert all(by_id[e["from"]]["col"] < by_id[e["to"]]["col"] for e in g["edges"]), "edges must only flow forward"
-    assert by_id["fred.Labour data"]["status"] == "frozen" and by_id["model.taylor"]["status"] == "planned"
+    assert by_id["fred.Labour data"]["status"] == "idle" and by_id["model.taylor"]["status"] == "planned"
     for e in g["edges"]:  # nothing non-live may feed a live node through a live edge
         if by_id[e["to"]]["status"] == "live" and e["status"] == "live":
             assert by_id[e["from"]]["status"] == "live"
     assert "100 − 96.07 = 3.930%" in json.dumps(g, ensure_ascii=False)
+    # a computed signal may feed the planned models but must not feed anything live
+    for e in g["edges"]:
+        if by_id[e["from"]]["status"] == "computed":
+            assert by_id[e["to"]]["status"] != "live"
     assert by_id["out"]["summary"] == "hold 80%"

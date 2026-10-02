@@ -38,7 +38,7 @@ def test_documents_appear_in_the_graph_as_frozen_evidence_feeding_only_the_analy
     snap.add(Item.make("human.doc.H5-001", "human_document", "human/documents/H5-001.md", doc().model_dump(mode="json")))
     g = dag.build(entry_for(snap, []), snap)
     node = next(n for n in g["nodes"] if n["id"] == "documents")
-    assert node["status"] == "frozen" and node["detail"]["rows"][0][0] == "H5-001"
+    assert node["status"] == "idle" and node["detail"]["rows"][0][0] == "H5-001"
     targets = {e["to"] for e in g["edges"] if e["from"] == "documents"}
     assert targets == {"model.llm"}
     assert all(e["status"] == "planned" for e in g["edges"] if e["from"] == "documents")

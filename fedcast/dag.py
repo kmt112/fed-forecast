@@ -1,7 +1,8 @@
 """Factor graph behind one ledger entry: what feeds what, with the values actually used.
 
 Built from the ledger entry and its snapshot only. Evidence that is frozen but not yet read
-by any model is marked `frozen`; components not yet built are `planned`. The graph therefore
+by anything is `idle`; one computed from the snapshot but not yet in the number is `computed`;
+components not yet built are `planned`. The graph therefore
 never implies an influence that is not in the number.
 
 Each node carries three explanations: `what` it is, `why` it bears on the decision, and
@@ -12,6 +13,7 @@ from __future__ import annotations
 
 from fedcast import OUTCOMES_BP, config
 from fedcast.journey import _dist, _label
+from fedcast.signals import inflation
 from fedcast.snapshot import Snapshot
 
 COLUMNS = ("Frozen evidence", "Signals", "Models", "Pool", "Your input", "Forecast")
@@ -86,6 +88,13 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
     def has(item_id: str) -> bool:
         return item_id in snap.items
 
+    infl = None
+    if has("fred.PCEPILFE") and has("fred.CPILFESL"):
+        try:
+            infl = inflation.compute(snap)
+        except ValueError:
+            infl = None
+
     # --- column 0: frozen evidence ------------------------------------------------------
     cal = snap.get("calendar")
     effr = snap.get("effr")["latest"]
@@ -134,8 +143,9 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
     others = sorted(i for i in snap.items if i.startswith("futures.") and i != contract_id)
     if others:
         nodes.append(_node(
-            "futures.other", 0, "Other futures", f"{len(others)} contracts, unused", "source", "frozen",
-            what="The adjacent contract months, frozen for the record.",
+            "futures.other", 0, "Adjacent contracts", f"{len(others)} months, unused", "source", "idle",
+            what="The adjacent fed-funds futures contract months (the same CME instrument, not prediction markets), "
+                 "kept for the record.",
             why="They let the chosen contract be cross-checked: the meeting-month contract implies the same move "
                 "by a noisier route, and the contract two months out shows what is priced for the meeting after.",
             how="Not read by any model yet.",
@@ -156,8 +166,12 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
             ids.append(iid)
         if ids:
             what, why, how = _GROUP_TEXT[label]
-            nodes.append(_node(f"fred.{label}", 0, label, f"{len(ids)} series, frozen", "source", "frozen",
-                               what=what, why=why, how=how + " No model reads this yet.", rows=rows, evidence=ids))
+            used = label == "Inflation data" and infl is not None
+            nodes.append(_node(f"fred.{label}", 0, label,
+                               f"{len(ids)} series, {'read by inflation gap' if used else 'not yet used'}", "source",
+                               "computed" if used else "idle", what=what, why=why,
+                               how=how + (" Read by the inflation-gap signal." if used else " Nothing reads this yet."),
+                               rows=rows, evidence=ids))
 
     for d in sorted(i for i in snap.items if i.startswith("fed.")):
         text = snap.get(d)["text"]
@@ -174,7 +188,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
                    "the direction of travel before it reaches the statement.")
             how = "Planned: count the participant-weighting phrases and let the analyst quote the key passages."
         nodes.append(_node(
-            d, 0, f"Fed {kind} {d[-10:]}", f"{len(text.split())} words, frozen", "source", "frozen",
+            d, 0, f"Fed {kind} {d[-10:]}", f"{len(text.split())} words, not yet used", "source", "idle",
             what=f"The full text of the FOMC {kind}, frozen as published.", why=why, how=how + " No model reads it yet.",
             rows=[["Opens with", text[:320].strip() + "…"]], evidence=[d]))
 
@@ -191,7 +205,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
     docs = sorted(i for i in snap.items if i.startswith("human.doc."))
     nodes.append(_node(
         "documents", 0, "Your documents", f"{len(docs)} in snapshot" if docs else "none yet", "human",
-        "frozen" if docs else "planned",
+        "idle" if docs else "planned",
         what="Your own write-ups, notes, uploaded reports and analyses, frozen into the snapshot as evidence "
              "tagged human-sourced. The verbatim text is what is stored; no summary stands in for it.",
         why="Analysts you trust, or your own reading, may know things the data feeds cannot show. Entering that "
@@ -234,18 +248,6 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
     for src in (contract_id, "effr", "calendar"):
         link(src, "sig.change")
 
-    pce = snap.get("fred.PCEPILFE")["observations"] if has("fred.PCEPILFE") else []
-    cpi = snap.get("fred.CPILFESL")["observations"] if has("fred.CPILFESL") else []
-    infl_rows = []
-    if pce:
-        a12, a6, a3 = _ann(pce, 12), _ann(pce, 6), _ann(pce, 3)
-        if a12 is not None:
-            infl_rows += [["Core PCE, 12-month", f"{a12:.2f}% → gap to 2% goal {a12 - 2:+.2f} pp"],
-                          ["Core PCE, 6-month annualised", f"{a6:.2f}%"], ["Core PCE, 3-month annualised", f"{a3:.2f}%"]]
-    if cpi:
-        c12, c3 = _ann(cpi, 12), _ann(cpi, 3)
-        if c12 is not None:
-            infl_rows += [["Core CPI, 12-month", f"{c12:.2f}%"], ["Core CPI, 3-month annualised", f"{c3:.2f}%"]]
     unrate = snap.get("fred.UNRATE")["observations"] if has("fred.UNRATE") else []
     dgs2 = snap.get("fred.DGS2")["observations"] if has("fred.DGS2") else []
     lab_rows, fin_rows = [], []
@@ -257,20 +259,6 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
         fin_rows = [["2-year yield minus policy rate", f"{y:.2f}% − {m['rate_before']:.2f}% = {(y - m['rate_before']) * 100:+.0f} bp"]]
 
     planned_signals = [
-        ("sig.inflation", "Inflation gap",
-         "How far realised core PCE inflation is above or below the Fed's 2% goal, with 3- and 6-month windows "
-         "showing which way it is heading.",
-         "It is realised inflation against the mandate, not a forecast against another forecast. The Fed's "
-         "reaction function (the Taylor principle) says the policy rate should rise more than one-for-one when "
-         "inflation is above target, so a positive gap argues for restrictive policy: hold or hike. A closing gap "
-         "is what permits cuts. On its own the gap says nothing about *this* meeting; it has to be read against "
-         "where the rate already is. If the current rate is already above what the rule implies for this gap, the "
-         "gap argues for holding, not hiking. That reading is the Taylor rule's job. Market-expected inflation "
-         "(breakevens) is a different thing and lives under market data.",
-         "12-month core PCE is the anchor (the Fed's own yardstick); 3- and 6-month annualised rates give momentum; "
-         "because PCE lags CPI by a month, a core-CPI-based nowcast will fill the missing month, labelled as such. "
-         "Not computed as a signal yet, so it has no effect on today's number.",
-         infl_rows, ["fred.Inflation data"]),
         ("sig.labour", "Labour slack",
          "How much spare capacity the labour market has: unemployment against its sustainable level, payroll "
          "growth against the pace needed to absorb new workers, claims against their trend.",
@@ -304,6 +292,41 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
          "Planned: tables from past meetings; a surprise floor derived from them. Not computed yet.",
          [], ["calendar"]),
     ]
+    infl_what = ("How far realised core PCE inflation is above or below the Fed's 2% goal, with 3- and 6-month "
+                 "windows showing which way it is heading.")
+    infl_why = ("It is realised inflation against the mandate, not a forecast against another forecast. The Fed's "
+                "reaction function (the Taylor principle) says the policy rate should rise more than one-for-one "
+                "when inflation is above target, so a positive gap argues for restrictive policy: hold or hike. A "
+                "closing gap is what permits cuts. On its own the gap says nothing about this meeting; it has to be "
+                "read against where the rate already is. If the current rate is already above what the rule implies "
+                "for this gap, the gap argues for holding, not hiking. That reading is the Taylor rule's job. "
+                "Market-expected inflation (breakevens) is a different thing and lives under market data.")
+    if infl:
+        rows = [["Core PCE, 12-month (anchor)", f"{infl['anchor_12m']:.2f}% → gap to 2% goal {infl['gap_pp']:+.2f} pp"],
+                ["Momentum: 3-month annualised", f"{infl['momentum']['3m']:.2f}%"],
+                ["Momentum: 6-month annualised", f"{infl['momentum']['6m']:.2f}%"],
+                ["Core PCE data through", infl["pce_through"]],
+                ["Core CPI, 12-month / 3-month",
+                 f"{infl['cpi']['12m']:.2f}% / {infl['cpi']['3m']:.2f}% (through {infl['cpi']['through']})"]]
+        if infl["nowcast"]:
+            nc = infl["nowcast"]
+            rows.append([f"Nowcast to {nc['month']}", f"{nc['anchor_12m']:.2f}% → gap {nc['gap_pp']:+.2f} pp "
+                                                       f"({nc['method']})"])
+        rows.append(["Reading", inflation.direction(infl)])
+        nodes.append(_node(
+            "sig.inflation", 1, "Inflation gap", f"gap {infl['gap_pp']:+.2f} pp", "signal", "computed",
+            what=infl_what, why=infl_why,
+            how="Computed from the snapshot by fedcast/signals/inflation.py: 12-month core PCE is the anchor, 3- and "
+                "6-month annualised rates are momentum, and because PCE lags CPI by a month the latest core-CPI "
+                "monthly change carries PCE forward as a labelled nowcast. It does not feed a live model yet: the "
+                "Taylor rule, next to be built, will read it. So it is not in today's number.",
+            rows=rows, evidence=infl["evidence"]))
+        link("fred.Inflation data", "sig.inflation", "computed")
+    else:
+        nodes.append(_node("sig.inflation", 1, "Inflation gap", "planned", "signal", "planned", what=infl_what,
+                           why=infl_why, how="Needs core PCE and core CPI in the snapshot."))
+        link("fred.Inflation data", "sig.inflation", "planned")
+
     for sid, label, what, why, how, rows, srcs in planned_signals:
         nodes.append(_node(sid, 1, label, "planned", "signal", "planned", what=what, why=why, how=how,
                            rows=rows, today=""))
