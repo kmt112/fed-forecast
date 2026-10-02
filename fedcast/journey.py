@@ -13,7 +13,7 @@ from fedcast.snapshot import Snapshot
 
 _KIND_LABEL = {"calendar": "FOMC calendar", "effr": "Effective fed funds rate", "futures": "Fed funds futures",
                "fred": "FRED macro series", "document": "Fed documents", "human_view": "Human views",
-               "human_document": "Your documents", "history": "Decision history"}
+               "human_document": "Your documents", "history": "Decision history", "prediction_market": "Prediction-market odds"}
 
 
 def _label(outcome: int) -> str:

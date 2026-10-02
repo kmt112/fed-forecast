@@ -55,7 +55,7 @@ SCORECARD: tuple[Dimension, ...] = (
               "Ledger entries that replay (bit-for-bit deterministic parts, within S1 for LLM parts)",
               100.0, "pct", "min"),
     Dimension("S10", "Human-input discipline",
-              "Share of human influence arriving via typed channels H1-H5 before the cutoff",
+              "Share of human influence arriving via typed channels H1-H6 before the cutoff",
               100.0, "pct", "min"),
 )
 
@@ -65,7 +65,9 @@ TILT_BY_STRENGTH = {1: 0.03, 2: 0.06, 3: 0.10}
 
 # Pooling (amendment #1, 2026-10-02): the market is the anchor; the Taylor-rule family corroborates or
 # dissents at a fifth of the weight. Models absent from a run are dropped and the rest renormalised.
-POOL_WEIGHTS: dict[str, float] = {"market_implied": 0.8, "taylor_rule": 0.2}
+# Amendment #2 (2026-10-02): hand-entered prediction-market odds join at a tenth of the weight, taken from the
+# futures anchor: an independent crowd on the same question, but thin and fee-distorted.
+POOL_WEIGHTS: dict[str, float] = {"market_implied": 0.7, "taylor_rule": 0.2, "prediction_market": 0.1}
 # No outcome is ever below this after pooling: the Fed occasionally does what nobody priced, and a
 # 0% bucket cannot be moved by a view or scored sensibly. Interim value until the base-rate table exists.
 SURPRISE_FLOOR = 0.015

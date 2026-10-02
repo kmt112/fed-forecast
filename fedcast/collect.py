@@ -8,6 +8,7 @@ from datetime import date
 from fedcast import config
 from fedcast.data import fomc_calendar, fomc_history, sources
 from fedcast.human.documents import load_documents
+from fedcast.human.prediction_markets import load_markets
 from fedcast.snapshot import Item, Snapshot
 
 
@@ -69,6 +70,11 @@ def build(as_of: date) -> Snapshot:
                 lambda: sources.fetch_target_rate_path(key, as_of))
     else:
         snap.missing["history.target_rate"] = "FRED_API_KEY not set in .env"
+
+    for mk in load_markets(config.ROOT / "human" / "prediction_markets.yaml"):
+        if mk.status == "active" and mk.meeting == nxt.decision_date:
+            snap.add(Item.make(f"human.pm.{mk.id}", "prediction_market", "human/prediction_markets.yaml",
+                               mk.model_dump(mode="json")))
 
     for doc in load_documents(config.ROOT / "human" / "documents"):
         if doc.status == "active":

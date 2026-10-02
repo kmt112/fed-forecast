@@ -20,6 +20,7 @@ import yaml
 
 from fedcast import config, dag, forecast, journey, ledger, snapshot
 from fedcast.human import documents as docs_store
+from fedcast.human import prediction_markets as pm_store
 from fedcast.human.extract import SUPPORTED, extract_text
 from fedcast.human.store import load_views
 from fedcast.human.views import View
@@ -29,6 +30,7 @@ LEDGER = config.ROOT / "ledger" / "forecasts.jsonl"
 VIEWS = config.ROOT / "human" / "views.yaml"
 WATCHLIST = config.ROOT / "human" / "watchlist.yaml"
 DOCS = config.ROOT / "human" / "documents"
+MARKETS = config.ROOT / "human" / "prediction_markets.yaml"
 INDEX = Path(__file__).parent / "index.html"
 AUTHOR = "tankahming123"
 
@@ -108,6 +110,8 @@ def state() -> dict:
         if out["snapshot"]:
             out["latest"]["stale"] = not out["snapshot"]["name"].endswith(last["forecast"]["snapshot_hash"][:12])
 
+    out["markets"] = [{**m.model_dump(mode="json"), "in_snapshot": f"human.pm.{m.id}" in (manifest["items"] if out["snapshot"] else {})}
+                      for m in pm_store.load_markets(MARKETS)]
     out["scorecard"] = [{**asdict(d), "status": _SCORECARD_STATUS.get(d.id, "Not measured yet: needs the LLM agents")}
                         for d in SCORECARD]
     return out
@@ -231,6 +235,29 @@ def _parse_multipart(content_type: str, body: bytes) -> tuple[dict, str | None, 
     return fields, filename, data
 
 
+def act_add_market(body: dict) -> dict:
+    items = pm_store.load_markets(MARKETS)
+    prices = {k: float(v) for k, v in (body.get("prices") or {}).items() if v not in ("", None)}
+    cal = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR)).get("calendar")
+    entry = pm_store.MarketOdds(id=pm_store.next_id(items), venue=body.get("venue") or "polymarket",
+                                meeting=date.fromisoformat(body.get("meeting") or cal["next_meeting"]),
+                                observed_at=datetime.now().replace(microsecond=0), author=AUTHOR,
+                                url=str(body.get("url") or "").strip(), prices=prices,
+                                volume_usd=float(body["volume_usd"]) if body.get("volume_usd") else None,
+                                note=str(body.get("note") or "").strip())
+    pm_store.save_markets(MARKETS, items + [entry])
+    return {"message": f"Odds {entry.id} saved ({entry.venue}, sums to {sum(prices.values()):.0f}%). "
+                       "Take a new snapshot to freeze them, then run a forecast."}
+
+
+def act_withdraw_market(body: dict) -> dict:
+    items = pm_store.load_markets(MARKETS)
+    if body["id"] not in [m.id for m in items]:
+        raise ValueError("unknown entry " + str(body["id"]))
+    pm_store.save_markets(MARKETS, [m.model_copy(update={"status": "withdrawn"}) if m.id == body["id"] else m for m in items])
+    return {"message": f"Odds {body['id']} withdrawn; they stay on file but will not enter new snapshots."}
+
+
 def act_withdraw_document(body: dict) -> dict:
     docs = {d.id: d for d in docs_store.load_documents(DOCS)}
     if body["id"] not in docs:
@@ -241,7 +268,8 @@ def act_withdraw_document(body: dict) -> dict:
 
 ACTIONS = {"/api/snapshot": act_snapshot, "/api/forecast": act_forecast, "/api/replay": act_replay,
            "/api/views": act_add_view, "/api/views/expire": act_expire_view, "/api/watchlist": act_add_directive,
-           "/api/documents": act_add_document, "/api/documents/upload": act_add_document, "/api/documents/withdraw": act_withdraw_document}
+           "/api/documents": act_add_document, "/api/documents/upload": act_add_document, "/api/documents/withdraw": act_withdraw_document,
+           "/api/markets": act_add_market, "/api/markets/withdraw": act_withdraw_market}
 
 
 class Handler(BaseHTTPRequestHandler):

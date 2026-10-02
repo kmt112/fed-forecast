@@ -250,6 +250,23 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
         rows=[[snap.get(d)["id"], f"{snap.get(d)['title']} ({snap.get(d)['relevance']})"] for d in docs],
         evidence=docs))
 
+    pm_items = sorted(i for i in snap.items if i.startswith("human.pm."))
+    pmm = fc["models"].get("prediction_market")
+    nodes.append(_node(
+        "pm", 0, "Prediction-market odds", f"{len(pm_items)} entr{'y' if len(pm_items) == 1 else 'ies'}" if pm_items else "none entered",
+        "human", "live" if pmm else ("idle" if pm_items else "planned"),
+        what="Odds for this meeting as shown on Polymarket or Kalshi, typed in by you with the time you saw them, the "
+             "URL and the volume. Recorded exactly as the site showed them; they rarely sum to 100 because of spreads.",
+        why="A second crowd answering the same question with money at stake, independent of the futures market. Thin "
+            "and fee-distorted by comparison, which is why it carries a small weight, but it can disagree with the "
+            "futures in informative ways.",
+        how="Frozen into the snapshot as a typed item. The prediction-market model normalises the most recent entry "
+            "for the next meeting. Entered by hand because these venues block scripts and reword contracts each meeting.",
+        rows=[[snap.get(i)["id"], f"{snap.get(i)['venue']} at {snap.get(i)['observed_at'].replace('T', ' ')}: "
+                                   + ", ".join(f"{_label(int(k))} {v:g}%" for k, v in snap.get(i)["prices"].items())]
+              for i in pm_items],
+        evidence=pm_items))
+
     if has("history.meetings") and has("history.target_rate"):
         hm, ht = snap.get("history.meetings")["meetings"], snap.get("history.target_rate")["changes"]
         nodes.append(_node(
@@ -483,6 +500,25 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
         for s in ("sig.inflation", "sig.labour", "sig.rate_before"):
             link(s, "model.taylor", "planned")
 
+    if pmm:
+        nodes.append(_node(
+            "model.pm", 2, "Prediction market", _top(pmm["probabilities"]), "model", "live",
+            what="The hand-entered prediction-market odds, normalised to sum to 100%.",
+            why="An independent read of the same question; small weight because the market is thin.",
+            how=f"Latest entry ({pmm['venue']}, {pmm['observed_at'].replace('T', ' ')}) with raw prices summing to "
+                f"{pmm['raw_total_pct']:g}%, divided through by that total.",
+            rows=[["Raw prices", ", ".join(f"{_label(int(k))} {v:g}%" for k, v in pmm["raw_prices_pct"].items())],
+                  ["Volume", f"${pmm['volume_usd']:,.0f}" if pmm.get("volume_usd") else "not recorded"],
+                  ["Distribution", _dist(pmm["probabilities"])]],
+            evidence=pmm["evidence"]))
+        link("pm", "model.pm")
+    else:
+        nodes.append(_node("model.pm", 2, "Prediction market", "not run", "model", "planned",
+                           what="The hand-entered prediction-market odds, normalised to sum to 100%.",
+                           why="An independent read of the same question; small weight because the market is thin.",
+                           how="Could not run: " + fc.get("models_skipped", {}).get("prediction_market", "no odds entered for this meeting.")))
+        link("pm", "model.pm", "planned")
+
     planned_models = [
         ("model.probit", "Ordered probit",
          "A statistical model of past decisions as a function of the signals.",
@@ -526,6 +562,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
              + [["Surprise floor", f"{floor * 100:.1f}% per outcome"], ["machine_only", _dist(fc["machine_only"])]]))
     link("model.market", "pool")
     link("model.taylor", "pool", "live" if tr else "planned")
+    link("model.pm", "pool", "live" if pmm else "planned")
     for mid, *_ in planned_models:
         link(mid, "pool", "planned")
 

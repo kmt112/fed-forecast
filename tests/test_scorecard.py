@@ -2,7 +2,7 @@ from fedcast.scorecard import SCORECARD, spec_hash
 
 # Pinned pre-registration. If this fails you changed the yardstick: add an entry to
 # governance/AMENDMENTS.md and update the pin in the same commit.
-PINNED_SPEC_HASH = "f081a3c6b0d3cd0e"
+PINNED_SPEC_HASH = "c897c8e7a54bc3d1"
 
 
 def test_scorecard_is_unchanged_since_last_amendment():

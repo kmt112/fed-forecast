@@ -12,11 +12,12 @@ from datetime import datetime, timezone
 from fedcast import OUTCOMES_BP, aggregate, config
 from fedcast.human.views import View, apply_tilt, net_budget
 from fedcast.models.baseline import market_implied
+from fedcast.models.prediction_market import prediction_market
 from fedcast.models.taylor import taylor_rule
 from fedcast.scorecard import POOL_WEIGHTS, SURPRISE_FLOOR, spec_hash
 from fedcast.snapshot import Snapshot
 
-MODELS = (market_implied, taylor_rule)
+MODELS = (market_implied, taylor_rule, prediction_market)
 
 
 def _code_version() -> str:

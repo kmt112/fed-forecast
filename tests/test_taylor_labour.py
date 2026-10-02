@@ -86,7 +86,7 @@ def test_pool_applies_weights_and_surprise_floor():
 
 def test_forecast_runs_both_models_and_records_skips_honestly():
     fc = forecast.compute(macro_snapshot(), [])
-    assert set(fc["models"]) == {"market_implied", "taylor_rule"} and fc["models_skipped"] == {}
+    assert set(fc["models"]) == {"market_implied", "taylor_rule"} and "taylor_rule" not in fc["models_skipped"]
     assert min(fc["machine_only"].values()) >= 0.015 - 1e-9
     from tests.test_snapshot import make_snapshot
     fc2 = forecast.compute(make_snapshot(), [])

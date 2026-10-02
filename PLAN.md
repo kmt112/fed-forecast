@@ -105,6 +105,7 @@ bound, replay and score. Free-text that silently moves the number is the one thi
 | H2 View | "The Chair is more hawkish than the market thinks — lean that way" | Structured view in the snapshot: direction, strength (1–3), rationale, author, timestamp, expiry (default: next meeting) | Treated as citable evidence with a bounded tilt (cap ±10 pp total probability mass moved). Aggregator applies it in code, not the LLM. |
 | H3 Correction | "This trace misread the minutes" | Permanent regression case in `evals/golden/` | Every human catch becomes a test that all future versions must pass. |
 | H5 Document | "Here is my write-up on bank lending standards" | Markdown file in `human/documents/`, frozen into the next snapshot as a `human_document` item | Evidence for the LLM analysts only, tagged human-sourced; must be quoted like any item; never read by quant models; never moves the number directly. |
+| H6 Prediction-market odds | "Polymarket shows hold 68 / hike 31" | Entry in `human/prediction_markets.yaml` with venue, time, URL, raw prices, volume; frozen into the next snapshot | Read by the prediction_market model at pool weight 0.1; evidence, not a view. |
 | H4 Governance | "S1 threshold is too loose" | Logged amendment with rationale | Changes scorecard constants; never retroactive. |
 
 **Two-track forecasts.** Every run publishes both `machine_only` and `human_adjusted`

@@ -123,6 +123,7 @@
   select, textarea, input { width: 100%; font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; padding: 7px 10px; }
   textarea { min-height: 64px; resize: vertical; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
   .item { border-top: 1px solid var(--line); padding: 9px 0; }
   .item .head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
   .item .why { color: var(--muted); margin-top: 2px; font-size: 12.5px; }
@@ -211,6 +212,29 @@
           </form>
           <div id="watchlist"></div>
         </div>
+      </div>
+      <div class="card">
+        <h3>Prediction-market odds: what Polymarket or Kalshi shows right now</h3>
+        <p class="sub">Type the prices as the site shows them (percent per outcome; they need not sum to 100). Frozen into the next snapshot and read by the prediction-market model at a tenth of the pool weight.</p>
+        <form id="market-form">
+          <div class="row2">
+            <div><label for="m-venue">Venue</label><select id="m-venue"><option value="polymarket">Polymarket</option><option value="kalshi">Kalshi</option><option value="other">Other</option></select></div>
+            <div><label for="m-url">Market URL</label><input id="m-url" placeholder="https://polymarket.com/event/…"></div>
+          </div>
+          <div class="row5">
+            <div><label for="m-p-50">Cut 50 %</label><input id="m-p-50" type="number" min="0" max="100" step="0.1"></div>
+            <div><label for="m-p-25">Cut 25 %</label><input id="m-p-25" type="number" min="0" max="100" step="0.1"></div>
+            <div><label for="m-p0">Hold %</label><input id="m-p0" type="number" min="0" max="100" step="0.1"></div>
+            <div><label for="m-p25">Hike 25 %</label><input id="m-p25" type="number" min="0" max="100" step="0.1"></div>
+            <div><label for="m-p50">Hike 50 %</label><input id="m-p50" type="number" min="0" max="100" step="0.1"></div>
+          </div>
+          <div class="row2">
+            <div><label for="m-vol">Volume in USD (optional)</label><input id="m-vol" type="number" min="0" step="1"></div>
+            <div><label for="m-note">Note (optional)</label><input id="m-note"></div>
+          </div>
+          <div style="margin-top:10px"><button class="btn primary" type="submit">Save odds</button></div>
+        </form>
+        <div id="markets"></div>
       </div>
       <div class="card">
         <h3>Your own data: a write-up, note, report or analysis</h3>
@@ -359,6 +383,15 @@ function render(s) {
       <div class="why">${esc(d.added_on)}${d.source ? " · " + esc(d.source) : ""} · ${d.chars} chars</div>
       <div class="doc-text">${esc(d.text)}${d.chars > 400 ? "…" : ""}</div></div>`).join("") : `<div class="empty">No documents yet.</div>`;
 
+  $("markets").innerHTML = s.markets.length ? s.markets.slice().reverse().map(m => `
+    <div class="item"><div class="head"><span><strong>${esc(m.id)}</strong> · ${esc(m.venue)} · meeting ${esc(m.meeting)}
+      ${m.status !== "active" ? `<span class="flag">withdrawn</span>` : m.in_snapshot ? `<span class="flag ok">in latest snapshot</span>` : `<span class="flag warn">not in a snapshot yet</span>`}</span>
+      ${m.status === "active" ? `<button class="link" data-withdraw-market="${esc(m.id)}">Withdraw</button>` : ""}</div>
+      <div class="why">${esc(m.observed_at.replace("T", " "))} · ${OUTCOMES.filter(o => m.prices[o] !== undefined).map(o => label(o) + " " + m.prices[o] + "%").join(" · ")}${m.volume_usd ? " · $" + Number(m.volume_usd).toLocaleString() : ""}${m.note ? " · " + esc(m.note) : ""}</div></div>`).join("")
+    : `<div class="empty">No odds entered yet.</div>`;
+  const pendingMk = s.markets.filter(m => m.status === "active" && !m.in_snapshot).length;
+  if (pendingMk) $("forecast-meta").innerHTML += `<span class="flag warn">${pendingMk} market odds not frozen yet: take a snapshot</span>`;
+
   $("chain-flag").innerHTML = s.chain_ok ? `<span class="flag ok">chain intact</span>` : `<span class="flag bad">chain broken</span>`;
   const t = p => { const [o, v] = topOf(p); return `${o} ${pct(v)}`; };
   $("ledger").innerHTML = `<tr><th>#</th><th>Recorded (UTC)</th><th>Meeting</th><th>Machine: most likely</th><th>With views: most likely</th><th>Views</th><th>Snapshot</th><th>Code</th></tr>` +
@@ -453,6 +486,11 @@ $("doc-form").onsubmit = async e => { e.preventDefault();
     ok = await post("/api/documents", {title: $("d-title").value, source: $("d-src").value, relevance: $("d-rel").value, text: $("d-text").value}, "Saving document…");
   } else { say("Choose a file or paste at least 20 characters of text.", "err"); return; }
   if (ok) { $("d-title").value = ""; $("d-src").value = ""; $("d-text").value = ""; $("d-file").value = ""; } };
+$("market-form").onsubmit = async e => { e.preventDefault();
+  const prices = {}; [["-50", "m-p-50"], ["-25", "m-p-25"], ["0", "m-p0"], ["25", "m-p25"], ["50", "m-p50"]].forEach(([k, id]) => { if ($(id).value !== "") prices[k] = $(id).value; });
+  if (await post("/api/markets", {venue: $("m-venue").value, url: $("m-url").value, prices, volume_usd: $("m-vol").value, note: $("m-note").value}, "Saving odds…"))
+    ["m-url", "m-p-50", "m-p-25", "m-p0", "m-p25", "m-p50", "m-vol", "m-note"].forEach(id => $(id).value = ""); };
+$("markets").onclick = e => { const id = e.target.dataset.withdrawMarket; if (id) post("/api/markets/withdraw", {id}, "Withdrawing…"); };
 $("documents").onclick = e => { const id = e.target.dataset.withdraw; if (id) post("/api/documents/withdraw", {id}, "Withdrawing…"); };
 $("views").onclick = e => { const id = e.target.dataset.expire; if (id) post("/api/views/expire", {id}, "Expiring view…"); };
 

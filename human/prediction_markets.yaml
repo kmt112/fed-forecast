@@ -1,0 +1,4 @@
+# H6 prediction-market odds, entered by hand from Polymarket or Kalshi. Prices in percent as shown on the
+# site; they need not sum to 100. Each entry is frozen into the next snapshot and read by the prediction_market
+# model, which uses the most recent active entry for the next meeting.
+markets: []
