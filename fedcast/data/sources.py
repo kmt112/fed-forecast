@@ -43,16 +43,35 @@ def fetch_effr(last_n: int = 10) -> dict:
 
 # --- FRED with vintage control -------------------------------------------------------------
 
-def fetch_fred(series_id: str, api_key: str, as_of: date, n_obs: int = 36) -> dict:
+def fetch_fred(series_id: str, api_key: str, as_of: date, n_obs: int = 36,
+               observation_start: str | None = None) -> dict:
     """Latest `n_obs` observations *as they were known on* `as_of` (ALFRED real-time period)."""
-    data = http.get_json("https://api.stlouisfed.org/fred/series/observations", {
+    params = {
         "series_id": series_id, "api_key": api_key, "file_type": "json",
         "realtime_start": as_of.isoformat(), "realtime_end": as_of.isoformat(),
         "sort_order": "desc", "limit": str(n_obs),
-    }, user_agent=http.PLAIN_UA)
+    }
+    if observation_start:
+        params["observation_start"] = observation_start
+    data = http.get_json("https://api.stlouisfed.org/fred/series/observations", params, user_agent=http.PLAIN_UA)
     obs = [{"date": o["date"], "value": None if o["value"] == "." else float(o["value"])}
            for o in data["observations"]]
     return {"series_id": series_id, "vintage": as_of.isoformat(), "observations": obs}
+
+
+def fetch_target_rate_path(api_key: str, as_of: date, start: str = "1990-01-01") -> dict:
+    """The policy target as a list of change points: DFEDTAR (single target, to 2008-12-15) then DFEDTARU
+    (upper bound of the range, from 2008-12-16). Daily values are collapsed to the days the target changed."""
+    old = fetch_fred("DFEDTAR", api_key, as_of, n_obs=100000, observation_start=start)["observations"]
+    new = fetch_fred("DFEDTARU", api_key, as_of, n_obs=100000, observation_start="2008-12-16")["observations"]
+    daily = sorted(((o["date"], o["value"]) for o in old + new if o["value"] is not None))
+    changes, last = [], None
+    for d, v in daily:
+        if v != last:
+            changes.append({"date": d, "target": v})
+            last = v
+    return {"series": ["DFEDTAR", "DFEDTARU"], "measure": "target rate, upper bound of the range since 2008-12-16",
+            "changes": changes}
 
 
 # --- Fed documents ---------------------------------------------------------------------------

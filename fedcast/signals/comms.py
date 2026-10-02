@@ -27,7 +27,7 @@ DOVISH = ("lower", "lowered", "cut", "ease", "easing", "accommodative", "downsid
 _BOILER = re.compile(r"^(for release at.*|share|federal reserve issues fomc statement|for media inquiries.*|"
                      r"implementation note.*|last update.*|[a-z]+ \d{1,2}, \d{4})$", re.I)
 _VOTE = re.compile(r"by a (\d+)\s*[–-]\s*(\d+) vote")
-_AGAINST = re.compile(r"Voting against (?:this action|the action)[^.]*?(?:was|were) ([^.]+)\.")
+_AGAINST = re.compile(r"Voting against (?:this|the)(?: monetary policy)? action (?:was|were) (.+)", re.S)
 
 
 def body(text: str) -> str:
@@ -38,8 +38,10 @@ def body(text: str) -> str:
 def vote(text: str) -> dict:
     m = _VOTE.search(text)
     against = _AGAINST.search(text)
-    return {"for": int(m.group(1)) if m else None, "against": int(m.group(2)) if m else None,
-            "dissenters": against.group(1).strip() if against else ""}
+    names = ""
+    if against:  # the Fed always writes "<names>, who preferred ..."; names may contain initials with periods
+        names = against.group(1).split(", who")[0].splitlines()[0].strip().rstrip(".")
+    return {"for": int(m.group(1)) if m else None, "against": int(m.group(2)) if m else None, "dissenters": names}
 
 
 def lexicon(text: str) -> dict:

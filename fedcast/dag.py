@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from fedcast import OUTCOMES_BP, config
 from fedcast.journey import _dist, _label
-from fedcast.signals import comms, financial, inflation, labour
+from fedcast.signals import base_rates, comms, financial, inflation, labour
 from fedcast.snapshot import Snapshot
 
 COLUMNS = ("Frozen evidence", "Signals", "Models", "Pool", "Your input", "Forecast")
@@ -113,6 +113,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
     lab = _try(labour.compute, snap) if all(has(e) for e in labour.EVIDENCE) else None
     fin = _try(financial.compute, snap) if all(has(e) for e in financial.EVIDENCE) else None
     tone = _try(comms.compute, snap)
+    hist = _try(base_rates.compute, snap) if all(has(e) for e in base_rates.EVIDENCE) else None
     sig_status = "live" if tr else "computed"  # the signals are in the number once the Taylor rule runs
 
     # --- column 0: frozen evidence ------------------------------------------------------
@@ -248,6 +249,20 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
             "them and they never move the number directly. Enter a view if you want the number to move.",
         rows=[[snap.get(d)["id"], f"{snap.get(d)['title']} ({snap.get(d)['relevance']})"] for d in docs],
         evidence=docs))
+
+    if has("history.meetings") and has("history.target_rate"):
+        hm, ht = snap.get("history.meetings")["meetings"], snap.get("history.target_rate")["changes"]
+        nodes.append(_node(
+            "history", 0, "Decision history", f"{len(hm)} meetings, {len(ht)} rate changes", "source",
+            "computed" if hist else "idle",
+            what="Every FOMC meeting date since 1994 (from the Fed's per-year history pages) and every change in the "
+                 "policy target since 1990 (FRED series DFEDTAR, then the upper bound DFEDTARU from December 2008).",
+            why="It is the record of what the committee actually did, which is what base rates are measured from.",
+            how="Meeting dates are parsed from the history pages; the daily target series is collapsed to the days it "
+                "changed. Both are frozen in the snapshot like any other item.",
+            rows=[["Meetings", f"{hm[0]['date']} to {hm[-1]['date']}"], ["Target changes", f"{ht[0]['date']} to {ht[-1]['date']}"],
+                  ["Latest target (upper bound)", f"{ht[-1]['target']:.2f}% since {ht[-1]['date']}"]],
+            evidence=["history.meetings", "history.target_rate"]))
 
     # --- column 1: signals ---------------------------------------------------------------
     nodes.append(_node(
@@ -391,18 +406,45 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None) -> d
                            why=tone_why, how="Needs a statement in the snapshot."))
 
     planned_signals = [
-        ("sig.history", "Base rates",
-         "How often, historically, the Fed has moved, held or surprised in situations like this one.",
-         "It is the antidote to overconfidence. If the market prices a move at 50% five weeks out, the question "
-         "is how often such pricing was followed by a move. It also measures how often the Fed did something the "
-         "market priced at 0%, which is why no outcome is ever given exactly 0%.",
-         "Planned: tables from past meetings, replacing the interim 1.5% surprise floor. Not computed yet.",
-         [], ["calendar"]),
     ]
     for sid, label, what, why, how, rows, srcs in planned_signals:
         nodes.append(_node(sid, 1, label, "planned", "signal", "planned", what=what, why=why, how=how, rows=rows))
         for s in srcs:
             link(s, sid, "planned")
+
+    hist_what = "How often, since 1994, the Fed has cut, held or hiked at scheduled meetings, and what it did next."
+    hist_why = ("It is the antidote to overconfidence. The conditional table (what followed a hike, a hold, a cut) is "
+                "the Fed's revealed tendency to continue, pause or reverse, and the frequency of 50 bp moves and "
+                "reversals is the evidence behind the surprise floor. What it cannot say is how often the market was "
+                "surprised; that needs historical futures prices.")
+    if hist:
+        g, o, c = hist["given_last"], hist["overall"], hist["conditional"]
+        rows = [["Scheduled decisions", f"{hist['scheduled_decisions']} from {hist['since']} to {hist['through']}"],
+                ["Overall", f"cut {o['cut']:.0%}, hold {o['hold']:.0%}, hike {o['hike']:.0%}"],
+                ["Last decision", f"{hist['last_decision']['decision']} of {hist['last_decision']['change_bp']:+.0f} bp on {hist['last_decision']['date']}"],
+                [f"Next decision after a {hist['last_decision']['decision']} (n = {hist['given_last_n']})",
+                 f"cut {g['cut']:.0%}, hold {g['hold']:.0%}, hike {g['hike']:.0%}"],
+                ["After a hike", f"cut {c['hike']['cut']:.0%}, hold {c['hike']['hold']:.0%}, hike {c['hike']['hike']:.0%}"],
+                ["After a hold", f"cut {c['hold']['cut']:.0%}, hold {c['hold']['hold']:.0%}, hike {c['hold']['hike']:.0%}"],
+                ["After a cut", f"cut {c['cut']['cut']:.0%}, hold {c['cut']['hold']:.0%}, hike {c['cut']['hike']:.0%}"],
+                ["Moves of 50 bp or more", f"{hist['moves_50bp_or_more']} of {hist['moves']} moves ({hist['share_of_moves_50bp_or_more']:.0%})"],
+                ["Direct reversals (cut after hike or hike after cut)", str(hist["reversals"])],
+                ["Intermeeting moves", f"{hist['intermeeting_moves']} since 1994; since 2000: "
+                                        + (", ".join(f"{m['date']} ({m['change_bp']:+.0f})" for m in hist["intermeeting_recent"]) or "none")],
+                ["Reading", base_rates.direction(hist)]]
+        nodes.append(_node("sig.history", 1, "Base rates", base_rates.direction(hist).split(",")[0], "signal", "computed",
+                           what=hist_what, why=hist_why,
+                           how="Computed from the snapshot by fedcast/signals/base_rates.py: each scheduled meeting's "
+                               "decision is the change in the target from the day before to the day after; the "
+                               "conditional table pairs each decision with the next. Not in today's number yet: it "
+                               "will become the historical base-rate model and replace the interim surprise floor.",
+                           rows=rows, evidence=hist["evidence"]))
+        link("history", "sig.history", "computed")
+    else:
+        nodes.append(_node("sig.history", 1, "Base rates", "planned", "signal", "planned", what=hist_what, why=hist_why,
+                           how="Needs the decision history in the snapshot: take a new snapshot."))
+        if has("history.meetings"):
+            link("history", "sig.history", "planned")
 
     # --- column 2: models ----------------------------------------------------------------
     nodes.append(_node(

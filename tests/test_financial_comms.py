@@ -53,7 +53,7 @@ For media inquiries, please email media@frb.gov."""
 
 
 def test_vote_and_dissenters():
-    assert comms.vote(PREV) == {"for": 11, "against": 1, "dissenters": "Jane Doe, who preferred to raise the target range"}
+    assert comms.vote(PREV) == {"for": 11, "against": 1, "dissenters": "Jane Doe"}
     assert comms.vote(LATEST)["against"] == 0
 
 
@@ -79,3 +79,9 @@ def test_lexicon_and_signal_from_snapshot():
 def test_lexicon_matches_whole_words_only():
     assert comms.lexicon("for release by a vote")["dovish"] == {}
     assert comms.lexicon("The Committee decided to ease policy.")["dovish"] == {"ease": 1}
+
+
+def test_dissent_phrasing_from_the_july_2026_statement():
+    text = ("Voting against the monetary policy action were Beth M. Hammack, Neel Kashkari, and Lorie K. Logan, who "
+            "preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting.")
+    assert comms.vote(text)["dissenters"] == "Beth M. Hammack, Neel Kashkari, and Lorie K. Logan"

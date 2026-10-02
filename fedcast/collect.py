@@ -6,7 +6,7 @@ from dataclasses import asdict
 from datetime import date
 
 from fedcast import config
-from fedcast.data import fomc_calendar, sources
+from fedcast.data import fomc_calendar, fomc_history, sources
 from fedcast.human.documents import load_documents
 from fedcast.snapshot import Item, Snapshot
 
@@ -61,6 +61,15 @@ def build(as_of: date) -> Snapshot:
     if last_minutes:
         attempt(f"fed.minutes.{last_minutes.decision_date}", "document", last_minutes.minutes_url,
                 lambda: sources.fetch_document(last_minutes.minutes_url))
+    attempt("history.meetings", "history", fomc_history.HISTORY_URL.format(year="YYYY"),
+            lambda: {"meetings": [{"date": m.decision_date.isoformat(), "scheduled": m.scheduled}
+                                  for m in fomc_history.fetch()]})
+    if key:
+        attempt("history.target_rate", "history", "api.stlouisfed.org/fred/series/observations?series_id=DFEDTAR,DFEDTARU",
+                lambda: sources.fetch_target_rate_path(key, as_of))
+    else:
+        snap.missing["history.target_rate"] = "FRED_API_KEY not set in .env"
+
     for doc in load_documents(config.ROOT / "human" / "documents"):
         if doc.status == "active":
             snap.add(Item.make(f"human.doc.{doc.id}", "human_document", f"human/documents/{doc.id}.md",
