@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from fedcast import OUTCOMES_BP, config
 from fedcast.journey import _dist, _label
-from fedcast.signals import base_rates, comms, financial, inflation, labour
+from fedcast.signals import base_rates, comms, financial, inflation, labour, sep
 from fedcast.snapshot import Snapshot
 
 COLUMNS = ("Frozen evidence", "Signals", "Models", "Pool", "Your input", "Forecast")
@@ -115,6 +115,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
     fin = _try(financial.compute, snap) if all(has(e) for e in financial.EVIDENCE) else None
     tone = _try(comms.compute, snap)
     hist = _try(base_rates.compute, snap) if all(has(e) for e in base_rates.EVIDENCE) else None
+    sepsig = _try(sep.compute, snap)
     sig_status = "live" if tr else "computed"  # the signals are in the number once the Taylor rule runs
 
     # --- column 0: frozen evidence ------------------------------------------------------
@@ -203,8 +204,12 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
 
     for d in sorted(i for i in snap.items if i.startswith("fed.")):
         text = snap.get(d)["text"]
-        kind = "statement" if ".statement." in d else "minutes"
-        if kind == "statement":
+        kind = "statement" if ".statement." in d else "minutes" if ".minutes." in d else "press conference"
+        if kind == "press conference":
+            why = ("The Chair's prepared remarks and answers to reporters are the most candid official guidance: how the "
+                   "committee weighs the risks, what would make it move, and what it declines to pre-commit to.")
+            how = "Planned: the communications analyst reads the transcript and must quote it."
+        elif kind == "statement":
             why = ("The statement is drafted word by word and changes are deliberate: a phrase added or dropped "
                    "('additional firming', 'the extent and timing of') is how the committee signals its next move. "
                    "The vote and any dissents show how united it is.")
@@ -226,6 +231,39 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
             what=f"The full text of the FOMC {kind}, frozen as published.", why=why,
             how=how + (" Read by the communication-tone signal." if read else " No model reads it yet."),
             rows=rows, evidence=[d]))
+
+    sp = snap.get("fed.speeches") if has("fed.speeches") else None
+    if sp:
+        nodes.append(_node(
+            "fed.speeches", 0, "Fed speeches", f"{len(sp['speeches'])} since {sp['since']}", "source", "idle",
+            what=f"Speeches by Board members since the last decision ({sp['since']}), from the Fed's own feed, as text.",
+            why="Between meetings this is where the signal moves: officials use speeches to prepare markets for the next "
+                "decision, and the balance of hawkish and dovish voices shifts before the statement does.",
+            how="Each speech is frozen as text. Planned: the communications analyst reads the ones on the economy and "
+                "policy and must quote them; regulatory speeches are listed but carry no policy signal. No model reads "
+                "them yet.",
+            rows=[[s_["date"], f"{s_['speaker']}: {s_['title']}"] for s_ in sp["speeches"]],
+            evidence=["fed.speeches"]))
+
+    sep_ids = sorted(i for i in snap.items if i.startswith("fed.sep."))
+    if sep_ids:
+        sd = snap.get(sep_ids[-1])
+        ffr = sd["medians"].get("Federal funds rate", {})
+        nodes.append(_node(
+            sep_ids[-1], 0, f"Projections (SEP) {sep_ids[-1][-10:]}", "medians, read by projections", "source",
+            "computed" if sepsig else "idle",
+            what="The Summary of Economic Projections published with quarterly meetings: each participant's projection "
+                 "for growth, unemployment, inflation and the appropriate federal funds rate at each year-end; the table "
+                 "gives the median and the range, and the previous SEP's medians for comparison.",
+            why="It is the committee saying, in numbers, where it expects to take the rate. The 'dot plot' median is the "
+                "closest thing to official forward guidance, and its revision from the previous quarter shows which way "
+                "the committee has moved.",
+            how="Parsed from the Fed's projections table by code. Read by the committee-projections signal.",
+            rows=[[f"Fed funds rate median, {y}", f"{v:.1f}%" + (f" (previous {sd['previous']['Federal funds rate'][y]:.1f}%)"
+                   if y in sd["previous"].get("Federal funds rate", {}) else "")] for y, v in ffr.items()]
+                 + [[f"{var} median, {sd['years'][0]}", f"{vals[sd['years'][0]]:.1f}"] for var, vals in sd["medians"].items()
+                    if var != "Federal funds rate" and sd["years"][0] in vals],
+            evidence=[sep_ids[-1]]))
 
     n_watch = len([w for w in (watchlist or []) if w.get("status") == "active"])
     nodes.append(_node(
@@ -430,6 +468,31 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         for s in srcs:
             link(s, sid, "planned")
 
+    sep_what = ("What the committee's own median projection implies for the rest of the year: the number of 25 bp moves "
+                "between today's target midpoint and the median year-end rate, spread over the meetings still to come.")
+    sep_why = ("It is the committee telling you its plan. A median above the current rate means more hikes are pencilled "
+               "in; the revision from the previous SEP shows whether the plan moved. It is a plan, not a promise: the "
+               "committee revises it every quarter, and the data between SEPs decide which way.")
+    if sepsig:
+        g = sepsig
+        rows = [["Median fed funds rate, end-" + g["year"], f"{g['median_end_year']:.1f}%" + (f" (previous SEP {g['previous_median']:.1f}%, revision {g['revision_pp']:+.1f} pp)" if g["previous_median"] is not None else "")],
+                ["Current target midpoint", f"{g['current_midpoint']:.3f}%"],
+                ["Implied change by year-end", f"{g['implied_change_bp']:+.1f} bp ≈ {g['implied_moves']:+.1f} moves of 25 bp"],
+                ["Meetings left this year", ", ".join(g["remaining_meetings"]) or "none"],
+                ["Average per remaining meeting", f"{g['per_meeting_bp']:+.1f} bp" if g["per_meeting_bp"] is not None else "n/a"],
+                ["Median path", ", ".join(f"{y}: {v:.1f}%" for y, v in g["path"].items())],
+                ["Reading", sep.direction(g)]]
+        nodes.append(_node("sig.sep", 1, "Committee projections", f"{g['implied_moves']:+.1f} moves by year-end", "signal", "computed",
+                           what=sep_what, why=sep_why,
+                           how="Computed from the snapshot by fedcast/signals/sep.py. Not in today's number yet: the next "
+                               "amendment can give it a pool weight, or the ordered probit can take it as a feature.",
+                           rows=rows, evidence=g["evidence"]))
+        link(g["sep_item"], "sig.sep", "computed")
+        link("effr", "sig.sep", "computed")
+    else:
+        nodes.append(_node("sig.sep", 1, "Committee projections", "planned", "signal", "planned", what=sep_what,
+                           why=sep_why, how="Needs a projections table in the snapshot (quarterly meetings)."))
+
     hist_what = "How often, since 1994, the Fed has cut, held or hiked at scheduled meetings, and what it did next."
     hist_why = ("It is the antidote to overconfidence. The conditional table (what followed a hike, a hold, a cut) is "
                 "the Fed's revealed tendency to continue, pause or reverse, and the frequency of 50 bp moves and "
@@ -548,7 +611,11 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                "a bounded tilt in basis points, never the final number.")
     comm = (analyses or {}).get("communications")
     naive = (analyses or {}).get("naive")
-    llm_srcs = ["sig.tone", "sig.inflation", "sig.labour", "watchouts", "documents"]
+    llm_srcs = ["sig.tone", "sig.inflation", "sig.labour", "sig.sep", "watchouts", "documents"]
+    for d_ in sorted(i for i in snap.items if i.startswith("fed.presconf.")):
+        link(d_, "sig.tone", "planned")
+    if has("fed.speeches"):
+        link("fed.speeches", "sig.tone", "planned")
     if comm:
         sm = comm["summary"]
         last = comm["runs"][-1]["verification"]

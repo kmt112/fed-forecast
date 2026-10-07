@@ -62,6 +62,18 @@ def build(as_of: date) -> Snapshot:
     if last_minutes:
         attempt(f"fed.minutes.{last_minutes.decision_date}", "document", last_minutes.minutes_url,
                 lambda: sources.fetch_document(last_minutes.minutes_url))
+    last_pc = next((m for m in reversed(past) if m.presconf_pdf_url), None)
+    last_sep = next((m for m in reversed(past) if m.sep_url), None)
+    if last_pc:
+        attempt(f"fed.presconf.{last_pc.decision_date}", "document", last_pc.presconf_pdf_url,
+                lambda: sources.fetch_presconf(last_pc.presconf_pdf_url))
+    if last_sep:
+        attempt(f"fed.sep.{last_sep.decision_date}", "projections", last_sep.sep_url,
+                lambda: sources.fetch_sep(last_sep.sep_url))
+    if statements:
+        attempt("fed.speeches", "speeches", "federalreserve.gov/feeds/speeches.xml",
+                lambda: sources.fetch_speeches(statements[-1].decision_date))
+
     attempt("history.meetings", "history", fomc_history.HISTORY_URL.format(year="YYYY"),
             lambda: {"meetings": [{"date": m.decision_date.isoformat(), "scheduled": m.scheduled}
                                   for m in fomc_history.fetch()]})

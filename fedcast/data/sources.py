@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import email.utils
 import html as htmllib
 import re
 from datetime import date
@@ -93,3 +94,78 @@ def html_to_text(page: str) -> str:
 
 def fetch_document(url: str) -> dict:
     return {"url": url, "text": html_to_text(http.get_text(url))}
+
+
+def fetch_presconf(pdf_url: str) -> dict:
+    """The press-conference transcript PDF, as text (code extraction, nothing summarised)."""
+    from fedcast.human.extract import extract_text
+
+    return {"url": pdf_url, "text": extract_text("transcript.pdf", http.get(pdf_url))}
+
+
+_CELL = re.compile(r"<t[hd].*?</t[hd]>", re.S)
+_ROW = re.compile(r"<tr.*?</tr>", re.S)
+_TABLE = re.compile(r"<table.*?</table>", re.S)
+_SEP_VARS = ("Change in real GDP", "Unemployment rate", "PCE inflation", "Core PCE inflation", "Federal funds rate")
+
+
+def parse_sep(page: str) -> dict:
+    """Median projections by variable and year from the SEP table, plus the previous SEP's medians."""
+    for tm in _TABLE.finditer(page):
+        table = tm.group(0)
+        if "Federal funds rate" not in table or "Median" not in table:
+            continue
+        rows = []
+        for r in _ROW.findall(table):
+            cells = [htmllib.unescape(_TAGS.sub("", c)).strip() for c in _CELL.findall(r)]
+            cells = [c for c in cells if c]
+            if cells:
+                rows.append(cells)
+        years = [c for c in rows[1] if c.isdigit() or c.lower() == "longer run"]
+        years = years[:next((i for i, y in enumerate(years[1:], 1) if y == years[0]), len(years))]  # first block only
+        medians, previous, current_var = {}, {}, None
+        for cells in rows[2:]:
+            name = re.sub(r"\d+$", "", cells[0]).strip()
+            nums = []
+            for c in cells[1:]:
+                try:
+                    nums.append(float(c))
+                except ValueError:
+                    break
+            if name in _SEP_VARS:
+                current_var = name
+                medians[name] = {years[i]: v for i, v in enumerate(nums[:len(years)])}
+            elif current_var and "projection" in name.lower():
+                previous[current_var] = {years[i]: v for i, v in enumerate(nums[:len(years)])}
+                current_var = None
+        return {"years": years, "medians": medians, "previous": previous}
+    raise ValueError("no projections table found")
+
+
+def fetch_sep(url: str) -> dict:
+    return {"url": url, **parse_sep(http.get_text(url))}
+
+
+_RSS_ITEM = re.compile(r"<item>(.*?)</item>", re.S)
+
+
+def _rss_field(item: str, tag: str) -> str:
+    m = re.search(rf"<{tag}>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?</{tag}>", item, re.S)
+    return htmllib.unescape(m.group(1).strip()) if m else ""
+
+
+def fetch_speeches(since: date, limit: int = 15, max_chars: int = 20000) -> dict:
+    """Speeches by Board members since `since` (the previous decision), from the Fed's RSS feed, as text."""
+    feed = http.get_text("https://www.federalreserve.gov/feeds/speeches.xml")
+    out = []
+    for item in _RSS_ITEM.findall(feed):
+        pub = email.utils.parsedate_to_datetime(_rss_field(item, "pubDate")).date()
+        if pub < since:
+            continue
+        title, link = _rss_field(item, "title"), _rss_field(item, "link")
+        speaker = title.split(",")[0].strip()
+        out.append({"date": pub.isoformat(), "speaker": speaker, "title": title.split(",", 1)[-1].strip(),
+                    "url": link, "text": html_to_text(http.get_text(link))[:max_chars]})
+        if len(out) >= limit:
+            break
+    return {"feed": "https://www.federalreserve.gov/feeds/speeches.xml", "since": since.isoformat(), "speeches": out}
