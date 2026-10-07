@@ -202,7 +202,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                 how=how + (f" Read by the {reader} signal." if used else " Nothing reads this yet."),
                 rows=rows, evidence=ids))
 
-    for d in sorted(i for i in snap.items if i.startswith("fed.")):
+    for d in sorted(i for i in snap.items if i.startswith("fed.") and snap.items[i].kind == "document"):
         text = snap.get(d)["text"]
         kind = "statement" if ".statement." in d else "minutes" if ".minutes." in d else "press conference"
         if kind == "press conference":

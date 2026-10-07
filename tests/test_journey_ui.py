@@ -90,3 +90,15 @@ def test_dag_only_marks_live_what_is_in_the_number():
         if by_id[e["from"]]["status"] == "computed":
             assert by_id[e["to"]]["status"] != "live"
     assert by_id["out"]["summary"] == "hold 76%"  # 80% less three 1.5% surprise floors, renormalised
+
+
+def test_dag_handles_projections_and_speeches_items():
+    from fedcast import dag
+
+    snap = full_snapshot()
+    snap.add(Item.make("fed.speeches", "speeches", "t", {"since": "2026-09-16", "speeches": [
+        {"date": "2026-10-01", "speaker": "Jefferson", "title": "The U.S. Economy and Monetary Policy", "url": "u", "text": "x"}]}))
+    snap.add(Item.make("fed.sep.2026-09-16", "projections", "t", {"url": "u", "years": ["2026"], "medians": {"Federal funds rate": {"2026": 4.1}}, "previous": {}}))
+    g = dag.build(entry_for(snap, []), snap)
+    ids = {n["id"] for n in g["nodes"]}
+    assert "fed.speeches" in ids and "fed.sep.2026-09-16" in ids
