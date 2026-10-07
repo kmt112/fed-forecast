@@ -1,0 +1,22 @@
+{
+ "id": "human.pm.H6-001",
+ "kind": "prediction_market",
+ "source": "human/prediction_markets.yaml",
+ "fetched_at": "2026-10-07T06:16:29+00:00",
+ "content": {
+  "id": "H6-001",
+  "venue": "polymarket",
+  "meeting": "2026-10-28",
+  "observed_at": "2026-10-02T17:58:41",
+  "author": "tankahming123",
+  "url": "",
+  "prices": {
+   "0": 25.0,
+   "25": 75.0
+  },
+  "volume_usd": 22.0,
+  "note": "",
+  "status": "active"
+ },
+ "sha256": "c152ebe933dbf2933ee7ab6a1ee781c2b32295ca514bc83481ce6b56ec5c9243"
+}

@@ -86,6 +86,8 @@ def test_replay_backend_records_then_serves(tmp_path):
     c1 = rb.complete("s", "p", {"type": "object"})
     c2 = rb.complete("s", "p", {"type": "object"})
     assert c1.output == c2.output and len(inner.calls) == 1 and c2.backend == "replay:fake"
+    rb.complete("s", "p", {"type": "object"}, run=1)   # a deliberate repeat is a different call
+    assert len(inner.calls) == 2
     with pytest.raises(LookupError):
         ReplayBackend(tmp_path).complete("s", "different", {"type": "object"})
 
