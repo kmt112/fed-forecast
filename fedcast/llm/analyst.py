@@ -74,8 +74,14 @@ NAIVE_SCHEMA = {
 _POLICY_SPEECH = re.compile(r"econom|monetary|policy|outlook|inflation|labou?r|employment|mandate|rates?\b", re.I)
 
 
+_QUOTE_MAP = str.maketrans({"’": "'", "‘": "'", "“": '"', "”": '"', "–": "-", "—": "-",
+                            " ": " ", "�": "'"})
+
+
 def _norm(s: str) -> str:
-    return re.sub(r"\s+", " ", s).strip().lower()
+    """Whitespace-, case- and typography-insensitive form used for quote matching. Curly quotes, dashes and the
+    replacement character that PDF extraction leaves for an apostrophe all fold to their plain equivalents."""
+    return re.sub(r"\s+", " ", s.translate(_QUOTE_MAP)).strip().lower()
 
 
 def render_signal(name: str, sig: dict) -> str:

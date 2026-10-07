@@ -56,3 +56,11 @@ def test_rss_field_parsing():
     item = "<title><![CDATA[Jefferson, The U.S. Economy and Monetary Policy]]></title><pubDate><![CDATA[Thu, 1 Oct 2026 17:30:00 GMT]]></pubDate>"
     assert sources._rss_field(item, "title") == "Jefferson, The U.S. Economy and Monetary Policy"
     assert sources._rss_field(item, "pubDate").startswith("Thu, 1 Oct 2026")
+
+
+def test_running_headers_and_page_numbers_are_stripped():
+    text = ("Transcript FINAL\nPage 1 of 3\nCHAIRMAN. I'm\nTranscript FINAL\nPage 2 of 3\nnot going to prejudge.\n"
+            "Transcript FINAL\nPage 3 of 3\nThank you.")
+    out = sources.strip_running_headers(text)
+    assert "Page" not in out and "Transcript FINAL" not in out
+    assert "I'm\nnot going to prejudge." in out

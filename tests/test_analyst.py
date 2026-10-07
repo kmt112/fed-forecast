@@ -94,3 +94,8 @@ def test_replay_backend_records_then_serves(tmp_path):
 
 def test_json_text_parsing_tolerates_fences():
     assert parse_json_text('```json\n{"a": 1}\n```') == {"a": 1}
+
+
+def test_quote_matching_ignores_typography():
+    assert analyst._norm("I’m not\ngoing to  prejudge – any") == "i'm not going to prejudge - any"
+    assert analyst._norm("I�m") == "i'm"

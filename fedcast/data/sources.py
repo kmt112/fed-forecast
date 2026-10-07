@@ -96,11 +96,27 @@ def fetch_document(url: str) -> dict:
     return {"url": url, "text": html_to_text(http.get_text(url))}
 
 
+_PAGE_NO = re.compile(r"^\s*Page \d+ of \d+\s*$")
+
+
+def strip_running_headers(text: str) -> str:
+    """Remove page numbers and running headers (short lines repeated on many pages), so that a sentence
+    broken across a page break is contiguous again and can be quoted verbatim."""
+    lines = text.splitlines()
+    from collections import Counter
+
+    counts = Counter(ln.strip() for ln in lines if ln.strip())
+    repeated = {ln for ln, n in counts.items() if n >= 3 and len(ln) < 90}
+    kept = [ln for ln in lines if not _PAGE_NO.match(ln) and ln.strip() not in repeated]
+    out = "\n".join(kept)
+    return re.sub(r"\n{3,}", "\n\n", out).strip()
+
+
 def fetch_presconf(pdf_url: str) -> dict:
     """The press-conference transcript PDF, as text (code extraction, nothing summarised)."""
     from fedcast.human.extract import extract_text
 
-    return {"url": pdf_url, "text": extract_text("transcript.pdf", http.get(pdf_url))}
+    return {"url": pdf_url, "text": strip_running_headers(extract_text("transcript.pdf", http.get(pdf_url)))}
 
 
 _CELL = re.compile(r"<t[hd].*?</t[hd]>", re.S)
