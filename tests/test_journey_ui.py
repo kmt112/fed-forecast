@@ -80,9 +80,25 @@ def test_dag_only_marks_live_what_is_in_the_number():
     by_id = {n["id"]: n for n in g["nodes"]}
     assert all(e["from"] in by_id and e["to"] in by_id for e in g["edges"])
     assert all(by_id[e["from"]]["col"] < by_id[e["to"]]["col"] for e in g["edges"]), "edges must only flow forward"
-    assert by_id["fred.Labour data"]["status"] == "frozen" and by_id["model.taylor"]["status"] == "planned"
+    assert by_id["fred.Labour data"]["status"] == "idle" and by_id["model.taylor"]["status"] == "planned"
     for e in g["edges"]:  # nothing non-live may feed a live node through a live edge
         if by_id[e["to"]]["status"] == "live" and e["status"] == "live":
             assert by_id[e["from"]]["status"] == "live"
     assert "100 − 96.07 = 3.930%" in json.dumps(g, ensure_ascii=False)
-    assert by_id["out"]["summary"] == "hold 80%"
+    # a computed signal may feed the planned models but must not feed anything live
+    for e in g["edges"]:
+        if by_id[e["from"]]["status"] == "computed":
+            assert by_id[e["to"]]["status"] != "live"
+    assert by_id["out"]["summary"] == "hold 76%"  # 80% less three 1.5% surprise floors, renormalised
+
+
+def test_dag_handles_projections_and_speeches_items():
+    from fedcast import dag
+
+    snap = full_snapshot()
+    snap.add(Item.make("fed.speeches", "speeches", "t", {"since": "2026-09-16", "speeches": [
+        {"date": "2026-10-01", "speaker": "Jefferson", "title": "The U.S. Economy and Monetary Policy", "url": "u", "text": "x"}]}))
+    snap.add(Item.make("fed.sep.2026-09-16", "projections", "t", {"url": "u", "years": ["2026"], "medians": {"Federal funds rate": {"2026": 4.1}}, "previous": {}}))
+    g = dag.build(entry_for(snap, []), snap)
+    ids = {n["id"] for n in g["nodes"]}
+    assert "fed.speeches" in ids and "fed.sep.2026-09-16" in ids

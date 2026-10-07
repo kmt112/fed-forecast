@@ -104,6 +104,8 @@ bound, replay and score. Free-text that silently moves the number is the one thi
 | H1 Standing directive | "Watch out for XYZ in future" | Entry in versioned `watchlist.yaml` | Agents must address each item explicitly in the trace ("XYZ: checked — found / not found, evidence …"). Adding one goes through the eval gate. |
 | H2 View | "The Chair is more hawkish than the market thinks — lean that way" | Structured view in the snapshot: direction, strength (1–3), rationale, author, timestamp, expiry (default: next meeting) | Treated as citable evidence with a bounded tilt (cap ±10 pp total probability mass moved). Aggregator applies it in code, not the LLM. |
 | H3 Correction | "This trace misread the minutes" | Permanent regression case in `evals/golden/` | Every human catch becomes a test that all future versions must pass. |
+| H5 Document | "Here is my write-up on bank lending standards" | Markdown file in `human/documents/`, frozen into the next snapshot as a `human_document` item | Evidence for the LLM analysts only, tagged human-sourced; must be quoted like any item; never read by quant models; never moves the number directly. |
+| H6 Prediction-market odds | "Polymarket shows hold 68 / hike 31" | Entry in `human/prediction_markets.yaml` with venue, time, URL, raw prices, volume; frozen into the next snapshot | Read by the prediction_market model at pool weight 0.1; evidence, not a view. |
 | H4 Governance | "S1 threshold is too loose" | Logged amendment with rationale | Changes scorecard constants; never retroactive. |
 
 **Two-track forecasts.** Every run publishes both `machine_only` and `human_adjusted`
@@ -138,7 +140,15 @@ How human input touches each scorecard dimension:
 | S9 Auditability | — | Every human input ledgered; any forecast replays with and without it |
 | **S10 Human-input discipline (new)** | — | 100% of human influence arrives via H1–H4; 0 untyped overrides; all views entered before the pre-registration cutoff |
 
-## 8. Known risks / honest caveats
+## 8. LLM layer (built 2026-10-02)
+
+`fedcast/llm/backend.py` — `ClaudeCodeBackend` (claude -p, --json-schema, --tools "" so no tool can be used),
+`ReplayBackend` (hash-keyed recordings), `FakeBackend` (tests). `fedcast/llm/analyst.py` — the communications
+analyst (arm D: snapshot + schema + citations + code verifier + watch-outs + bounded tilt) and the naive control
+(arm A). `fedcast analyse --arm comms|naive --runs N`. Analyses are saved under `analyses/<snapshot>/` and shown in
+the graph as *computed*; the analyst enters the pool only after passing S1–S3/S10 and an amendment sets its weight.
+
+## 9. Known risks / honest caveats
 - **`claude -p` has no temperature/seed control** → repeatability must come from harness design
   (that is the point), and S1 is measured, not assumed. API backend later allows temperature=0 comparison.
 - **Subscription rate limits** make N=10 × 6 arms slow → ReplayBackend caching + run ablations in batches.

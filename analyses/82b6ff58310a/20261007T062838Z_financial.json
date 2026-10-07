@@ -1,0 +1,166 @@
+{
+ "analyst": "financial",
+ "arm": "D",
+ "prompt_version": "specialists-v2",
+ "prompt_chars": 4202,
+ "created_at": "2026-10-07T06:28:38+00:00",
+ "snapshot_hash": "82b6ff58310af1fd176f56ffe2e887047d88ddc097da485bcf649e96d32cc1a7",
+ "backend": "replay",
+ "runs": [
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The 2-year yield sits well above the policy rate, with the gap positive and widening sharply over four weeks, signaling the bond market is pricing higher rates ahead — hawkish.",
+       "quote": "\"gap_bp\": 96.0, \"change_4wk_bp\": 47.0",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The policy rate is far below the 2-year yield, reinforcing that the bond market expects rates higher than the current setting.",
+       "quote": "\"yield\": 4.84",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Breakeven inflation sits above the goal but has edged slightly lower over four weeks, a modestly dovish wrinkle on the inflation-expectations front.",
+       "quote": "\"vs_goal_pp\": 0.37, \"change_4wk_pp\": -0.03",
+       "item": "signal.financial",
+       "lean": "dovish"
+      },
+      {
+       "text": "The NFCI level barely moved over four weeks, offering no clear directional signal from broad financial conditions.",
+       "quote": "\"level\": -0.548, \"date\": \"2026-09-25\", \"change_4wk\": 0.011",
+       "item": "signal.financial",
+       "lean": "neutral"
+      },
+      {
+       "text": "Base rates conditioned on the last decision put the odds of another hike well above a hold and rule out a cut, corroborating the bond market's hawkish read.",
+       "quote": "given_last: {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+       "item": "signal.base_rates",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The latest statement contains no explicit language on financial conditions, but frames policy around still-elevated inflation, consistent with the hawkish tilt from rates and base rates.",
+       "quote": "Inflation remains elevated. Today's policy action will support a timelier return to the Committee's 2 percent goal.",
+       "item": "fed.statement.2026-09-16",
+       "lean": "hawkish"
+      }
+     ],
+     "tilt_bp": 5,
+     "confidence": "medium",
+     "summary": "The bond market is pricing rates above the current policy setting: the 2-year yield (4.84) is 96bp above the policy rate (3.88) and the gap widened 47bp in four weeks, a hawkish signal. This is corroborated by base rates, which give a 0.653 probability of another hike conditional on the last decision and a 0.0 probability of a cut, and by the September statement noting inflation remains elevated. Partially offsetting are breakevens, which stay above goal (0.37pp) but ticked down 0.03pp, and the NFCI, which barely moved (change 0.011). The statement itself does not explicitly mention financial conditions. On net the evidence corroborates a hawkish tilt of +5bp.",
+     "watchouts": []
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 38.6,
+    "prompt_hash": "30e80e16051afb8f",
+    "meta": {
+     "session_id": "5248ae37-e720-4eb1-b112-2a387b428ec0",
+     "cost_usd": 0.179975,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 7615,
+      "cache_read_input_tokens": 63960,
+      "output_tokens": 2873,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 7615,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "not_available",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 476,
+        "cache_read_input_tokens": 63960,
+        "cache_creation_input_tokens": 4600,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 4600
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The 2-year yield sits well above the policy rate, with the gap positive and widening sharply over four weeks, signaling the bond market is pricing higher rates ahead — hawkish.",
+      "quote": "\"gap_bp\": 96.0, \"change_4wk_bp\": 47.0",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The policy rate is far below the 2-year yield, reinforcing that the bond market expects rates higher than the current setting.",
+      "quote": "\"yield\": 4.84",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Breakeven inflation sits above the goal but has edged slightly lower over four weeks, a modestly dovish wrinkle on the inflation-expectations front.",
+      "quote": "\"vs_goal_pp\": 0.37, \"change_4wk_pp\": -0.03",
+      "item": "signal.financial",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The NFCI level barely moved over four weeks, offering no clear directional signal from broad financial conditions.",
+      "quote": "\"level\": -0.548, \"date\": \"2026-09-25\", \"change_4wk\": 0.011",
+      "item": "signal.financial",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Base rates conditioned on the last decision put the odds of another hike well above a hold and rule out a cut, corroborating the bond market's hawkish read.",
+      "quote": "given_last: {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+      "item": "signal.base_rates",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The latest statement contains no explicit language on financial conditions, but frames policy around still-elevated inflation, consistent with the hawkish tilt from rates and base rates.",
+      "quote": "Inflation remains elevated. Today's policy action will support a timelier return to the Committee's 2 percent goal.",
+      "item": "fed.statement.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 6,
+    "n_verified": 6,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 5.0,
+    "tilt_clipped": false
+   }
+  }
+ ],
+ "summary": {
+  "runs": 1,
+  "tilt_mean_bp": 5.0,
+  "tilt_std_bp": null,
+  "groundedness_pct_mean": 100.0,
+  "leakage_total": 0,
+  "watchouts_missing_total": 0
+ }
+}

@@ -1,0 +1,180 @@
+{
+ "analyst": "inflation",
+ "arm": "D",
+ "prompt_version": "specialists-v2",
+ "prompt_chars": 4812,
+ "created_at": "2026-10-07T06:27:13+00:00",
+ "snapshot_hash": "82b6ff58310af1fd176f56ffe2e887047d88ddc097da485bcf649e96d32cc1a7",
+ "backend": "replay",
+ "runs": [
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The computed inflation gap is above the 2.0 goal, a hawkish pre-read signal.",
+       "quote": "goal: 2.0\nanchor_12m: 3.008\ngap_pp: 1.008",
+       "item": "signal.inflation",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Shorter-horizon momentum readings also run above the 2.0 goal, reinforcing the hawkish inflation signal.",
+       "quote": "momentum: {\"3m\": 2.046, \"6m\": 2.744}",
+       "item": "signal.inflation",
+       "lean": "hawkish"
+      },
+      {
+       "text": "CPI over 12 months remains well above goal in the pre-read.",
+       "quote": "cpi: {\"12m\": 2.763, \"3m\": 1.971, \"through\": \"2026-08-01\"}",
+       "item": "signal.inflation",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The committee's PCE inflation projections were revised up for 2026 versus the previous SEP, a hawkish shift.",
+       "quote": "\"PCE inflation\": {\"2026\": 3.7, \"2027\": 2.3, \"2028\": 2.1, \"2029\": 2.0, \"Longer run\": 2.0}",
+       "item": "fed.sep.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The core PCE inflation median for 2026 was revised up from the prior SEP's figure.",
+       "quote": "\"Core PCE inflation\": {\"2026\": 3.4, \"2027\": 2.5, \"2028\": 2.2, \"2029\": 2.0}",
+       "item": "signal.projections",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The September statement describes inflation as still elevated and frames the hike as supporting a return to goal, a hawkish inflation characterization.",
+       "quote": "Inflation remains elevated. Today's policy action will support a timelier return to the Committee's 2 percent goal.",
+       "item": "fed.statement.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The July statement likewise flagged inflation as elevated relative to goal, with dissenters preferring a hike.",
+       "quote": "Inflation remains elevated relative to the Committee's 2 percent goal, in part reflecting supply shocks that have driven price increases in certain sectors, including energy. The Committee will deliver price stability.",
+       "item": "fed.statement.2026-07-29",
+       "lean": "hawkish"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": 7,
+     "confidence": "high",
+     "summary": "Every piece of inflation evidence points the same direction: hawkish. The deterministic pre-read shows a 12-month anchor of 3.008 against a 2.0 goal (gap of 1.008 pp), with momentum (3m 2.046, 6m 2.744) and 12m CPI of 2.763 all above goal. The September SEP revised PCE inflation up for 2026 (to 3.7 from 3.6) and core PCE up (to 3.4 from 3.3). Both the July and September statements say \"Inflation remains elevated,\" and the September statement ties its rate hike to a \"timelier return to the Committee's 2 percent goal.\" On inflation alone this argues for continued tightening (a hike), so the net tilt is clearly hawkish, set at +7 bp."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 28.2,
+    "prompt_hash": "ac418b2cc748fb6d",
+    "meta": {
+     "session_id": "da76dc15-e4ef-4901-99af-46342ab805e9",
+     "cost_usd": 0.165705,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 7893,
+      "cache_read_input_tokens": 63960,
+      "output_tokens": 2191,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 7893,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "not_available",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 348,
+        "cache_read_input_tokens": 63960,
+        "cache_creation_input_tokens": 4460,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 4460
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The computed inflation gap is above the 2.0 goal, a hawkish pre-read signal.",
+      "quote": "goal: 2.0\nanchor_12m: 3.008\ngap_pp: 1.008",
+      "item": "signal.inflation",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Shorter-horizon momentum readings also run above the 2.0 goal, reinforcing the hawkish inflation signal.",
+      "quote": "momentum: {\"3m\": 2.046, \"6m\": 2.744}",
+      "item": "signal.inflation",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "CPI over 12 months remains well above goal in the pre-read.",
+      "quote": "cpi: {\"12m\": 2.763, \"3m\": 1.971, \"through\": \"2026-08-01\"}",
+      "item": "signal.inflation",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The committee's PCE inflation projections were revised up for 2026 versus the previous SEP, a hawkish shift.",
+      "quote": "\"PCE inflation\": {\"2026\": 3.7, \"2027\": 2.3, \"2028\": 2.1, \"2029\": 2.0, \"Longer run\": 2.0}",
+      "item": "fed.sep.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The core PCE inflation median for 2026 was revised up from the prior SEP's figure.",
+      "quote": "\"Core PCE inflation\": {\"2026\": 3.4, \"2027\": 2.5, \"2028\": 2.2, \"2029\": 2.0}",
+      "item": "signal.projections",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The September statement describes inflation as still elevated and frames the hike as supporting a return to goal, a hawkish inflation characterization.",
+      "quote": "Inflation remains elevated. Today's policy action will support a timelier return to the Committee's 2 percent goal.",
+      "item": "fed.statement.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The July statement likewise flagged inflation as elevated relative to goal, with dissenters preferring a hike.",
+      "quote": "Inflation remains elevated relative to the Committee's 2 percent goal, in part reflecting supply shocks that have driven price increases in certain sectors, including energy. The Committee will deliver price stability.",
+      "item": "fed.statement.2026-07-29",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 7,
+    "n_verified": 7,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 7.0,
+    "tilt_clipped": false
+   }
+  }
+ ],
+ "summary": {
+  "runs": 1,
+  "tilt_mean_bp": 7.0,
+  "tilt_std_bp": null,
+  "groundedness_pct_mean": 100.0,
+  "leakage_total": 0,
+  "watchouts_missing_total": 0
+ }
+}

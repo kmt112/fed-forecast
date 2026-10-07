@@ -8,6 +8,9 @@ from __future__ import annotations
 
 import json
 import re
+import threading
+from email.parser import BytesParser
+from email.policy import default as email_policy
 import traceback
 from dataclasses import asdict
 from datetime import date, datetime, timedelta
@@ -17,15 +20,23 @@ from pathlib import Path
 import yaml
 
 from fedcast import config, dag, forecast, journey, ledger, snapshot
+from fedcast.human import documents as docs_store
+from fedcast.human import prediction_markets as pm_store
+from fedcast.human.extract import SUPPORTED, extract_text
 from fedcast.human.store import load_views
 from fedcast.human.views import View
+from fedcast.llm import analyst as analyst_mod
 from fedcast.scorecard import SCORECARD, TILT_BY_STRENGTH, TILT_CAP
 
 LEDGER = config.ROOT / "ledger" / "forecasts.jsonl"
 VIEWS = config.ROOT / "human" / "views.yaml"
 WATCHLIST = config.ROOT / "human" / "watchlist.yaml"
+DOCS = config.ROOT / "human" / "documents"
+MARKETS = config.ROOT / "human" / "prediction_markets.yaml"
 INDEX = Path(__file__).parent / "index.html"
 AUTHOR = "tankahming123"
+
+JOB: dict = {"running": False, "progress": [], "started_at": None, "finished_at": None, "error": None}
 
 _VIEWS_HEADER = """# H2 views. Each one tilts the human_adjusted forecast by a bounded amount until it expires.
 # strength: 1 = mild (3 pp), 2 = firm (6 pp), 3 = strong (10 pp). Total tilt is capped at 10 pp.
@@ -88,19 +99,83 @@ def state() -> dict:
 
     out["views"] = [{**v.model_dump(mode="json"), "active": v.is_active(today)} for v in load_views(VIEWS)]
     out["watchlist"] = _load_watchlist()
+    frozen_ids = set()
+    if out["snapshot"]:
+        frozen_ids = {k.split("human.doc.", 1)[1] for k in manifest["items"] if k.startswith("human.doc.")}
+    out["documents"] = [{**d.model_dump(mode="json"), "text": d.text[:400], "chars": len(d.text),
+                         "in_snapshot": d.id in frozen_ids} for d in docs_store.load_documents(DOCS)]
 
     out["latest"] = None
     if entries:
         last = entries[-1]
         snap = _snapshot_by_hash(last["forecast"]["snapshot_hash"])
+        analyses = analyst_mod.latest_all(last["forecast"]["snapshot_hash"])
         out["latest"] = {"entry": last, "journey": journey.build(last, snap) if snap else None,
-                         "dag": dag.build(last, snap, out["watchlist"]) if snap else None}
+                         "dag": dag.build(last, snap, out["watchlist"], analyses) if snap else None,
+                         "analyses": {k: _trim_analysis(v) for k, v in analyses.items()}}
         if out["snapshot"]:
             out["latest"]["stale"] = not out["snapshot"]["name"].endswith(last["forecast"]["snapshot_hash"][:12])
+    out["job"] = JOB
 
+    out["markets"] = [{**m.model_dump(mode="json"), "in_snapshot": f"human.pm.{m.id}" in (manifest["items"] if out["snapshot"] else {})}
+                      for m in pm_store.load_markets(MARKETS)]
     out["scorecard"] = [{**asdict(d), "status": _SCORECARD_STATUS.get(d.id, "Not measured yet: needs the LLM agents")}
                         for d in SCORECARD]
     return out
+
+
+def _trim_analysis(rec: dict | None) -> dict | None:
+    if not rec:
+        return None
+    last = rec["runs"][-1]
+    out = {k: rec[k] for k in ("analyst", "arm", "prompt_version", "created_at", "backend", "summary")}
+    out["prompt_chars"] = rec.get("prompt_chars")
+    if rec["analyst"] == "naive":
+        out["last"] = {"probabilities": last["probabilities"], "reasoning": last["completion"]["output"].get("reasoning", "")}
+    else:
+        o = last["completion"]["output"]
+        out["last"] = {"summary": o.get("summary", ""), "confidence": o.get("confidence"), "watchouts": o.get("watchouts", []),
+                       "verification": last["verification"], "model": last["completion"].get("model"),
+                       "duration_s": last["completion"].get("duration_s")}
+    return out
+
+
+def _analysis_job(names: list[str], runs: int) -> None:
+    import yaml
+
+    from fedcast.llm.api_backend import make_backend
+    from fedcast.llm.backend import ReplayBackend
+
+    try:
+        snap = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR))
+        watchlist = _load_watchlist()
+        backend = ReplayBackend(config.ROOT / "analyses" / "replay", make_backend())
+        log = lambda m: JOB["progress"].append(m.strip())
+        for name in names:
+            if name == "naive":
+                rec = analyst_mod.run_naive(snap, backend, runs=runs, log=log)
+            else:
+                rec = analyst_mod.run_specialist(analyst_mod.SPECIALISTS[name], snap, backend, watchlist, runs=runs, log=log)
+            analyst_mod.save(rec)
+            s = rec["summary"]
+            JOB["progress"].append(f"{name}: " + (f"tilt {s['tilt_mean_bp']:+.1f} bp, {s['groundedness_pct_mean']:.0f}% grounded, "
+                                                  f"{s['leakage_total']} leaked" if name != "naive" else "done"))
+    except Exception as exc:  # the UI shows the failure; nothing is half-written
+        JOB["error"] = f"{type(exc).__name__}: {exc}"
+    finally:
+        JOB["running"] = False
+        JOB["finished_at"] = datetime.now().replace(microsecond=0).isoformat()
+
+
+def act_analyse(body: dict) -> dict:
+    if JOB["running"]:
+        raise ValueError("an analysis is already running")
+    names = body.get("analysts") or list(analyst_mod.SPECIALISTS) + ["naive"]
+    runs = max(1, min(10, int(body.get("runs") or 1)))
+    JOB.update({"running": True, "progress": [f"starting {', '.join(names)} ({runs} run(s) each)"],
+                "started_at": datetime.now().replace(microsecond=0).isoformat(), "finished_at": None, "error": None})
+    threading.Thread(target=_analysis_job, args=(names, runs), daemon=True).start()
+    return {"message": "Analysts started. Each call takes about a minute; progress shows below the buttons."}
 
 
 # --- actions ------------------------------------------------------------------------------------
@@ -183,8 +258,80 @@ def act_add_directive(body: dict) -> dict:
     return {"message": f"Directive {item['id']} saved. The LLM analysts will have to address it once they exist."}
 
 
+def act_add_document(body: dict) -> dict:
+    docs = docs_store.load_documents(DOCS)
+    doc = docs_store.Document(id=docs_store.next_id(docs), title=str(body["title"]).strip(), author=AUTHOR,
+                              added_on=date.today(), source=str(body.get("source") or "").strip(),
+                              relevance=body.get("relevance") or "unsure", text=str(body["text"]).strip())
+    docs_store.save(DOCS, doc)
+    return {"message": f"Document {doc.id} saved. Take a new snapshot to freeze it into the evidence."}
+
+
+def act_upload_document(fields: dict, filename: str, data: bytes) -> dict:
+    if len(data) > 20_000_000:
+        raise ValueError("file is larger than 20 MB")
+    text = extract_text(filename, data)
+    docs = docs_store.load_documents(DOCS)
+    doc = docs_store.Document(id=docs_store.next_id(docs), title=(fields.get("title") or filename).strip(),
+                              author=AUTHOR, added_on=date.today(),
+                              source=(fields.get("source") or f"uploaded file {filename}").strip(),
+                              relevance=fields.get("relevance") or "unsure", text=text)
+    docs_store.save(DOCS, doc)
+    (DOCS / "files").mkdir(parents=True, exist_ok=True)
+    (DOCS / "files" / f"{doc.id}{Path(filename).suffix.lower()}").write_bytes(data)
+    return {"message": f"Document {doc.id} saved: {len(text):,} characters extracted from {filename}. "
+                       "Take a new snapshot to freeze it into the evidence."}
+
+
+def _parse_multipart(content_type: str, body: bytes) -> tuple[dict, str | None, bytes | None]:
+    msg = BytesParser(policy=email_policy).parsebytes(
+        b"Content-Type: " + content_type.encode() + b"\r\nMIME-Version: 1.0\r\n\r\n" + body)
+    fields, filename, data = {}, None, None
+    for part in msg.iter_parts():
+        name = part.get_param("name", header="content-disposition")
+        if part.get_filename():
+            filename, data = part.get_filename(), part.get_payload(decode=True)
+        elif name:
+            fields[name] = part.get_payload(decode=True).decode("utf-8", errors="replace")
+    return fields, filename, data
+
+
+def act_add_market(body: dict) -> dict:
+    items = pm_store.load_markets(MARKETS)
+    prices = {k: float(v) for k, v in (body.get("prices") or {}).items() if v not in ("", None)}
+    cal = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR)).get("calendar")
+    entry = pm_store.MarketOdds(id=pm_store.next_id(items), venue=body.get("venue") or "polymarket",
+                                meeting=date.fromisoformat(body.get("meeting") or cal["next_meeting"]),
+                                observed_at=datetime.now().replace(microsecond=0), author=AUTHOR,
+                                url=str(body.get("url") or "").strip(), prices=prices,
+                                volume_usd=float(body["volume_usd"]) if body.get("volume_usd") else None,
+                                note=str(body.get("note") or "").strip())
+    pm_store.save_markets(MARKETS, items + [entry])
+    return {"message": f"Odds {entry.id} saved ({entry.venue}, sums to {sum(prices.values()):.0f}%). "
+                       "Take a new snapshot to freeze them, then run a forecast."}
+
+
+def act_withdraw_market(body: dict) -> dict:
+    items = pm_store.load_markets(MARKETS)
+    if body["id"] not in [m.id for m in items]:
+        raise ValueError("unknown entry " + str(body["id"]))
+    pm_store.save_markets(MARKETS, [m.model_copy(update={"status": "withdrawn"}) if m.id == body["id"] else m for m in items])
+    return {"message": f"Odds {body['id']} withdrawn; they stay on file but will not enter new snapshots."}
+
+
+def act_withdraw_document(body: dict) -> dict:
+    docs = {d.id: d for d in docs_store.load_documents(DOCS)}
+    if body["id"] not in docs:
+        raise ValueError("unknown document " + str(body["id"]))
+    docs_store.save(DOCS, docs[body["id"]].model_copy(update={"status": "withdrawn"}), overwrite=True)
+    return {"message": f"Document {body['id']} withdrawn. It stays on file but will not enter new snapshots."}
+
+
 ACTIONS = {"/api/snapshot": act_snapshot, "/api/forecast": act_forecast, "/api/replay": act_replay,
-           "/api/views": act_add_view, "/api/views/expire": act_expire_view, "/api/watchlist": act_add_directive}
+           "/api/views": act_add_view, "/api/views/expire": act_expire_view, "/api/watchlist": act_add_directive,
+           "/api/documents": act_add_document, "/api/documents/upload": act_add_document, "/api/documents/withdraw": act_withdraw_document,
+           "/api/markets": act_add_market, "/api/markets/withdraw": act_withdraw_market,
+           "/api/analyse": act_analyse}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -218,8 +365,15 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(404, {"error": "not found"})
         try:
             length = int(self.headers.get("Content-Length") or 0)
-            body = json.loads(self.rfile.read(length) or b"{}")
-            result = action(body)
+            raw = self.rfile.read(length)
+            ctype = self.headers.get("Content-Type") or ""
+            if ctype.startswith("multipart/form-data"):
+                fields, filename, data = _parse_multipart(ctype, raw)
+                if not filename:
+                    raise ValueError("no file in the upload")
+                result = act_upload_document(fields, filename, data)
+            else:
+                result = action(json.loads(raw or b"{}"))
             self._send(200, {**result, "state": state()})
         except Exception as exc:
             traceback.print_exc()

@@ -33,7 +33,7 @@ def test_delta_between_tracks_equals_view_budget():
 def test_pool_renormalises_over_present_models():
     a = {-50: 0, -25: 0, 0: 1.0, 25: 0, 50: 0}
     b = {-50: 0, -25: 0, 0: 0.0, 25: 1.0, 50: 0}
-    pooled = aggregate.pool({"a": a, "b": b}, {"a": 3.0, "b": 1.0, "absent": 5.0})
+    pooled = aggregate.pool({"a": a, "b": b}, {"a": 3.0, "b": 1.0, "absent": 5.0}, floor=0.0)
     assert pooled[0] == pytest.approx(0.75) and pooled[25] == pytest.approx(0.25)
 
 

@@ -6,7 +6,9 @@ from dataclasses import asdict
 from datetime import date
 
 from fedcast import config
-from fedcast.data import fomc_calendar, sources
+from fedcast.data import fomc_calendar, fomc_history, sources
+from fedcast.human.documents import load_documents
+from fedcast.human.prediction_markets import load_markets
 from fedcast.snapshot import Item, Snapshot
 
 
@@ -52,12 +54,42 @@ def build(as_of: date) -> Snapshot:
         else:
             snap.missing[f"fred.{sid}"] = "FRED_API_KEY not set in .env"
 
-    last_statement = next((m for m in reversed(past) if m.statement_url), None)
+    statements = [m for m in past if m.statement_url][-2:]  # latest and previous, for the word diff
     last_minutes = next((m for m in reversed(past) if m.minutes_url), None)
-    if last_statement:
-        attempt(f"fed.statement.{last_statement.decision_date}", "document", last_statement.statement_url,
-                lambda: sources.fetch_document(last_statement.statement_url))
+    for st in statements:
+        attempt(f"fed.statement.{st.decision_date}", "document", st.statement_url,
+                lambda st=st: sources.fetch_document(st.statement_url))
     if last_minutes:
         attempt(f"fed.minutes.{last_minutes.decision_date}", "document", last_minutes.minutes_url,
                 lambda: sources.fetch_document(last_minutes.minutes_url))
+    last_pc = next((m for m in reversed(past) if m.presconf_pdf_url), None)
+    last_sep = next((m for m in reversed(past) if m.sep_url), None)
+    if last_pc:
+        attempt(f"fed.presconf.{last_pc.decision_date}", "document", last_pc.presconf_pdf_url,
+                lambda: sources.fetch_presconf(last_pc.presconf_pdf_url))
+    if last_sep:
+        attempt(f"fed.sep.{last_sep.decision_date}", "projections", last_sep.sep_url,
+                lambda: sources.fetch_sep(last_sep.sep_url))
+    if statements:
+        attempt("fed.speeches", "speeches", "federalreserve.gov/feeds/speeches.xml",
+                lambda: sources.fetch_speeches(statements[-1].decision_date))
+
+    attempt("history.meetings", "history", fomc_history.HISTORY_URL.format(year="YYYY"),
+            lambda: {"meetings": [{"date": m.decision_date.isoformat(), "scheduled": m.scheduled}
+                                  for m in fomc_history.fetch()]})
+    if key:
+        attempt("history.target_rate", "history", "api.stlouisfed.org/fred/series/observations?series_id=DFEDTAR,DFEDTARU",
+                lambda: sources.fetch_target_rate_path(key, as_of))
+    else:
+        snap.missing["history.target_rate"] = "FRED_API_KEY not set in .env"
+
+    for mk in load_markets(config.ROOT / "human" / "prediction_markets.yaml"):
+        if mk.status == "active" and mk.meeting == nxt.decision_date:
+            snap.add(Item.make(f"human.pm.{mk.id}", "prediction_market", "human/prediction_markets.yaml",
+                               mk.model_dump(mode="json")))
+
+    for doc in load_documents(config.ROOT / "human" / "documents"):
+        if doc.status == "active":
+            snap.add(Item.make(f"human.doc.{doc.id}", "human_document", f"human/documents/{doc.id}.md",
+                               doc.model_dump(mode="json")))
     return snap

@@ -12,7 +12,8 @@ from fedcast import OUTCOMES_BP
 from fedcast.snapshot import Snapshot
 
 _KIND_LABEL = {"calendar": "FOMC calendar", "effr": "Effective fed funds rate", "futures": "Fed funds futures",
-               "fred": "FRED macro series", "document": "Fed documents", "human_view": "Human views"}
+               "fred": "FRED macro series", "document": "Fed documents", "human_view": "Human views",
+               "human_document": "Your documents", "history": "Decision history", "prediction_market": "Prediction-market odds", "projections": "Committee projections", "speeches": "Fed speeches"}
 
 
 def _label(outcome: int) -> str:
@@ -77,14 +78,30 @@ def build(entry: dict, snap: Snapshot) -> list[dict]:
     })
 
     weights = fc["pool_weights"]
+    live = [name for name in weights if name in fc["models"]]
+    floor = fc.get("surprise_floor", 0.0)
+    tr = fc["models"].get("taylor_rule")
+    if tr:
+        steps.append({
+            "title": "Read the rate against the Taylor-rule family",
+            "body": (f"With 12-month core PCE at {tr['inputs']['inflation_12m']:.2f}% and unemployment at "
+                     f"{tr['inputs']['unemployment']:.1f}%, the four Monetary Policy Report rules, over a grid of "
+                     f"neutral-rate and sustainable-unemployment assumptions, prescribe an average move of "
+                     f"{tr['expected_change_bp']:+.1f} bp from {tr['rate_before']:.2f}% (spread {tr['spread_bp']:.0f} bp). "
+                     f"That spread plus a 15 bp floor sets the width of the distribution."),
+            "rows": [[f"{v} rule", f"{bp:+.1f} bp"] for v, bp in tr["by_variant_bp"].items()]
+                    + [["Taylor-rule distribution", _dist(tr["probabilities"])]],
+            "evidence": tr["evidence"],
+        })
     steps.append({
         "title": "Pool the models",
-        "body": ("Each model's distribution is averaged using fixed, recorded weights. Code does this; no language "
-                 "model writes the number. "
-                 + ("Only the market-implied model exists so far, so the pool equals it. Taylor-rule, ordered-probit "
-                    "and base-rate models, then the verified LLM signals, will join here."
-                    if len(weights) == 1 else "")),
-        "rows": [[name, f"weight {w:g}"] for name, w in weights.items()] + [["machine_only", _dist(fc["machine_only"])]],
+        "body": ("Each live model's distribution is averaged using fixed, recorded weights, then no outcome is allowed "
+                 f"below the {floor * 100:.1f}% surprise floor. Code does this; no language model writes the number."
+                 + (" Models that could not run on this snapshot are listed and dropped: "
+                    + "; ".join(f"{k} ({v})" for k, v in fc.get("models_skipped", {}).items())
+                    if fc.get("models_skipped") else "")),
+        "rows": [[name, f"weight {w:g}" + ("" if name in live else " (not run)")] for name, w in weights.items()]
+                + [["machine_only", _dist(fc["machine_only"])]],
     })
 
     views = fc["human"]["views_applied"]
@@ -112,12 +129,12 @@ def build(entry: dict, snap: Snapshot) -> list[dict]:
                  ["Recorded at (UTC)", entry["created_at"]]],
     })
 
-    used = set(m["evidence"])
+    used = {e for mo in fc["models"].values() for e in mo["evidence"]}
     unused = sorted(i for i in snap.items if i not in used)
     steps.append({
         "title": "What is in the snapshot but not yet in the number",
-        "body": ("These items are frozen and ready, but no model reads them yet. They feed the quant models and the "
-                 "LLM analysts in the next phases. Today's number is the market's view only."),
+        "body": ("These items are frozen and ready, but no model reads them yet. They feed the remaining quant "
+                 "models and the LLM analysts in the next phases."),
         "rows": [[i, snap.items[i].source] for i in unused],
         "muted": True,
     })

@@ -1,0 +1,16 @@
+# H6 prediction-market odds, entered by hand from Polymarket or Kalshi. Prices in percent as shown on the
+# site; they need not sum to 100. Each entry is frozen into the next snapshot and read by the prediction_market
+# model, which uses the most recent active entry for the next meeting.
+markets:
+- id: H6-001
+  venue: polymarket
+  meeting: '2026-10-28'
+  observed_at: '2026-10-02T17:58:41'
+  author: tankahming123
+  url: ''
+  prices:
+    '0': 25.0
+    '25': 75.0
+  volume_usd: 22.0
+  note: ''
+  status: active

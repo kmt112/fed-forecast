@@ -6,198 +6,336 @@
 <title>FedCast</title>
 <style>
   :root {
-    --bg: #f6f5f1; --surface: #ffffff; --ink: #1d1f23; --muted: #666b75; --line: #e2e0d9;
+    --bg: #eef0f3; --surface: #ffffff; --surface-2: #f7f8fa; --ink: #15181d; --muted: #646b76; --line: #dde1e7;
     --accent: #1f5f8b; --accent-soft: #dbe8f1; --human: #9a5b13; --human-soft: #f3e4cf;
-    --ok: #2c6e49; --warn: #a4501a; --bad: #a3312c; --radius: 10px;
+    --ok: #2c6e49; --warn: #a4501a; --bad: #a3312c; --nav: #1b2430; --nav-ink: #c9d2dd; --nav-active: #2b3a4c;
+    --radius: 10px;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #15171a; --surface: #1e2125; --ink: #e9e7e1; --muted: #9aa0aa; --line: #30343a;
-      --accent: #7db8de; --accent-soft: #23394a; --human: #e0a860; --human-soft: #40321f;
-      --ok: #7cc49a; --warn: #e39a62; --bad: #e88580; }
+    :root { --bg: #111417; --surface: #1a1e23; --surface-2: #20252b; --ink: #e8e8e4; --muted: #98a0ab; --line: #2c323a;
+      --accent: #7db8de; --accent-soft: #233a4c; --human: #e0a860; --human-soft: #3f321f;
+      --ok: #7cc49a; --warn: #e39a62; --bad: #e88580; --nav: #0d1013; --nav-ink: #aab3bf; --nav-active: #1f262e; }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 80px; }
-  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; margin-bottom: 20px; }
-  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
-  h2 { font-size: 17px; margin: 0 0 4px; }
-  h3 { font-size: 14px; margin: 0 0 8px; }
-  .sub { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
-  .meeting { color: var(--muted); }
-  .meeting strong { color: var(--ink); }
-  section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 20px; margin-bottom: 16px; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 13.5px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: grid; grid-template-columns: 212px 1fr; overflow: hidden; }
+  h1, h2, h3 { margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; } h3 { font-size: 13px; }
+  p { margin: 0; }
+  code { font: 12px ui-monospace, Consolas, monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
 
-  .bar-row { display: grid; grid-template-columns: 58px 1fr 52px; align-items: center; gap: 10px; margin: 6px 0; }
-  .bar-row .lbl { color: var(--muted); font-size: 13px; text-align: right; }
+  /* sidebar */
+  aside { background: var(--nav); color: var(--nav-ink); display: flex; flex-direction: column; padding: 18px 12px; gap: 4px; }
+  .brand { color: #fff; font-size: 17px; font-weight: 700; padding: 0 10px 2px; }
+  .brand small { display: block; font-size: 11.5px; font-weight: 400; color: var(--nav-ink); margin-top: 2px; }
+  nav { margin-top: 14px; display: flex; flex-direction: column; gap: 2px; }
+  nav button { all: unset; cursor: pointer; padding: 8px 10px; border-radius: 7px; font-size: 13.5px; color: var(--nav-ink); display: flex; justify-content: space-between; }
+  nav button:hover { background: var(--nav-active); }
+  nav button.active { background: var(--nav-active); color: #fff; font-weight: 600; }
+  nav button .k { font-size: 11px; opacity: .55; }
+  .side-status { margin-top: auto; font-size: 12px; padding: 10px; border-top: 1px solid rgba(255,255,255,.08); display: grid; gap: 6px; }
+  .side-status b { color: #fff; font-weight: 600; }
+
+  /* main */
+  main { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+  .topbar { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .topbar h1 { font-size: 16px; margin-right: auto; }
+  .content { padding: 18px 20px 40px; overflow: auto; flex: 1; }
+  .view { display: none; } .view.active { display: block; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+  .card + .card, .card-grid + .card { margin-top: 14px; }
+  .card-grid { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) { .card-grid { grid-template-columns: 1fr; } }
+  .sub { color: var(--muted); font-size: 12.5px; margin: 2px 0 12px; }
+  .flag { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 99px; margin-left: 6px; border: 1px solid currentColor; vertical-align: middle; }
+  .flag.ok { color: var(--ok); } .flag.warn { color: var(--warn); } .flag.bad { color: var(--bad); } .flag.info { color: var(--accent); }
+  .meta { color: var(--muted); font-size: 12.5px; margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+
+  button.btn { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 7px 12px; border-radius: 7px; cursor: pointer; }
+  button.btn:hover { border-color: var(--accent); }
+  button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .5; cursor: wait; }
+  button.link { border: 0; padding: 0; color: var(--accent); background: none; font: inherit; font-size: 12.5px; cursor: pointer; }
+  #msg { font-size: 12.5px; padding: 6px 20px; min-height: 28px; background: var(--surface); border-bottom: 1px solid var(--line); }
+  #msg.ok { color: var(--ok); } #msg.err { color: var(--bad); } #msg.busy { color: var(--muted); }
+  .job { font: 12px ui-monospace, Consolas, monospace; padding: 6px 20px; background: var(--surface-2); border-bottom: 1px solid var(--line); color: var(--muted); max-height: 120px; overflow: auto; white-space: pre-wrap; }
+  .claim { display: grid; grid-template-columns: 70px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .claim .lean { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+  .claim .lean.hawkish { color: var(--bad); } .claim .lean.dovish { color: var(--ok); } .claim .lean.neutral { color: var(--muted); }
+  .claim .q { color: var(--muted); font-size: 12.5px; margin-top: 2px; } .claim .q::before { content: "“"; } .claim .q::after { content: "”"; }
+  .claim .src { font-size: 12px; margin-top: 2px; }
+  .an-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-bottom: 6px; }
+  .an-head .tilt { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* forecast */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+  .tile .lbl { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .tile .val { font-size: 22px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .tile .val small { font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+  .bar-row { display: grid; grid-template-columns: 56px 1fr 52px; align-items: center; gap: 10px; margin: 6px 0; }
+  .bar-row .lbl { color: var(--muted); font-size: 12.5px; text-align: right; }
   .bar-row .pct { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
-  .track { height: 14px; background: var(--accent-soft); border-radius: 4px; overflow: hidden; }
+  .track { height: 13px; background: var(--accent-soft); border-radius: 4px; overflow: hidden; }
   .track.human { background: var(--human-soft); }
   .fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .4s; }
   .human .fill { background: var(--human); }
   .zero .pct, .zero .lbl { opacity: .45; font-weight: 400; }
 
-  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding-top: 16px;
-    border-top: 1px solid var(--line); }
-  button { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-    padding: 8px 14px; border-radius: 8px; cursor: pointer; }
-  button:hover { border-color: var(--accent); }
-  button.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
-  button:disabled { opacity: .5; cursor: wait; }
-  button .n { display: inline-block; width: 18px; height: 18px; line-height: 18px; border-radius: 50%;
-    background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 700; margin-right: 6px;
-    text-align: center; }
-  button.primary .n { background: var(--surface); }
-  button.link { border: 0; padding: 0; color: var(--accent); background: none; font-size: 13px; }
-  #msg { margin-top: 12px; font-size: 14px; min-height: 21px; }
-  #msg.ok { color: var(--ok); } #msg.err { color: var(--bad); } #msg.busy { color: var(--muted); }
-  .flag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 99px; margin-left: 6px;
-    border: 1px solid currentColor; }
-  .flag.ok { color: var(--ok); } .flag.warn { color: var(--warn); } .flag.bad { color: var(--bad); }
-  .meta { color: var(--muted); font-size: 13px; margin-top: 10px; }
-  code { font: 12.5px ui-monospace, Consolas, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
-
-  ol.journey { list-style: none; margin: 0; padding: 0; }
-  ol.journey li { display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding-bottom: 18px; position: relative; }
-  ol.journey li::before { content: ""; position: absolute; left: 15px; top: 30px; bottom: 0; width: 1px; background: var(--line); }
-  ol.journey li:last-child::before { display: none; }
-  .num { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); color: var(--accent);
-    font-weight: 700; display: grid; place-items: center; font-size: 14px; }
-  li.muted .num { background: var(--bg); color: var(--muted); }
-  .step p { margin: 2px 0 8px; color: var(--muted); font-size: 14px; max-width: 70ch; }
-  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
-  td, th { text-align: left; padding: 5px 10px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 500; font-size: 12.5px; }
-  .kv td:first-child { color: var(--muted); width: 38%; }
-  .kv td:last-child { font-variant-numeric: tabular-nums; }
-  .scroll { overflow-x: auto; }
-
-  #dag svg { display: block; font-family: inherit; }
+  /* evidence graph */
+  .graph-layout { display: grid; grid-template-columns: 3fr 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 1000px) { .graph-layout { grid-template-columns: 1fr; } }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); margin: 0 0 10px; }
+  .legend i { display: inline-block; width: 20px; height: 11px; border: 1.5px solid var(--accent); border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+  .legend i.computed { border-color: var(--muted); }
+  .legend i.idle { border-style: dashed; border-color: var(--line); }
+  .legend i.planned { border-style: dotted; border-color: var(--line); }
+  .legend i.human { border-color: var(--human); }
+  #dag { overflow: auto; }
+  #dag svg { display: block; font-family: inherit; min-width: 1000px; width: 100%; height: auto; }
   #dag .node rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; cursor: pointer; }
   #dag .node.live rect { stroke: var(--accent); }
-  #dag .node.frozen rect { stroke-dasharray: 5 3; }
+  #dag .node.computed rect { stroke: var(--muted); }
+  #dag .node.idle rect { stroke-dasharray: 5 3; }
   #dag .node.planned rect { stroke-dasharray: 2 3; }
   #dag .node.human rect { stroke: var(--human); }
   #dag .node.output rect { fill: var(--accent-soft); }
   #dag .node.sel rect { stroke-width: 3; }
-  #dag .node:hover rect { fill: var(--bg); }
+  #dag .node:hover rect { fill: var(--surface-2); }
   #dag .nl { font-size: 12.5px; font-weight: 600; fill: var(--ink); pointer-events: none; }
   #dag .ns { font-size: 11px; fill: var(--muted); pointer-events: none; }
-  #dag .planned .nl { fill: var(--muted); }
+  #dag .planned .nl, #dag .idle .nl { fill: var(--muted); }
   #dag .edge { fill: none; stroke: var(--line); stroke-width: 1.5; }
   #dag .edge.live { stroke: var(--accent); opacity: .55; }
+  #dag .edge.computed { stroke: var(--muted); opacity: .6; }
   #dag .edge.planned { stroke-dasharray: 3 4; }
   #dag .edge.hot { stroke: var(--human); stroke-width: 3; opacity: 1; }
   #dag .colh { font-size: 11px; fill: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
-  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); margin: 6px 0 12px; }
-  .legend i { display: inline-block; width: 22px; height: 12px; border: 1.5px solid var(--accent); border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
-  .legend i.frozen { border-style: dashed; border-color: var(--line); }
-  .legend i.planned { border-style: dotted; border-color: var(--line); }
-  .legend i.human { border-color: var(--human); }
-  #dag-detail { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
-  #dag-detail p { color: var(--muted); font-size: 14px; max-width: 75ch; margin: 4px 0 8px; }
-  .links button { margin: 2px 6px 2px 0; }
-  details summary { cursor: pointer; color: var(--accent); font-size: 14px; }
-  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
-  select, textarea, input { width: 100%; font: inherit; color: var(--ink); background: var(--bg);
-    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
-  textarea { min-height: 70px; resize: vertical; }
+  .detail-pane { position: sticky; top: 0; max-height: calc(100vh - 150px); overflow: auto; }
+  .detail-pane p { color: var(--muted); font-size: 13px; margin: 4px 0 8px; }
+  .detail-pane .plbl { color: var(--ink); font-weight: 600; }
+  .links { font-size: 12.5px; margin-top: 8px; display: grid; gap: 4px; }
+  .links button { margin-right: 6px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  td, th { text-align: left; padding: 5px 10px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; }
+  .kv td:first-child { color: var(--muted); width: 42%; }
+  .kv td:last-child { font-variant-numeric: tabular-nums; }
+  .scroll { overflow-x: auto; }
+
+  /* input */
+  label { display: block; font-size: 12.5px; color: var(--muted); margin: 10px 0 4px; }
+  select, textarea, input { width: 100%; font: inherit; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 7px; padding: 7px 10px; }
+  textarea { min-height: 64px; resize: vertical; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .item { border-top: 1px solid var(--line); padding: 10px 0; font-size: 14px; }
+  .row5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  @media (max-width: 900px) { .row5 { grid-template-columns: repeat(3, 1fr); } }
+  .unit { position: relative; }
+  .unit input { padding-right: 26px; }
+  .unit span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 12.5px; pointer-events: none; }
+  .item { border-top: 1px solid var(--line); padding: 9px 0; }
   .item .head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-  .item .why { color: var(--muted); margin-top: 2px; }
-  .empty { color: var(--muted); font-size: 14px; padding: 10px 0; }
+  .item .why { color: var(--muted); margin-top: 2px; font-size: 12.5px; }
+  .doc-text { white-space: pre-wrap; color: var(--muted); font-size: 12.5px; margin-top: 4px; max-height: 80px; overflow: hidden; }
+
+  /* methodology */
+  ol.rules { margin: 0 0 8px; padding-left: 20px; }
+  ol.rules li { margin: 4px 0; color: var(--muted); }
+  ol.rules li strong { color: var(--ink); }
+  ol.journey { list-style: none; margin: 0; padding: 0; }
+  ol.journey li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding-bottom: 16px; position: relative; }
+  ol.journey li::before { content: ""; position: absolute; left: 14px; top: 28px; bottom: 0; width: 1px; background: var(--line); }
+  ol.journey li:last-child::before { display: none; }
+  .num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; display: grid; place-items: center; font-size: 13px; }
+  li.muted .num { background: var(--surface-2); color: var(--muted); }
+  .step p { margin: 2px 0 8px; color: var(--muted); max-width: 72ch; }
 </style>
 </head>
 <body>
+<aside>
+  <div class="brand">FedCast<small>FOMC decision forecaster</small></div>
+  <nav id="nav">
+    <button data-view="forecast" class="active">Forecast <span class="k">1</span></button>
+    <button data-view="evidence">Evidence graph <span class="k">2</span></button>
+    <button data-view="input">Your input <span class="k">3</span></button>
+    <button data-view="methodology">Methodology <span class="k">4</span></button>
+    <button data-view="ledger">Ledger <span class="k">5</span></button>
+    <button data-view="scorecard">Scorecard <span class="k">6</span></button>
+    <button data-view="analysts">Analysts <span class="k">7</span></button>
+  </nav>
+  <div class="side-status" id="side-status"></div>
+</aside>
+
 <main>
-  <header>
-    <h1>FedCast</h1>
-    <div class="meeting" id="meeting"></div>
-  </header>
+  <div class="topbar">
+    <h1 id="view-title">Forecast</h1>
+    <button class="btn" id="btn-snapshot" title="Fetch live data from the Fed, FRED, the New York Fed and futures quotes, and freeze it as a fingerprinted bundle.">Take snapshot</button>
+    <button class="btn primary" id="btn-forecast" title="Run the models and your views on the latest snapshot and record the result in the ledger.">Run forecast</button>
+    <button class="btn" id="btn-replay" title="Two checks: the ledger chain is intact, and every entry recomputes exactly from its frozen snapshot.">Verify ledger</button>
+    <button class="btn" id="btn-analyse" title="Run the five specialist analysts and the naive control on the latest snapshot (about a minute per call, in the background).">Run analysts</button>
+  </div>
+  <div id="msg"></div>
+  <div id="job" class="job" style="display:none"></div>
+  <div class="content">
 
-  <section>
-    <h2>Forecast for the next decision</h2>
-    <p class="sub">Two tracks, always shown together: what the machine says, and what it says after your views.</p>
-    <div class="grid2">
-      <div><h3>Machine only</h3><div id="bars-machine"></div></div>
-      <div><h3>With your views <span id="tilt-note" class="sub"></span></h3><div id="bars-human"></div></div>
-    </div>
-    <div class="meta" id="forecast-meta"></div>
-    <div class="actions">
-      <button id="btn-snapshot" title="Fetch live data from the Fed, FRED, the New York Fed and futures quotes, and freeze it as a fingerprinted bundle."><span class="n">1</span>Take snapshot</button>
-      <button id="btn-forecast" class="primary" title="Run the models and your views on the latest snapshot and record the result in the ledger."><span class="n">2</span>Run forecast</button>
-      <button id="btn-replay" title="Two checks: (1) tamper check, each entry carries the fingerprint of the one before; (2) recompute every entry from its frozen snapshot and demand the exact same numbers."><span class="n">3</span>Verify ledger</button>
-    </div>
-    <div id="msg"></div>
-  </section>
+    <section class="view active" data-view="forecast">
+      <div class="tiles" id="tiles"></div>
+      <div class="card-grid">
+        <div class="card"><h3>Machine only</h3><p class="sub">Models and the pool, nothing else.</p><div id="bars-machine"></div></div>
+        <div class="card"><h3>With your views <span id="tilt-note" class="sub" style="display:inline"></span></h3><p class="sub">Same forecast after your active views, tilt capped at 10 pp.</p><div id="bars-human"></div></div>
+      </div>
+      <div class="card"><div class="meta" id="forecast-meta"></div></div>
+    </section>
 
-  <section>
-    <h2>What feeds the number</h2>
-    <p class="sub">Every factor and the path it takes to the forecast, built from the ledger entry and its frozen snapshot. Click a box.</p>
-    <div class="legend"><span><i></i>live: in today's number</span><span><i class="frozen"></i>frozen: in the snapshot, not yet used</span><span><i class="planned"></i>planned: not built yet</span><span><i class="human"></i>your input</span></div>
-    <div id="dag"></div>
-    <div id="dag-detail"></div>
-    <details style="margin-top:16px"><summary>Step-by-step narrative</summary>
-      <ol class="journey" id="journey" style="margin-top:12px"></ol></details>
-  </section>
+    <section class="view" data-view="evidence">
+      <div class="legend"><span><i></i>live: in today's number</span><span><i class="computed"></i>computed: calculated, not yet in the number</span><span><i class="idle"></i>idle: in the snapshot, nothing reads it yet</span><span><i class="planned"></i>planned: not built</span><span><i class="human"></i>your input</span></div>
+      <div class="graph-layout">
+        <div class="card"><div id="dag"></div></div>
+        <div class="card detail-pane" id="dag-detail"></div>
+      </div>
+    </section>
 
-  <section>
-    <h2>Your input</h2>
-    <p class="sub">The only two ways to steer the system. Both are typed, recorded, and visible in every forecast they touch.</p>
-    <div class="grid2">
-      <div>
-        <h3>Add a view: "I think it should lean this way"</h3>
-        <form id="view-form">
+    <section class="view" data-view="input">
+      <p class="sub">Three typed channels. Everything you enter is recorded and visible in every forecast it touches; nothing moves the number silently.</p>
+      <div class="card-grid">
+        <div class="card">
+          <h3>Views: "I think it should lean this way"</h3>
+          <form id="view-form">
+            <div class="row2">
+              <div><label for="v-dir">Direction</label>
+                <select id="v-dir"><option value="hawkish">Hawkish (toward a hike)</option><option value="dovish">Dovish (toward a cut)</option></select></div>
+              <div><label for="v-str">Strength</label>
+                <select id="v-str"><option value="1">Mild: moves 3 pp</option><option value="2" selected>Firm: moves 6 pp</option><option value="3">Strong: moves 10 pp (the cap)</option></select></div>
+            </div>
+            <label for="v-why">Why you think so (kept for the post-meeting review; does not change the size of the tilt)</label>
+            <textarea id="v-why" required minlength="20"></textarea>
+            <label for="v-exp">Expires on</label>
+            <input id="v-exp" type="date" required>
+            <div style="margin-top:10px"><button class="btn primary" type="submit">Save view</button></div>
+          </form>
+          <div id="views"></div>
+        </div>
+        <div class="card">
+          <h3>Watch-outs: "watch for XYZ in future"</h3>
+          <form id="watch-form">
+            <label for="w-text">What should every future run check for?</label>
+            <textarea id="w-text" required minlength="10"></textarea>
+            <div style="margin-top:10px"><button class="btn primary" type="submit">Save watch-out</button></div>
+          </form>
+          <div id="watchlist"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Prediction-market odds: what Polymarket or Kalshi shows right now</h3>
+        <p class="sub">Type the prices as the site shows them (percent per outcome; they need not sum to 100). Frozen into the next snapshot and read by the prediction-market model at a tenth of the pool weight.</p>
+        <form id="market-form">
           <div class="row2">
-            <div><label for="v-dir">Direction</label>
-              <select id="v-dir"><option value="hawkish">Hawkish (toward a hike)</option><option value="dovish">Dovish (toward a cut)</option></select></div>
-            <div><label for="v-str">Strength</label>
-              <select id="v-str"><option value="1">Mild: moves 3 pp</option><option value="2" selected>Firm: moves 6 pp</option><option value="3">Strong: moves 10 pp (the cap)</option></select></div>
+            <div><label for="m-venue">Venue</label><select id="m-venue"><option value="polymarket">Polymarket</option><option value="kalshi">Kalshi</option><option value="other">Other</option></select></div>
+            <div><label for="m-url">Market URL</label><input id="m-url" placeholder="https://polymarket.com/event/…"></div>
           </div>
-          <label for="v-why">Why you think so (kept for the post-meeting review; does not change the size of the tilt)</label>
-          <textarea id="v-why" required minlength="20"></textarea>
-          <label for="v-exp">Expires on</label>
-          <input id="v-exp" type="date" required>
-          <div style="margin-top:12px"><button class="primary" type="submit">Save view</button></div>
+          <p class="sub" style="margin:10px 0 0">Price of each outcome, in percent (a price of 68¢ is 68)</p>
+          <div class="row5">
+            <div><label for="m-p-50">50+ bps decrease</label><div class="unit"><input id="m-p-50" type="number" min="0" max="100" step="0.1" placeholder="–"><span>%</span></div></div>
+            <div><label for="m-p-25">25 bps decrease</label><div class="unit"><input id="m-p-25" type="number" min="0" max="100" step="0.1" placeholder="–"><span>%</span></div></div>
+            <div><label for="m-p0">No change</label><div class="unit"><input id="m-p0" type="number" min="0" max="100" step="0.1" placeholder="–"><span>%</span></div></div>
+            <div><label for="m-p25">25 bps increase</label><div class="unit"><input id="m-p25" type="number" min="0" max="100" step="0.1" placeholder="–"><span>%</span></div></div>
+            <div><label for="m-p50">50+ bps increase</label><div class="unit"><input id="m-p50" type="number" min="0" max="100" step="0.1" placeholder="–"><span>%</span></div></div>
+          </div>
+          <div class="row2">
+            <div><label for="m-vol">Volume in USD (optional)</label><input id="m-vol" type="number" min="0" step="1"></div>
+            <div><label for="m-note">Note (optional)</label><input id="m-note"></div>
+          </div>
+          <div style="margin-top:10px"><button class="btn primary" type="submit">Save odds</button></div>
         </form>
-        <div id="views"></div>
+        <div id="markets"></div>
       </div>
-      <div>
-        <h3>Add a watch-out: "watch for XYZ in future"</h3>
-        <form id="watch-form">
-          <label for="w-text">What should every future run check for?</label>
-          <textarea id="w-text" required minlength="10"></textarea>
-          <div style="margin-top:12px"><button class="primary" type="submit">Save watch-out</button></div>
+      <div class="card">
+        <h3>Your own data: a write-up, note, report or analysis</h3>
+        <p class="sub">Frozen into the next snapshot as evidence tagged "yours". The analysts must quote it like any other item; it never moves the number by itself.</p>
+        <form id="doc-form">
+          <div class="row2">
+            <div><label for="d-title">Title</label><input id="d-title" required minlength="3"></div>
+            <div><label for="d-src">Source (own analysis, a colleague, a URL, a report)</label><input id="d-src"></div>
+          </div>
+          <div class="row2">
+            <div><label for="d-rel">How related is it to the next decision?</label>
+              <select id="d-rel"><option value="related">Related: it bears on this meeting</option><option value="unsure" selected>Unsure: let the analysts judge</option><option value="unrelated">Unrelated: background only</option></select></div>
+            <div><label for="d-file">Upload (.pdf, .docx, .txt, .md): text extracted by code, stored verbatim</label><input id="d-file" type="file" accept=".pdf,.docx,.txt,.md"></div>
+          </div>
+          <label for="d-text">Or paste the text</label>
+          <textarea id="d-text" minlength="20" style="min-height:100px"></textarea>
+          <div style="margin-top:10px"><button class="btn primary" type="submit">Save document</button></div>
         </form>
-        <div id="watchlist"></div>
+        <div id="documents"></div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section>
-    <h2>Ledger <span id="chain-flag"></span></h2>
-    <p class="sub">Every forecast ever recorded. Append-only; entries are chained so edits and deletions show.</p>
-    <div class="scroll"><table id="ledger"></table></div>
-  </section>
+    <section class="view" data-view="methodology">
+      <div class="card">
+        <h3>The fixed rules every forecast follows</h3>
+        <ol class="rules" style="margin-top:8px">
+          <li><strong>Freeze the evidence.</strong> Everything is fetched into one fingerprinted snapshot. Nothing outside it may be read: no internet, no memory.</li>
+          <li><strong>Compute in code.</strong> Signals and models are plain code; each one lists the snapshot items it used.</li>
+          <li><strong>Pool with fixed weights.</strong> No language model writes the final number; at most it proposes a bounded, cited nudge.</li>
+          <li><strong>Apply typed human input.</strong> Views tilt the number by a capped amount. Documents and watch-outs are evidence for the analysts, never a direct nudge.</li>
+          <li><strong>Record and verify.</strong> Every forecast goes into an append-only, hash-chained ledger and must recompute exactly from its snapshot.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>Step by step for the current entry</h3>
+        <p class="sub">Rebuilt from the ledger entry and its frozen snapshot, with the actual values.</p>
+        <ol class="journey" id="journey"></ol>
+      </div>
+    </section>
 
-  <section>
-    <h2>Process scorecard</h2>
-    <p class="sub">The yardstick the tool is judged by. Fixed before any forecasting code was written; changes need a logged amendment.</p>
-    <div class="scroll"><table id="scorecard"></table></div>
-  </section>
+    <section class="view" data-view="ledger">
+      <div class="card">
+        <h3>Every forecast ever recorded <span id="chain-flag"></span></h3>
+        <p class="sub">Append-only; entries are chained so edits and deletions show.</p>
+        <div class="scroll"><table id="ledger"></table></div>
+      </div>
+    </section>
+
+    <section class="view" data-view="analysts">
+      <p class="sub">What each LLM specialist concluded on the latest forecast's snapshot, with every claim's quote and whether code could verify it. Scored, not yet in the number.</p>
+      <div id="analysts"></div>
+    </section>
+
+    <section class="view" data-view="scorecard">
+      <div class="card">
+        <h3>Process scorecard</h3>
+        <p class="sub">The yardstick the tool is judged by. Fixed before any forecasting code was written; changes need a logged amendment.</p>
+        <div class="scroll"><table id="scorecard"></table></div>
+      </div>
+    </section>
+
+  </div>
 </main>
 
 <script>
 const OUTCOMES = ["-50", "-25", "0", "25", "50"];
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const label = o => o === "0" ? "hold" : (o > 0 ? "+" : "") + o + " bp";
+const label = o => o === "0" ? "no change" : (o > 0 ? "+" : "") + o + " bps";
 const pct = p => (p * 100).toFixed(1) + "%";
+const topOf = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return [label(o), p[o] || 0]; };
 
+// --- navigation ------------------------------------------------------------------------
+const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard", analysts: "Analysts"};
+function showView(v) {
+  document.querySelectorAll(".view").forEach(s => s.classList.toggle("active", s.dataset.view === v));
+  document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.view === v));
+  $("view-title").textContent = TITLES[v];
+  try { localStorage.setItem("fedcast.view", v); } catch (e) {}
+}
+$("nav").onclick = e => { const b = e.target.closest("[data-view]"); if (b) showView(b.dataset.view); };
+document.addEventListener("keydown", e => { const v = Object.keys(TITLES)[Number(e.key) - 1]; if (v && !e.target.matches("input,textarea,select")) showView(v); });
+try { const v = localStorage.getItem("fedcast.view"); if (v && TITLES[v]) showView(v); } catch (e) {}
+
+// --- rendering --------------------------------------------------------------------------
 function bars(el, probs, human) {
   el.innerHTML = probs ? OUTCOMES.map(o => {
     const p = probs[o] || 0;
@@ -206,33 +344,41 @@ function bars(el, probs, human) {
       <span class="pct">${pct(p)}</span></div>`;
   }).join("") : `<div class="empty">No forecast yet. Take a snapshot, then run a forecast.</div>`;
 }
-
 function kv(rows) {
   return rows && rows.length ? `<table class="kv">${rows.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>` : "";
 }
 
 function render(s) {
-  const snap = s.snapshot, latest = s.latest;
-  if (snap) {
-    const days = Math.round((new Date(snap.next_meeting) - new Date(s.today)) / 864e5);
-    $("meeting").innerHTML = `Next decision <strong>${esc(snap.next_meeting)}</strong> · ${days} days away`;
-    if (!$("v-exp").value) $("v-exp").value = snap.next_meeting;
-  } else $("meeting").textContent = "No snapshot yet";
+  const snap = s.snapshot, latest = s.latest, fc = latest && latest.entry.forecast;
+  const days = snap ? Math.round((new Date(snap.next_meeting) - new Date(s.today)) / 864e5) : null;
+  if (snap && !$("v-exp").value) $("v-exp").value = snap.next_meeting;
 
-  const fc = latest && latest.entry.forecast;
+  $("side-status").innerHTML = snap ? `<div>Next decision<br><b>${esc(snap.next_meeting)}</b> · ${days} days</div>
+    <div>Latest snapshot<br><b>${esc(snap.as_of)}</b> · ${snap.n_items} items${snap.complete ? "" : " · incomplete"}</div>
+    <div>Ledger<br><b>${s.ledger.length} entr${s.ledger.length === 1 ? "y" : "ies"}</b> · chain ${s.chain_ok ? "intact" : "broken"}</div>` : `<div>No snapshot yet</div>`;
+
+  const [mo, mp] = fc ? topOf(fc.machine_only) : ["—", 0], [ho, hp] = fc ? topOf(fc.human_adjusted) : ["—", 0];
+  $("tiles").innerHTML = `<div class="tile"><div class="lbl">Next decision</div><div class="val">${snap ? esc(snap.next_meeting) : "—"}<small>${days !== null ? days + " days" : ""}</small></div></div>
+    <div class="tile"><div class="lbl">Machine: most likely</div><div class="val">${esc(mo)}<small>${fc ? pct(mp) : ""}</small></div></div>
+    <div class="tile"><div class="lbl">With your views</div><div class="val">${esc(ho)}<small>${fc ? pct(hp) : ""}</small></div></div>
+    <div class="tile"><div class="lbl">Market-expected change</div><div class="val">${fc ? (fc.models.market_implied.expected_change_bp >= 0 ? "+" : "") + fc.models.market_implied.expected_change_bp.toFixed(1) + " bp" : "—"}<small>${fc ? "from " + fc.models.market_implied.rate_before.toFixed(2) + "%" : ""}</small></div></div>`;
   bars($("bars-machine"), fc && fc.machine_only, false);
   bars($("bars-human"), fc && fc.human_adjusted, true);
   $("tilt-note").textContent = fc ? `(net tilt ${(fc.human.net_budget * 100 >= 0 ? "+" : "") + (fc.human.net_budget * 100).toFixed(0)} pp)` : "";
 
   let meta = "";
-  if (fc) meta += `Ledger entry #${latest.entry.seq} · snapshot <code>${esc(fc.snapshot_hash.slice(0, 12))}</code> · code <code>${esc(latest.entry.code_version)}</code>`;
+  if (fc) meta += `<span>Ledger entry #${latest.entry.seq} · snapshot <code>${esc(fc.snapshot_hash.slice(0, 12))}</code> · code <code>${esc(latest.entry.code_version)}</code></span>`;
   if (latest && latest.stale) meta += `<span class="flag warn">a newer snapshot exists: run a forecast to use it</span>`;
   if (snap && !snap.complete) meta += `<span class="flag bad">latest snapshot is missing ${Object.keys(snap.missing).length} sources</span>`;
   const pending = s.views.filter(v => v.active && fc && !fc.human.views_applied.some(a => a.id === v.id));
   if (pending.length) meta += `<span class="flag warn">${pending.length} saved view${pending.length > 1 ? "s" : ""} not yet applied: run a forecast</span>`;
+  const pendingDocs = s.documents.filter(d => d.status === "active" && !d.in_snapshot).length;
+  if (pendingDocs) meta += `<span class="flag warn">${pendingDocs} document${pendingDocs > 1 ? "s" : ""} not frozen yet: take a snapshot</span>`;
+  if (!meta) meta = `<span class="empty">Nothing recorded yet.</span>`;
   $("forecast-meta").innerHTML = meta;
 
   renderDag(latest && latest.dag);
+
   $("journey").innerHTML = latest && latest.journey ? latest.journey.map(st => `
     <li class="${st.muted ? "muted" : ""}"><div class="num">${st.n}</div><div class="step">
       <h3>${esc(st.title)}</h3><p>${esc(st.body)}</p>${kv(st.rows)}
@@ -251,21 +397,79 @@ function render(s) {
       <span class="sub" style="margin:0">${esc(w.added_on)}</span></div><div class="why">${esc(w.directive)}</div></div>`).join("")
     : `<div class="empty">No watch-outs yet. They bind the LLM analysts, which arrive in the next phase.</div>`;
 
+  $("documents").innerHTML = s.documents.length ? s.documents.slice().reverse().map(d => `
+    <div class="item"><div class="head"><span><strong>${esc(d.id)}</strong> · ${esc(d.title)} · ${esc(d.relevance)}
+      ${d.status !== "active" ? `<span class="flag">withdrawn</span>` : d.in_snapshot ? `<span class="flag ok">in latest snapshot</span>` : `<span class="flag warn">not in a snapshot yet</span>`}</span>
+      ${d.status === "active" ? `<button class="link" data-withdraw="${esc(d.id)}">Withdraw</button>` : ""}</div>
+      <div class="why">${esc(d.added_on)}${d.source ? " · " + esc(d.source) : ""} · ${d.chars} chars</div>
+      <div class="doc-text">${esc(d.text)}${d.chars > 400 ? "…" : ""}</div></div>`).join("") : `<div class="empty">No documents yet.</div>`;
+
+  $("markets").innerHTML = s.markets.length ? s.markets.slice().reverse().map(m => `
+    <div class="item"><div class="head"><span><strong>${esc(m.id)}</strong> · ${esc(m.venue)} · meeting ${esc(m.meeting)}
+      ${m.status !== "active" ? `<span class="flag">withdrawn</span>` : m.in_snapshot ? `<span class="flag ok">in latest snapshot</span>` : `<span class="flag warn">not in a snapshot yet</span>`}</span>
+      ${m.status === "active" ? `<button class="link" data-withdraw-market="${esc(m.id)}">Withdraw</button>` : ""}</div>
+      <div class="why">${esc(m.observed_at.replace("T", " "))} · ${OUTCOMES.filter(o => m.prices[o] !== undefined).map(o => label(o) + " " + m.prices[o] + "%").join(" · ")}${m.volume_usd ? " · $" + Number(m.volume_usd).toLocaleString() : ""}${m.note ? " · " + esc(m.note) : ""}</div></div>`).join("")
+    : `<div class="empty">No odds entered yet.</div>`;
+  const pendingMk = s.markets.filter(m => m.status === "active" && !m.in_snapshot).length;
+  if (pendingMk) $("forecast-meta").innerHTML += `<span class="flag warn">${pendingMk} market odds not frozen yet: take a snapshot</span>`;
+
+  renderAnalysts(latest && latest.analyses);
+  renderJob(s.job);
+
   $("chain-flag").innerHTML = s.chain_ok ? `<span class="flag ok">chain intact</span>` : `<span class="flag bad">chain broken</span>`;
-  const top = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return `${label(o)} ${pct(p[o])}`; };
+  const t = p => { const [o, v] = topOf(p); return `${o} ${pct(v)}`; };
   $("ledger").innerHTML = `<tr><th>#</th><th>Recorded (UTC)</th><th>Meeting</th><th>Machine: most likely</th><th>With views: most likely</th><th>Views</th><th>Snapshot</th><th>Code</th></tr>` +
     (s.ledger.length ? s.ledger.slice().reverse().map(e => `<tr><td>${e.seq}</td><td>${esc(e.created_at.replace("T", " ").slice(0, 16))}</td>
-      <td>${esc(e.meeting)}</td><td>${top(e.machine_only)}</td><td>${top(e.human_adjusted)}</td><td>${e.n_views}</td>
+      <td>${esc(e.meeting)}</td><td>${t(e.machine_only)}</td><td>${t(e.human_adjusted)}</td><td>${e.n_views}</td>
       <td><code>${esc(e.snapshot)}</code></td><td><code>${esc(e.code)}</code></td></tr>`).join("") : `<tr><td colspan="8" class="empty">Empty.</td></tr>`);
 
-  const mark = d => d.threshold === 0 ? "exactly 0" : (d.unit === "pct" && d.threshold === 100) ? "100%"
-    : `${d.direction === "max" ? "at most" : "at least"} ${d.threshold}${unit(d)}`;
   const unit = d => ({pp: " pp", pct: "%", count: "", score: " / 5"}[d.unit]);
+  const mark = d => d.threshold === 0 ? "exactly 0" : (d.unit === "pct" && d.threshold === 100) ? "100%" : `${d.direction === "max" ? "at most" : "at least"} ${d.threshold}${unit(d)}`;
   $("scorecard").innerHTML = `<tr><th></th><th>Dimension</th><th>How it is measured</th><th>Pass mark</th><th>Status today</th></tr>` +
-    s.scorecard.map(d => `<tr><td>${esc(d.id)}</td><td><strong>${esc(d.name)}</strong></td><td>${esc(d.metric)}</td>
-      <td style="white-space:nowrap">${mark(d)}</td><td>${esc(d.status)}</td></tr>`).join("");
+    s.scorecard.map(d => `<tr><td>${esc(d.id)}</td><td><strong>${esc(d.name)}</strong></td><td>${esc(d.metric)}</td><td style="white-space:nowrap">${mark(d)}</td><td>${esc(d.status)}</td></tr>`).join("");
 }
 
+// --- analysts -------------------------------------------------------------------------------
+const AN_LABELS = {communications: "Communications", minutes_digest: "Minutes digest", inflation: "Inflation", labour: "Labour market", financial: "Financial conditions", naive: "Naive control (arm A)"};
+function renderAnalysts(an) {
+  const el = $("analysts");
+  if (!an || !Object.values(an).some(Boolean)) { el.innerHTML = `<div class="card"><div class="empty">No analyses on this snapshot yet. Click "Run analysts".</div></div>`; return; }
+  el.innerHTML = Object.entries(AN_LABELS).map(([k, title]) => {
+    const a = an[k];
+    if (!a) return `<div class="card"><h3>${title}</h3><div class="empty">Not run on this snapshot.</div></div>`;
+    const s = a.summary;
+    if (k === "naive") return `<div class="card"><h3>${title}</h3>
+      <div class="an-head"><span class="tilt">${OUTCOMES.map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ")}</span>
+        <span class="sub" style="margin:0">${s.runs} run(s)${s.max_std_pp !== null ? ", max std " + s.max_std_pp + " pp" : ""} · groundedness 0% by construction · ${s.leakage_total} numbers from memory</span></div>
+      <p class="sub" style="margin:0">${esc(a.last.reasoning)}</p></div>`;
+    const v = a.last.verification;
+    return `<div class="card"><h3>${title}</h3>
+      <div class="an-head"><span class="tilt">${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp</span>
+        <span class="flag ${s.groundedness_pct_mean >= 95 ? "ok" : "bad"}">${s.groundedness_pct_mean.toFixed(0)}% grounded</span>
+        <span class="flag ${s.leakage_total === 0 ? "ok" : "bad"}">${s.leakage_total} leaked</span>
+        <span class="flag ${s.watchouts_missing_total === 0 ? "ok" : "bad"}">${s.watchouts_missing_total} watch-outs missing</span>
+        <span class="sub" style="margin:0">${s.runs} run(s)${s.tilt_std_bp !== null ? ", tilt std " + s.tilt_std_bp + " bp" : ""} · confidence ${esc(a.last.confidence || "")} · ${a.last.model ? esc(a.last.model) : ""}${a.last.duration_s ? " · " + a.last.duration_s + "s" : ""}</span></div>
+      <p style="margin:6px 0 10px">${esc(a.last.summary)}</p>
+      ${v.claims.map(c => `<div class="claim"><div class="lean ${c.lean}">${c.lean}</div><div>${esc(c.text)}<div class="q">${esc(c.quote)}</div>
+        <div class="src"><code>${esc(c.item)}</code> ${c.verified ? `<span class="flag ok">quote verified</span>` : `<span class="flag bad">quote not found</span>`}${c.leaked_numbers.length ? `<span class="flag bad">numbers not in evidence: ${esc(c.leaked_numbers.join(", "))}</span>` : ""}</div></div></div>`).join("")}
+      ${a.last.watchouts.length ? `<div class="sub" style="margin-top:10px">Watch-outs: ${a.last.watchouts.map(w => `<code>${esc(w.id)}</code> ${esc(w.status)}: ${esc(w.evidence)}`).join(" · ")}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+let jobTimer = null;
+function renderJob(job) {
+  const el = $("job");
+  if (!job || (!job.running && !job.progress.length)) { el.style.display = "none"; return; }
+  el.style.display = "block";
+  el.textContent = (job.running ? "Analysts running… " : job.error ? "Analysts failed: " + job.error + " " : "Analysts finished " + (job.finished_at || "") + " ") + "\n" + job.progress.slice(-6).join("\n");
+  if (job.running && !jobTimer) jobTimer = setInterval(async () => {
+    const s = await (await fetch("/api/state")).json(); render(s);
+    if (!s.job.running) { clearInterval(jobTimer); jobTimer = null; }
+  }, 4000);
+}
+$("btn-analyse").onclick = () => post("/api/analyse", {runs: 1}, "Starting analysts…");
+
+// --- factor graph -------------------------------------------------------------------------
 let lastDag = null, dagSelected = null;
 function renderDag(dag) {
   lastDag = dag;
@@ -295,28 +499,32 @@ function renderDag(dag) {
     return `<g class="node ${n.status} ${n.kind} ${sel === n.id ? "sel" : ""}" data-id="${esc(n.id)}" transform="translate(${p.x},${p.y})">
       <rect width="${W}" height="${H}" rx="8"/><text class="nl" x="10" y="19">${esc(n.label)}</text><text class="ns" x="10" y="35">${esc(n.summary)}</text></g>`; }).join("");
   const heads = dag.columns.map((t, i) => `<text class="colh" x="${PAD + i * COLW}" y="13">${esc(t)}</text>`).join("");
-  el.innerHTML = `<div class="scroll"><svg width="${width}" height="${height + TOP}" viewBox="0 0 ${width} ${height + TOP}">${heads}<g transform="translate(0,${TOP})">${hotLast}${nodes}</g></svg></div>`;
+  el.innerHTML = `<svg viewBox="0 0 ${width} ${height + TOP}">${heads}<g transform="translate(0,${TOP})">${hotLast}${nodes}</g></svg>`;
 
   const n = dag.nodes.find(x => x.id === sel);
-  if (!n) { det.innerHTML = `<div class="empty">Click any box to see its reasoning, the values it used, and what it feeds.</div>`; return; }
+  if (!n) { det.innerHTML = `<h3>Pick a factor</h3><p>Click any box to see what it is, why it matters for the decision, how it is computed, the values it used, and what it feeds.</p>`; return; }
   const name = id => dag.nodes.find(x => x.id === id).label;
   const fedBy = dag.edges.filter(e => e.to === n.id), feeds = dag.edges.filter(e => e.from === n.id);
-  const linkList = (list, key) => list.length ? list.map(e => `<button class="link" data-go="${esc(e[key])}">${esc(name(e[key]))}${e.status === "planned" ? " (planned)" : ""}</button>`).join(" · ") : "—";
-  const status = {live: ["ok", "live: in today's number"], frozen: ["warn", "frozen: in the snapshot, not yet used"], planned: ["", "planned: not built yet"]}[n.status];
-  det.innerHTML = `<h3>${esc(n.label)} <span class="flag ${status[0]}">${status[1]}</span></h3><p>${esc(n.detail.body)}</p>${kv(n.detail.rows)}
+  const linkList = (list, key) => list.length ? list.map(e => `<button class="link" data-go="${esc(e[key])}">${esc(name(e[key]))}${e.status === "planned" ? " (planned)" : ""}</button>`).join(" ") : "—";
+  const status = {live: ["ok", "live: in today's number"], computed: ["info", "computed, not yet in the number"], idle: ["warn", "in the snapshot, nothing reads it yet"], planned: ["", "planned: not built yet"]}[n.status];
+  const para = (lbl, txt) => txt ? `<p><strong class="plbl">${lbl}</strong> ${esc(txt)}</p>` : "";
+  det.innerHTML = `<h3>${esc(n.label)}</h3><p><span class="flag ${status[0]}" style="margin:0">${status[1]}</span></p>
+    ${para("What it is.", n.detail.body)}${para("Why it matters for the decision.", n.detail.why)}${para("How it is computed.", n.detail.how)}
+    ${n.detail.rows.length ? `<p><strong class="plbl">${n.status === "live" ? "Values used." : n.status === "computed" ? "Computed values." : "Today's values, for reference."}</strong></p>` : ""}${kv(n.detail.rows)}
     ${n.detail.evidence.length ? `<p style="margin-top:8px">Evidence: ${n.detail.evidence.map(e => `<code>${esc(e)}</code>`).join(" ")}</p>` : ""}
-    <div class="links" style="font-size:13.5px;margin-top:8px"><div>Fed by: ${linkList(fedBy, "from")}</div><div>Feeds: ${linkList(feeds, "to")}</div></div>`;
+    <div class="links"><div>Fed by: ${linkList(fedBy, "from")}</div><div>Feeds: ${linkList(feeds, "to")}</div></div>`;
 }
 $("dag").onclick = e => { const g = e.target.closest("[data-id]"); if (g) { dagSelected = g.dataset.id; renderDag(lastDag); } };
 $("dag-detail").onclick = e => { const id = e.target.dataset.go; if (id) { dagSelected = id; renderDag(lastDag); } };
 
+// --- actions ------------------------------------------------------------------------------
 function say(text, cls) { const m = $("msg"); m.textContent = text; m.className = cls; }
-
 async function post(path, body, busyText) {
   document.querySelectorAll("button").forEach(b => b.disabled = true);
   say(busyText, "busy");
   try {
-    const r = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json", "X-FedCast": "1"}, body: JSON.stringify(body || {})});
+    const isForm = body instanceof FormData;
+    const r = await fetch(path, {method: "POST", headers: isForm ? {"X-FedCast": "1"} : {"Content-Type": "application/json", "X-FedCast": "1"}, body: isForm ? body : JSON.stringify(body || {})});
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || "Request failed");
     render(data.state); say(data.message, "ok");
@@ -324,7 +532,6 @@ async function post(path, body, busyText) {
   } catch (e) { say(e.message, "err"); return false; }
   finally { document.querySelectorAll("button").forEach(b => b.disabled = false); }
 }
-
 $("btn-snapshot").onclick = () => post("/api/snapshot", {}, "Fetching live data from the Fed, FRED, the New York Fed and futures quotes…");
 $("btn-forecast").onclick = () => post("/api/forecast", {}, "Running models…");
 $("btn-replay").onclick = () => post("/api/replay", {}, "Recomputing every ledger entry…");
@@ -332,6 +539,23 @@ $("view-form").onsubmit = async e => { e.preventDefault();
   if (await post("/api/views", {direction: $("v-dir").value, strength: $("v-str").value, rationale: $("v-why").value, expires_on: $("v-exp").value}, "Saving view…")) $("v-why").value = ""; };
 $("watch-form").onsubmit = async e => { e.preventDefault();
   if (await post("/api/watchlist", {directive: $("w-text").value}, "Saving watch-out…")) $("w-text").value = ""; };
+$("doc-form").onsubmit = async e => { e.preventDefault();
+  const file = $("d-file").files[0];
+  let ok;
+  if (file) {
+    const fd = new FormData();
+    fd.append("title", $("d-title").value); fd.append("source", $("d-src").value); fd.append("relevance", $("d-rel").value); fd.append("file", file);
+    ok = await post("/api/documents/upload", fd, `Extracting text from ${file.name}…`);
+  } else if ($("d-text").value.trim().length >= 20) {
+    ok = await post("/api/documents", {title: $("d-title").value, source: $("d-src").value, relevance: $("d-rel").value, text: $("d-text").value}, "Saving document…");
+  } else { say("Choose a file or paste at least 20 characters of text.", "err"); return; }
+  if (ok) { $("d-title").value = ""; $("d-src").value = ""; $("d-text").value = ""; $("d-file").value = ""; } };
+$("market-form").onsubmit = async e => { e.preventDefault();
+  const prices = {}; [["-50", "m-p-50"], ["-25", "m-p-25"], ["0", "m-p0"], ["25", "m-p25"], ["50", "m-p50"]].forEach(([k, id]) => { if ($(id).value !== "") prices[k] = $(id).value; });
+  if (await post("/api/markets", {venue: $("m-venue").value, url: $("m-url").value, prices, volume_usd: $("m-vol").value, note: $("m-note").value}, "Saving odds…"))
+    ["m-url", "m-p-50", "m-p-25", "m-p0", "m-p25", "m-p50", "m-vol", "m-note"].forEach(id => $(id).value = ""); };
+$("markets").onclick = e => { const id = e.target.dataset.withdrawMarket; if (id) post("/api/markets/withdraw", {id}, "Withdrawing…"); };
+$("documents").onclick = e => { const id = e.target.dataset.withdraw; if (id) post("/api/documents/withdraw", {id}, "Withdrawing…"); };
 $("views").onclick = e => { const id = e.target.dataset.expire; if (id) post("/api/views/expire", {id}, "Expiring view…"); };
 
 fetch("/api/state").then(r => r.json()).then(render).catch(e => say(e.message, "err"));
