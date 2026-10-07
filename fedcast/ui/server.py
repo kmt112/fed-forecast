@@ -143,12 +143,13 @@ def _trim_analysis(rec: dict | None) -> dict | None:
 def _analysis_job(names: list[str], runs: int) -> None:
     import yaml
 
-    from fedcast.llm.backend import ClaudeCodeBackend, ReplayBackend
+    from fedcast.llm.api_backend import make_backend
+    from fedcast.llm.backend import ReplayBackend
 
     try:
         snap = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR))
         watchlist = _load_watchlist()
-        backend = ReplayBackend(config.ROOT / "analyses" / "replay", ClaudeCodeBackend())
+        backend = ReplayBackend(config.ROOT / "analyses" / "replay", make_backend())
         log = lambda m: JOB["progress"].append(m.strip())
         for name in names:
             if name == "naive":

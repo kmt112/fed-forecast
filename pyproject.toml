@@ -12,6 +12,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+api = ["anthropic>=1"]
 
 [build-system]
 requires = ["setuptools>=68"]

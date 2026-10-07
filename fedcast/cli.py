@@ -86,12 +86,13 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
     import yaml
 
     from fedcast.llm import analyst
-    from fedcast.llm.backend import ClaudeCodeBackend, ReplayBackend
+    from fedcast.llm.api_backend import make_backend
+    from fedcast.llm.backend import ReplayBackend
 
     path = Path(args.snapshot) if args.snapshot else snapshot.latest(config.SNAPSHOT_DIR)
     snap = snapshot.load(path)
     watchlist = (yaml.safe_load((config.ROOT / "human" / "watchlist.yaml").read_text(encoding="utf-8")) or {}).get("items") or []
-    live = ClaudeCodeBackend(model=args.model)
+    live = make_backend(args.model)
     backend = ReplayBackend(config.ROOT / "analyses" / "replay", live) if args.replay else live
     names = list(analyst.SPECIALISTS) if args.arm == "all" else ["communications" if args.arm == "comms" else args.arm]
     recs = []
