@@ -2,8 +2,14 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "fedcast-ui",
+      "name": "fedcast-ui (Windows)",
       "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "fedcast.cli", "ui", "--no-browser"],
+      "port": 8765
+    },
+    {
+      "name": "fedcast-ui (macOS/Linux)",
+      "runtimeExecutable": ".venv/bin/python",
       "runtimeArgs": ["-m", "fedcast.cli", "ui", "--no-browser"],
       "port": 8765
     }
