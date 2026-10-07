@@ -60,6 +60,14 @@
   button.link { border: 0; padding: 0; color: var(--accent); background: none; font: inherit; font-size: 12.5px; cursor: pointer; }
   #msg { font-size: 12.5px; padding: 6px 20px; min-height: 28px; background: var(--surface); border-bottom: 1px solid var(--line); }
   #msg.ok { color: var(--ok); } #msg.err { color: var(--bad); } #msg.busy { color: var(--muted); }
+  .job { font: 12px ui-monospace, Consolas, monospace; padding: 6px 20px; background: var(--surface-2); border-bottom: 1px solid var(--line); color: var(--muted); max-height: 120px; overflow: auto; white-space: pre-wrap; }
+  .claim { display: grid; grid-template-columns: 70px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .claim .lean { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+  .claim .lean.hawkish { color: var(--bad); } .claim .lean.dovish { color: var(--ok); } .claim .lean.neutral { color: var(--muted); }
+  .claim .q { color: var(--muted); font-size: 12.5px; margin-top: 2px; } .claim .q::before { content: "“"; } .claim .q::after { content: "”"; }
+  .claim .src { font-size: 12px; margin-top: 2px; }
+  .an-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-bottom: 6px; }
+  .an-head .tilt { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
   /* forecast */
   .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 14px; }
@@ -156,6 +164,7 @@
     <button data-view="methodology">Methodology <span class="k">4</span></button>
     <button data-view="ledger">Ledger <span class="k">5</span></button>
     <button data-view="scorecard">Scorecard <span class="k">6</span></button>
+    <button data-view="analysts">Analysts <span class="k">7</span></button>
   </nav>
   <div class="side-status" id="side-status"></div>
 </aside>
@@ -166,8 +175,10 @@
     <button class="btn" id="btn-snapshot" title="Fetch live data from the Fed, FRED, the New York Fed and futures quotes, and freeze it as a fingerprinted bundle.">Take snapshot</button>
     <button class="btn primary" id="btn-forecast" title="Run the models and your views on the latest snapshot and record the result in the ledger.">Run forecast</button>
     <button class="btn" id="btn-replay" title="Two checks: the ledger chain is intact, and every entry recomputes exactly from its frozen snapshot.">Verify ledger</button>
+    <button class="btn" id="btn-analyse" title="Run the five specialist analysts and the naive control on the latest snapshot (about a minute per call, in the background).">Run analysts</button>
   </div>
   <div id="msg"></div>
+  <div id="job" class="job" style="display:none"></div>
   <div class="content">
 
     <section class="view active" data-view="forecast">
@@ -288,6 +299,11 @@
       </div>
     </section>
 
+    <section class="view" data-view="analysts">
+      <p class="sub">What each LLM specialist concluded on the latest forecast's snapshot, with every claim's quote and whether code could verify it. Scored, not yet in the number.</p>
+      <div id="analysts"></div>
+    </section>
+
     <section class="view" data-view="scorecard">
       <div class="card">
         <h3>Process scorecard</h3>
@@ -308,7 +324,7 @@ const pct = p => (p * 100).toFixed(1) + "%";
 const topOf = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return [label(o), p[o] || 0]; };
 
 // --- navigation ------------------------------------------------------------------------
-const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard"};
+const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard", analysts: "Analysts"};
 function showView(v) {
   document.querySelectorAll(".view").forEach(s => s.classList.toggle("active", s.dataset.view === v));
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.view === v));
@@ -397,6 +413,9 @@ function render(s) {
   const pendingMk = s.markets.filter(m => m.status === "active" && !m.in_snapshot).length;
   if (pendingMk) $("forecast-meta").innerHTML += `<span class="flag warn">${pendingMk} market odds not frozen yet: take a snapshot</span>`;
 
+  renderAnalysts(latest && latest.analyses);
+  renderJob(s.job);
+
   $("chain-flag").innerHTML = s.chain_ok ? `<span class="flag ok">chain intact</span>` : `<span class="flag bad">chain broken</span>`;
   const t = p => { const [o, v] = topOf(p); return `${o} ${pct(v)}`; };
   $("ledger").innerHTML = `<tr><th>#</th><th>Recorded (UTC)</th><th>Meeting</th><th>Machine: most likely</th><th>With views: most likely</th><th>Views</th><th>Snapshot</th><th>Code</th></tr>` +
@@ -409,6 +428,46 @@ function render(s) {
   $("scorecard").innerHTML = `<tr><th></th><th>Dimension</th><th>How it is measured</th><th>Pass mark</th><th>Status today</th></tr>` +
     s.scorecard.map(d => `<tr><td>${esc(d.id)}</td><td><strong>${esc(d.name)}</strong></td><td>${esc(d.metric)}</td><td style="white-space:nowrap">${mark(d)}</td><td>${esc(d.status)}</td></tr>`).join("");
 }
+
+// --- analysts -------------------------------------------------------------------------------
+const AN_LABELS = {communications: "Communications", minutes_digest: "Minutes digest", inflation: "Inflation", labour: "Labour market", financial: "Financial conditions", naive: "Naive control (arm A)"};
+function renderAnalysts(an) {
+  const el = $("analysts");
+  if (!an || !Object.values(an).some(Boolean)) { el.innerHTML = `<div class="card"><div class="empty">No analyses on this snapshot yet. Click "Run analysts".</div></div>`; return; }
+  el.innerHTML = Object.entries(AN_LABELS).map(([k, title]) => {
+    const a = an[k];
+    if (!a) return `<div class="card"><h3>${title}</h3><div class="empty">Not run on this snapshot.</div></div>`;
+    const s = a.summary;
+    if (k === "naive") return `<div class="card"><h3>${title}</h3>
+      <div class="an-head"><span class="tilt">${OUTCOMES.map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ")}</span>
+        <span class="sub" style="margin:0">${s.runs} run(s)${s.max_std_pp !== null ? ", max std " + s.max_std_pp + " pp" : ""} · groundedness 0% by construction · ${s.leakage_total} numbers from memory</span></div>
+      <p class="sub" style="margin:0">${esc(a.last.reasoning)}</p></div>`;
+    const v = a.last.verification;
+    return `<div class="card"><h3>${title}</h3>
+      <div class="an-head"><span class="tilt">${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp</span>
+        <span class="flag ${s.groundedness_pct_mean >= 95 ? "ok" : "bad"}">${s.groundedness_pct_mean.toFixed(0)}% grounded</span>
+        <span class="flag ${s.leakage_total === 0 ? "ok" : "bad"}">${s.leakage_total} leaked</span>
+        <span class="flag ${s.watchouts_missing_total === 0 ? "ok" : "bad"}">${s.watchouts_missing_total} watch-outs missing</span>
+        <span class="sub" style="margin:0">${s.runs} run(s)${s.tilt_std_bp !== null ? ", tilt std " + s.tilt_std_bp + " bp" : ""} · confidence ${esc(a.last.confidence || "")} · ${a.last.model ? esc(a.last.model) : ""}${a.last.duration_s ? " · " + a.last.duration_s + "s" : ""}</span></div>
+      <p style="margin:6px 0 10px">${esc(a.last.summary)}</p>
+      ${v.claims.map(c => `<div class="claim"><div class="lean ${c.lean}">${c.lean}</div><div>${esc(c.text)}<div class="q">${esc(c.quote)}</div>
+        <div class="src"><code>${esc(c.item)}</code> ${c.verified ? `<span class="flag ok">quote verified</span>` : `<span class="flag bad">quote not found</span>`}${c.leaked_numbers.length ? `<span class="flag bad">numbers not in evidence: ${esc(c.leaked_numbers.join(", "))}</span>` : ""}</div></div></div>`).join("")}
+      ${a.last.watchouts.length ? `<div class="sub" style="margin-top:10px">Watch-outs: ${a.last.watchouts.map(w => `<code>${esc(w.id)}</code> ${esc(w.status)}: ${esc(w.evidence)}`).join(" · ")}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+let jobTimer = null;
+function renderJob(job) {
+  const el = $("job");
+  if (!job || (!job.running && !job.progress.length)) { el.style.display = "none"; return; }
+  el.style.display = "block";
+  el.textContent = (job.running ? "Analysts running… " : job.error ? "Analysts failed: " + job.error + " " : "Analysts finished " + (job.finished_at || "") + " ") + "\n" + job.progress.slice(-6).join("\n");
+  if (job.running && !jobTimer) jobTimer = setInterval(async () => {
+    const s = await (await fetch("/api/state")).json(); render(s);
+    if (!s.job.running) { clearInterval(jobTimer); jobTimer = null; }
+  }, 4000);
+}
+$("btn-analyse").onclick = () => post("/api/analyse", {runs: 1}, "Starting analysts…");
 
 // --- factor graph -------------------------------------------------------------------------
 let lastDag = null, dagSelected = null;

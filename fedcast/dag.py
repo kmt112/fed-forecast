@@ -611,33 +611,36 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                "a bounded tilt in basis points, never the final number.")
     comm = (analyses or {}).get("communications")
     naive = (analyses or {}).get("naive")
+    specialists = {k: v for k, v in (analyses or {}).items() if v and k not in ("naive",)}
     llm_srcs = ["sig.tone", "sig.inflation", "sig.labour", "sig.sep", "watchouts", "documents"]
     for d_ in sorted(i for i in snap.items if i.startswith("fed.presconf.")):
         link(d_, "sig.tone", "planned")
     if has("fed.speeches"):
         link("fed.speeches", "sig.tone", "planned")
-    if comm:
-        sm = comm["summary"]
-        last = comm["runs"][-1]["verification"]
-        rows = [["Runs on this snapshot", f"{sm['runs']} via {comm['backend']} ({comm['prompt_version']})"],
-                ["Tilt (bounded ±10 bp)", f"mean {sm['tilt_mean_bp']:+.1f} bp" + (f", std {sm['tilt_std_bp']:.1f} bp (S1)" if sm["tilt_std_bp"] is not None else "")],
-                ["Groundedness (S2)", f"{sm['groundedness_pct_mean']:.0f}% of claims quote-verified"],
-                ["Leakage (S3)", f"{sm['leakage_total']} number(s) not in the quoted evidence"],
-                ["Watch-outs (S10)", f"{sm['watchouts_missing_total']} missing"],
-                ["Last run", f"{last['n_verified']}/{last['n_claims']} claims verified; "
-                             + comm["runs"][-1]["completion"]["output"].get("summary", "")[:240]]]
+    if specialists:
+        rows = []
+        for name, rec in specialists.items():
+            sm = rec["summary"]
+            rows.append([name.replace("_", " "), f"tilt {sm['tilt_mean_bp']:+.1f} bp"
+                         + (f" (std {sm['tilt_std_bp']:.1f})" if sm["tilt_std_bp"] is not None else "")
+                         + f", {sm['groundedness_pct_mean']:.0f}% grounded, {sm['leakage_total']} leaked, "
+                         + f"{sm['watchouts_missing_total']} watch-outs missing, {sm['runs']} run(s)"])
+        tilts = [rec["summary"]["tilt_mean_bp"] for rec in specialists.values()]
+        rows.append(["Mean tilt across specialists", f"{sum(tilts) / len(tilts):+.1f} bp (not in the number)"])
+        sm = {"tilt_mean_bp": sum(tilts) / len(tilts),
+              "groundedness_pct_mean": sum(r["summary"]["groundedness_pct_mean"] for r in specialists.values()) / len(specialists)}
         if naive:
             ns = naive["summary"]
             rows.append(["Naive control (arm A), same snapshot date",
                          f"{ns['runs']} run(s): " + ", ".join(f"{_label(int(k))} {v * 100:.0f}%" for k, v in ns["mean_probabilities"].items() if v >= 0.005)
                          + (f"; max std {ns['max_std_pp']:.1f} pp" if ns["max_std_pp"] is not None else "")
                          + f"; {ns['leakage_total']} numbers from memory, 0% groundedness"])
-        nodes.append(_node("model.llm", 2, "LLM analysts", f"tilt {sm['tilt_mean_bp']:+.0f} bp, {sm['groundedness_pct_mean']:.0f}% grounded",
+        nodes.append(_node("model.llm", 2, "LLM analysts", f"{len(specialists)} run, tilt {sm['tilt_mean_bp']:+.0f} bp, {sm['groundedness_pct_mean']:.0f}% grounded",
                            "model", "computed", what=llm_what, why=llm_why,
-                           how="The communications analyst reads the statement diff, both statements, the minutes, your "
-                               "documents and the watch-outs, and returns claims with verbatim quotes, a watch-out "
-                               "report and a tilt. Code verifies every quote. Computed and scored; not in the number until "
-                               "it passes the eval gate (S1-S3, S10 thresholds) and a weight is set by amendment.",
+                           how="Each specialist reads its slice of the evidence plus the deterministic pre-reads and your "
+                               "documents and watch-outs, and returns claims with verbatim quotes, a watch-out report and a "
+                               "tilt. Code verifies every quote. Computed and scored; not in the number until the arm passes "
+                               "the eval gate (S1-S3, S10 thresholds) and a weight is set by amendment. See the Analysts view.",
                            rows=rows))
         for s_ in llm_srcs:
             link(s_, "model.llm", "computed")

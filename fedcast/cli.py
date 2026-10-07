@@ -93,15 +93,20 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
     watchlist = (yaml.safe_load((config.ROOT / "human" / "watchlist.yaml").read_text(encoding="utf-8")) or {}).get("items") or []
     live = ClaudeCodeBackend(model=args.model)
     backend = ReplayBackend(config.ROOT / "analyses" / "replay", live) if args.replay else live
-    if args.arm == "naive":
-        rec = analyst.run_naive(snap, backend, runs=args.runs)
-    else:
-        rec = analyst.run_comms(snap, backend, watchlist, runs=args.runs)
-    out = analyst.save(rec)
+    names = list(analyst.SPECIALISTS) if args.arm == "all" else ["communications" if args.arm == "comms" else args.arm]
+    recs = []
+    for name in names:
+        if name == "naive":
+            recs.append(analyst.run_naive(snap, backend, runs=args.runs))
+        else:
+            recs.append(analyst.run_specialist(analyst.SPECIALISTS[name], snap, backend, watchlist, runs=args.runs))
+        analyst.save(recs[-1])
+    rec = recs[-1]
+    out = analyst.ANALYSES_DIR / snap.hash[:12]
     print(f"{rec['analyst']} (arm {rec['arm']}) on snapshot {snap.hash[:12]} via {rec['backend']}: {args.runs} run(s)")
     for k, v in rec["summary"].items():
         print(f"  {k}: {v}")
-    if rec["analyst"] == "communications":
+    if rec["analyst"] != "naive":
         v = rec["runs"][-1]["verification"]
         print("  last run claims:")
         for c in v["claims"]:
@@ -132,7 +137,8 @@ def main() -> None:
     f.set_defaults(fn=_cmd_forecast)
     sub.add_parser("replay", help="verify the ledger chain and recompute every entry").set_defaults(fn=_cmd_replay)
     a = sub.add_parser("analyse", help="run an LLM analyst on a snapshot and verify its claims")
-    a.add_argument("--arm", choices=["comms", "naive"], default="comms", help="comms = harnessed analyst (arm D); naive = control (arm A)")
+    a.add_argument("--arm", choices=["all", "comms", "communications", "minutes_digest", "inflation", "labour", "financial", "naive"],
+                   default="all", help="a specialist (arm D), all of them, or the naive control (arm A)")
     a.add_argument("--runs", type=int, default=1, help="repeat N times to measure repeatability (S1)")
     a.add_argument("--snapshot", help="snapshot directory (default: latest)")
     a.add_argument("--model", help="claude model id (default: the CLI's default)")

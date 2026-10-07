@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 from email.parser import BytesParser
 from email.policy import default as email_policy
 import traceback
@@ -34,6 +35,8 @@ DOCS = config.ROOT / "human" / "documents"
 MARKETS = config.ROOT / "human" / "prediction_markets.yaml"
 INDEX = Path(__file__).parent / "index.html"
 AUTHOR = "tankahming123"
+
+JOB: dict = {"running": False, "progress": [], "started_at": None, "finished_at": None, "error": None}
 
 _VIEWS_HEADER = """# H2 views. Each one tilts the human_adjusted forecast by a bounded amount until it expires.
 # strength: 1 = mild (3 pp), 2 = firm (6 pp), 3 = strong (10 pp). Total tilt is capped at 10 pp.
@@ -106,18 +109,72 @@ def state() -> dict:
     if entries:
         last = entries[-1]
         snap = _snapshot_by_hash(last["forecast"]["snapshot_hash"])
-        analyses = {a: analyst_mod.latest(last["forecast"]["snapshot_hash"], a) for a in ("communications", "naive")}
+        analyses = analyst_mod.latest_all(last["forecast"]["snapshot_hash"])
         out["latest"] = {"entry": last, "journey": journey.build(last, snap) if snap else None,
                          "dag": dag.build(last, snap, out["watchlist"], analyses) if snap else None,
-                         "analyses": {k: (v["summary"] if v else None) for k, v in analyses.items()}}
+                         "analyses": {k: _trim_analysis(v) for k, v in analyses.items()}}
         if out["snapshot"]:
             out["latest"]["stale"] = not out["snapshot"]["name"].endswith(last["forecast"]["snapshot_hash"][:12])
+    out["job"] = JOB
 
     out["markets"] = [{**m.model_dump(mode="json"), "in_snapshot": f"human.pm.{m.id}" in (manifest["items"] if out["snapshot"] else {})}
                       for m in pm_store.load_markets(MARKETS)]
     out["scorecard"] = [{**asdict(d), "status": _SCORECARD_STATUS.get(d.id, "Not measured yet: needs the LLM agents")}
                         for d in SCORECARD]
     return out
+
+
+def _trim_analysis(rec: dict | None) -> dict | None:
+    if not rec:
+        return None
+    last = rec["runs"][-1]
+    out = {k: rec[k] for k in ("analyst", "arm", "prompt_version", "created_at", "backend", "summary")}
+    out["prompt_chars"] = rec.get("prompt_chars")
+    if rec["analyst"] == "naive":
+        out["last"] = {"probabilities": last["probabilities"], "reasoning": last["completion"]["output"].get("reasoning", "")}
+    else:
+        o = last["completion"]["output"]
+        out["last"] = {"summary": o.get("summary", ""), "confidence": o.get("confidence"), "watchouts": o.get("watchouts", []),
+                       "verification": last["verification"], "model": last["completion"].get("model"),
+                       "duration_s": last["completion"].get("duration_s")}
+    return out
+
+
+def _analysis_job(names: list[str], runs: int) -> None:
+    import yaml
+
+    from fedcast.llm.backend import ClaudeCodeBackend, ReplayBackend
+
+    try:
+        snap = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR))
+        watchlist = _load_watchlist()
+        backend = ReplayBackend(config.ROOT / "analyses" / "replay", ClaudeCodeBackend())
+        log = lambda m: JOB["progress"].append(m.strip())
+        for name in names:
+            if name == "naive":
+                rec = analyst_mod.run_naive(snap, backend, runs=runs, log=log)
+            else:
+                rec = analyst_mod.run_specialist(analyst_mod.SPECIALISTS[name], snap, backend, watchlist, runs=runs, log=log)
+            analyst_mod.save(rec)
+            s = rec["summary"]
+            JOB["progress"].append(f"{name}: " + (f"tilt {s['tilt_mean_bp']:+.1f} bp, {s['groundedness_pct_mean']:.0f}% grounded, "
+                                                  f"{s['leakage_total']} leaked" if name != "naive" else "done"))
+    except Exception as exc:  # the UI shows the failure; nothing is half-written
+        JOB["error"] = f"{type(exc).__name__}: {exc}"
+    finally:
+        JOB["running"] = False
+        JOB["finished_at"] = datetime.now().replace(microsecond=0).isoformat()
+
+
+def act_analyse(body: dict) -> dict:
+    if JOB["running"]:
+        raise ValueError("an analysis is already running")
+    names = body.get("analysts") or list(analyst_mod.SPECIALISTS) + ["naive"]
+    runs = max(1, min(10, int(body.get("runs") or 1)))
+    JOB.update({"running": True, "progress": [f"starting {', '.join(names)} ({runs} run(s) each)"],
+                "started_at": datetime.now().replace(microsecond=0).isoformat(), "finished_at": None, "error": None})
+    threading.Thread(target=_analysis_job, args=(names, runs), daemon=True).start()
+    return {"message": "Analysts started. Each call takes about a minute; progress shows below the buttons."}
 
 
 # --- actions ------------------------------------------------------------------------------------
@@ -272,7 +329,8 @@ def act_withdraw_document(body: dict) -> dict:
 ACTIONS = {"/api/snapshot": act_snapshot, "/api/forecast": act_forecast, "/api/replay": act_replay,
            "/api/views": act_add_view, "/api/views/expire": act_expire_view, "/api/watchlist": act_add_directive,
            "/api/documents": act_add_document, "/api/documents/upload": act_add_document, "/api/documents/withdraw": act_withdraw_document,
-           "/api/markets": act_add_market, "/api/markets/withdraw": act_withdraw_market}
+           "/api/markets": act_add_market, "/api/markets/withdraw": act_withdraw_market,
+           "/api/analyse": act_analyse}
 
 
 class Handler(BaseHTTPRequestHandler):
