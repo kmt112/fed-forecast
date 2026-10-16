@@ -30,10 +30,15 @@ and, where it is a fitted model, a pre-registered spec and the expanding-window 
       floor is then derived from the base-rate tail instead of fixed.
 - [ ] Condition on the previous *two* decisions and on cycle position; check sample sizes stay meaningful.
 
-## Taylor-rule family
-- [ ] Show the 3-month-momentum variant as a reference line beside the 12-month anchor (sign flips today).
-- [ ] Take r* and u* from the SEP longer-run medians in the snapshot instead of a fixed grid.
-- [ ] Revisit the quarter-to-meeting scaling of the first-difference rule (currently 0.5).
+## Taylor-rule family (the rules are the Fed's; the inputs and the conversion are ours)
+- [ ] Inflation measure: show the 3-month-momentum variant beside the 12-month anchor (today they differ in sign:
+      +11 bp vs -11 bp); decide by amendment whether the anchor stays 12-month only.
+- [ ] r* and u*: read them from the SEP longer-run medians already in the snapshot (3.2% nominal funds rate,
+      4.2% unemployment) instead of the fixed grids 0.5-1.5% and 4.0-4.4%.
+- [ ] Partial adjustment (rho = 0.85 per meeting) and the quarter-to-meeting scaling of the first-difference rule
+      (0.5): document a source or estimate them on the decision history (pre-register first).
+- [ ] Rule rate -> probability: the normal with sigma = sqrt(spread^2 + 15 bp^2) is our construction; test
+      alternatives on the expanding window (pre-register), and show the per-variant distributions, not just the mean.
 
 ## Market-implied
 - [ ] Second futures price source with an agreement check (broker API; CME blocks scripts).
