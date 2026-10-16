@@ -1,0 +1,114 @@
+{
+ "as_of": "2026-10-15",
+ "hash": "2834903776a14bd959d76d7f59cbe2c23564f0a30490d5896b44a8695906fe31",
+ "complete": true,
+ "created_at": "2026-10-16T03:22:20+00:00",
+ "missing": {},
+ "items": {
+  "calendar": {
+   "kind": "calendar",
+   "source": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+   "sha256": "9c1d6f9b3c89d65c184feae400edaf7ca38f0d1e746a751ed08ae5ae7ea9df87"
+  },
+  "effr": {
+   "kind": "effr",
+   "source": "markets.newyorkfed.org/api/rates/unsecured/effr",
+   "sha256": "5e62aa90e55553666be8c6552550e9f7acc56cce9a547138046c4e70c56ded29"
+  },
+  "fed.minutes.2026-09-16": {
+   "kind": "document",
+   "source": "https://www.federalreserve.gov/monetarypolicy/fomcminutes20260916.htm",
+   "sha256": "0036739b734c1f420d62937d3d8bd0482210983c1b49b521169a0cae82ed143a"
+  },
+  "fed.presconf.2026-09-16": {
+   "kind": "document",
+   "source": "https://www.federalreserve.gov/mediacenter/files/FOMCpresconf20260916.pdf",
+   "sha256": "26079e530863191eb4596adb27d5b59a43db8f1aebcf86c93c19802e48c1185c"
+  },
+  "fed.sep.2026-09-16": {
+   "kind": "projections",
+   "source": "https://www.federalreserve.gov/monetarypolicy/fomcprojtabl20260916.htm",
+   "sha256": "f9537fe1a58e89131216d358d8829c3f5117b0b26d18e77fd10f246af9abb9c7"
+  },
+  "fed.speeches": {
+   "kind": "speeches",
+   "source": "federalreserve.gov/feeds/speeches.xml",
+   "sha256": "a4c8c40c6ba24274dda6bf76279e575c7748178274e47d0af083719e8b662802"
+  },
+  "fed.statement.2026-07-29": {
+   "kind": "document",
+   "source": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm",
+   "sha256": "9e5e85956665640dee5c5cc19b97d4a79688a154fa08743742f8eb3f5653031a"
+  },
+  "fed.statement.2026-09-16": {
+   "kind": "document",
+   "source": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm",
+   "sha256": "9ab568d03655dbe52e8fb538f7203929b99bd0a61f3d2ad337134702d7a12416"
+  },
+  "fred.CPILFESL": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=CPILFESL",
+   "sha256": "e8aa49d4378650a0e412df4e2f2c3dbc3c4d8d47776b7663a29a49d4c4af571d"
+  },
+  "fred.DGS2": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=DGS2",
+   "sha256": "94e5b6b45d032d373b80a6f3950fc3a2ffe2a0ea0e34da8916f40dbf4e4b54aa"
+  },
+  "fred.ICSA": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=ICSA",
+   "sha256": "6680fcf887b16236cd37401ebc23bd0caea2e43c0ff3722ae1a3fc50b58666eb"
+  },
+  "fred.NFCI": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=NFCI",
+   "sha256": "cf12ae31ecfb0595e35a850ab7ebf7fd606c5c3cd148c3bd539fb02b6d3af18e"
+  },
+  "fred.PAYEMS": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=PAYEMS",
+   "sha256": "8a4d8fdd42435f328190d385e2903a0efb05a95d4969e2f127ae659ddf8cc497"
+  },
+  "fred.PCEPILFE": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=PCEPILFE",
+   "sha256": "3068ae70ee8bd6b47990112a789d2ce452fd1a758f469f4000b31c82890d6a4d"
+  },
+  "fred.T5YIE": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=T5YIE",
+   "sha256": "fabf5d61bc47236c0cdf2b9aea17bb616e730c008f7442242ea94b9a928a24f5"
+  },
+  "fred.UNRATE": {
+   "kind": "fred",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=UNRATE",
+   "sha256": "e620e49fc26e90bf8e6c330e099f8e505354a49444954e17c30618ed5c6d25c4"
+  },
+  "futures.ZQV26": {
+   "kind": "futures",
+   "source": "finance.yahoo.com/quote/ZQV26.CBT",
+   "sha256": "075a4366503afba414d78d131711f8b814e4bfd3b3589b1a12dc6aa8acd53913"
+  },
+  "futures.ZQX26": {
+   "kind": "futures",
+   "source": "finance.yahoo.com/quote/ZQX26.CBT",
+   "sha256": "705357a9c24b85c66c6897de15081dd390b859de9d75bda2d375b5932b0d0e5e"
+  },
+  "history.meetings": {
+   "kind": "history",
+   "source": "https://www.federalreserve.gov/monetarypolicy/fomchistoricalYYYY.htm",
+   "sha256": "6f69e618c2e33eb2eda3e51aaf3a1f80d4304dbddcd8442899065dc804314ce0"
+  },
+  "history.target_rate": {
+   "kind": "history",
+   "source": "api.stlouisfed.org/fred/series/observations?series_id=DFEDTAR,DFEDTARU",
+   "sha256": "b534b7fa52ac3d50f1cf93ae2c9be0d41de94a16533568c354d70cc63572c1e8"
+  },
+  "human.pm.H6-001": {
+   "kind": "prediction_market",
+   "source": "human/prediction_markets.yaml",
+   "sha256": "c152ebe933dbf2933ee7ab6a1ee781c2b32295ca514bc83481ce6b56ec5c9243"
+  }
+ }
+}

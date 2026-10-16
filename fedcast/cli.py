@@ -118,6 +118,43 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
     print(f"saved {out.relative_to(config.ROOT)}")
 
 
+def _cmd_probit(args: argparse.Namespace) -> None:
+    """Fetch the real-time panels once, build the dataset, run the pre-registered evaluation, fit on all rows."""
+    from fedcast.data import alfred, sources
+    from fedcast.models import probit
+
+    key = config.secret("FRED_API_KEY")
+    if not key:
+        raise SystemExit("FRED_API_KEY not set in .env")
+    snap = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR))
+    meetings = snap.get("history.meetings")["meetings"]
+    path = snap.get("history.target_rate")["changes"]
+    if probit.PANELS_PATH.exists() and not args.refetch:
+        panels = json.loads(probit.PANELS_PATH.read_text(encoding="utf-8"))
+        print(f"using cached panels from {probit.PANELS_PATH.relative_to(config.ROOT)} (--refetch to update)")
+    else:
+        panels = {}
+        for sid in ("PCEPILFE", "UNRATE", "PAYEMS"):
+            panels[sid] = alfred.fetch_realtime(sid, key, "1990-01-01")
+            print(f"  {sid}: {len(panels[sid])} vintage rows, first vintage {alfred.first_vintage(panels[sid])}")
+        d = sources.fetch_fred("DGS2", key, config.today(), n_obs=100000, observation_start="1990-01-01")
+        panels["DGS2"] = [{"date": o["date"], "value": o["value"]} for o in d["observations"] if o["value"] is not None]
+        print(f"  DGS2: {len(panels['DGS2'])} daily observations")
+        probit.PANELS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        probit.PANELS_PATH.write_text(json.dumps(panels), encoding="utf-8")
+    rec = probit.fit_and_save(panels, meetings, path, snap.as_of)
+    ev, m = rec["evaluation"], rec["model"]
+    print(f"dataset: {rec['rows']} scheduled decisions, {rec['first_date']} to {rec['last_date']}")
+    print(f"pre-registered split: train {ev['train_n']} (< {ev['train_end']}), test {ev['test_n']}; test classes cut/hold/hike {ev['test_class_counts']}")
+    for name in ("probit", "base_given_previous", "base_unconditional"):
+        print(f"  {name:22s} log score {ev[name]['log_score']:+.3f}   accuracy {ev[name]['accuracy']:.0%}")
+    print("coefficients (standardised features), fitted on all rows:")
+    for f, b in m["beta"].items():
+        print(f"  {f:9s} {b:+.3f}")
+    print(f"cutpoints {m['cuts'][0]:+.3f} / {m['cuts'][1]:+.3f}; converged {m['converged']}; large-move shares {rec['size_shares']}")
+    print(f"saved {probit.MODEL_PATH.relative_to(config.ROOT)}")
+
+
 def _cmd_ui(args: argparse.Namespace) -> None:
     from fedcast.ui.server import serve
 
@@ -145,6 +182,9 @@ def main() -> None:
     a.add_argument("--model", help="claude model id (default: the CLI's default)")
     a.add_argument("--replay", action="store_true", help="serve recorded completions when available, record new ones")
     a.set_defaults(fn=_cmd_analyse)
+    pr = sub.add_parser("probit", help="fit and evaluate the ordered probit on history as first published")
+    pr.add_argument("--refetch", action="store_true", help="re-download the ALFRED panels")
+    pr.set_defaults(fn=_cmd_probit)
     u = sub.add_parser("ui", help="open the local front end in your browser")
     u.add_argument("--port", type=int, default=8765)
     u.add_argument("--no-browser", action="store_true")

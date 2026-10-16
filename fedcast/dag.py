@@ -597,14 +597,37 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                            how="Could not run: " + fc.get("models_skipped", {}).get("prediction_market", "no odds entered for this meeting.")))
         link("pm", "model.pm", "planned")
 
+    pb = fc["models"].get("ordered_probit")
+    pb_what = ("A statistical model of the committee's past decisions as a function of the signals, fitted on history "
+               "exactly as it was first published (FRED's archive of vintages), so it never sees revised data.")
+    pb_why = ("It lets the record say how the Fed actually weighted inflation, slack, the bond market's expected path "
+              "and its own last move, rather than assuming the weights. Its evaluation on a split fixed in advance says "
+              "how much it adds over simple base rates.")
+    if pb:
+        ev = pb["evaluation"]; cp = pb["class_probabilities"]
+        rows = [["Features (today)", ", ".join(f"{k} {v:+.2f}" for k, v in pb["features"].items())],
+                ["Contributions to the index", ", ".join(f"{k} {v:+.2f}" for k, v in pb["contributions"].items())],
+                ["Class probabilities", f"cut {cp['cut']:.0%}, hold {cp['hold']:.0%}, hike {cp['hike']:.0%}"],
+                ["Distribution", _dist(pb["probabilities"])],
+                ["Fitted on", f"{pb['rows']} scheduled decisions ({pb['fitted_on']})"],
+                ["Held-out test (since " + ev["train_end"] + ")", f"{ev['test_n']} decisions: probit log score {ev['probit']['log_score']:+.3f} "
+                 f"vs base rate given previous {ev['base_given_previous']['log_score']:+.3f} vs unconditional {ev['base_unconditional']['log_score']:+.3f}"],
+                ["Held-out accuracy", f"probit {ev['probit']['accuracy']:.0%}, base given previous {ev['base_given_previous']['accuracy']:.0%}"]]
+        nodes.append(_node("model.probit", 2, "Ordered probit", f"hike {cp['hike']:.0%}, hold {cp['hold']:.0%}", "model", "computed",
+                           what=pb_what, why=pb_why,
+                           how="Pre-registered spec in fedcast/models/probit.py: seven features as known the day before each "
+                               "decision, two cutpoints, maximum likelihood, one fixed train/test split, no re-specification. "
+                               "Computed on every forecast; not in the number until an amendment sets a weight.",
+                           rows=rows, evidence=pb["evidence"]))
+        for s_ in ("sig.inflation", "sig.labour", "sig.financial", "sig.history"):
+            link(s_, "model.probit", "computed")
+    else:
+        nodes.append(_node("model.probit", 2, "Ordered probit", "not fitted", "model", "planned", what=pb_what, why=pb_why,
+                           how="Run `fedcast probit` to fit it. " + fc.get("models_skipped", {}).get("ordered_probit", "")))
+        for s_ in ("sig.inflation", "sig.labour", "sig.financial", "sig.history"):
+            link(s_, "model.probit", "planned")
+
     planned_models = [
-        ("model.probit", "Ordered probit",
-         "A statistical model of past decisions as a function of the signals.",
-         "It lets the data say how the Fed actually weighted inflation, slack and market pricing, rather than "
-         "assuming the weights.",
-         "Fitted on roughly 250 meetings since 1994 using data as first published; features and procedure "
-         "pre-registered before fitting; evaluated by log score on a held-out window. Not built yet.",
-         ["sig.inflation", "sig.labour", "sig.financial"]),
         ("model.base", "Historical base rates",
          "Outcome frequencies in comparable situations.",
          "Keeps every model honest about surprises.",
@@ -680,6 +703,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
     link("model.market", "pool")
     link("model.taylor", "pool", "live" if tr else "planned")
     link("model.pm", "pool", "live" if pmm else "planned")
+    link("model.probit", "pool", "planned")
     for mid, *_ in planned_models:
         link(mid, "pool", "planned")
 

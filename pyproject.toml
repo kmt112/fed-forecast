@@ -9,6 +9,8 @@ dependencies = [
     "pypdf>=4",
     "python-docx>=1",
     "tzdata>=2024.1",
+    "numpy>=1.26",
+    "scipy>=1.11",
 ]
 
 [project.optional-dependencies]
