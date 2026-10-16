@@ -3,6 +3,16 @@
 Not pressing. Each item is a candidate change; anything that touches the number goes through an amendment
 and, where it is a fitted model, a pre-registered spec and the expanding-window evaluation before it earns weight.
 
+## Model deep-dive (owner's request, 2026-10-16)
+- [ ] A detailed, model-by-model review of inputs and mathematics, one session per model, written up in docs/:
+      for each input, where it comes from, how it is transformed, what it is assumed to mean, and how sensitive the
+      output is to it; for the maths, the formula, its derivation or source, and worked numbers from a real snapshot.
+      Order: ordered probit (feature construction, standardisation, cutpoints, shrinkage, bucket split, the
+      likelihood and its optimiser, the expanding-window scoring), then Taylor family, market-implied, base rates,
+      prediction market, then the signals that feed them.
+- [ ] From each review, a list of candidate changes, each tagged "pre-register before testing" where it would be
+      judged on outcomes.
+
 ## Gate decisions pending live evidence
 - [ ] Score every outside-the-pool model (probit v2, base rates, LLM analysts) on the 28 Oct 2026 decision and the
       following meetings from the ledger; decide pool weights only on that record.
