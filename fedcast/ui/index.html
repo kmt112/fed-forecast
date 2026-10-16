@@ -117,6 +117,18 @@
   .detail-pane p { color: var(--muted); font-size: 13px; margin: 4px 0 8px; }
   .detail-pane .plbl { color: var(--ink); font-weight: 600; }
   .links { font-size: 12.5px; margin-top: 8px; display: grid; gap: 4px; }
+  .sources { margin-top: 10px; font-size: 12.5px; }
+  .sources .srow { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 4px 0; border-top: 1px solid var(--line); align-items: baseline; }
+  .sources .srow .nm { flex: 1 1 60%; min-width: 0; }
+  .sources a { color: var(--accent); text-decoration: none; }
+  .sources a:hover { text-decoration: underline; }
+  #reader { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; z-index: 50; }
+  #reader.open { display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .reader-box { background: var(--surface); color: var(--ink); border-radius: var(--radius); width: min(900px, 100%); max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  .reader-head { display: flex; gap: 10px; align-items: baseline; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .reader-head h3 { flex: 1; }
+  .reader-body { overflow: auto; padding: 16px 18px; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; font-family: Georgia, "Times New Roman", serif; }
+  .reader-body.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
   .links button { margin-right: 6px; }
 
   table { border-collapse: collapse; width: 100%; font-size: 13px; }
@@ -169,6 +181,7 @@
   <div class="side-status" id="side-status"></div>
 </aside>
 
+<div id="reader"><div class="reader-box"><div class="reader-head"><h3 id="reader-title"></h3><span class="sub" id="reader-meta" style="margin:0"></span><button class="btn" id="reader-close">Close</button></div><div class="reader-body" id="reader-body"></div></div></div>
 <main>
   <div class="topbar">
     <h1 id="view-title">Forecast</h1>
@@ -512,10 +525,28 @@ function renderDag(dag) {
     ${para("What it is.", n.detail.body)}${para("Why it matters for the decision.", n.detail.why)}${para("How it is computed.", n.detail.how)}
     ${n.detail.rows.length ? `<p><strong class="plbl">${n.status === "live" ? "Values used." : n.status === "computed" ? "Computed values." : "Today's values, for reference."}</strong></p>` : ""}${kv(n.detail.rows)}
     ${n.detail.evidence.length ? `<p style="margin-top:8px">Evidence: ${n.detail.evidence.map(e => `<code>${esc(e)}</code>`).join(" ")}</p>` : ""}
+    ${n.detail.sources && n.detail.sources.length ? `<div class="sources"><strong class="plbl">Sources.</strong> ${n.detail.sources.map(src => `<div class="srow"><span class="nm">${esc(src.label)}</span>
+      ${src.url ? `<a href="${esc(src.url)}" target="_blank" rel="noopener">original ↗</a>` : ""}
+      ${src.frozen ? `<button class="link" data-read="${esc(src.id)}">frozen text</button>` : ""}</div>`).join("")}</div>` : ""}
     <div class="links"><div>Fed by: ${linkList(fedBy, "from")}</div><div>Feeds: ${linkList(feeds, "to")}</div></div>`;
 }
+async function openReader(id) {
+  const r = await fetch("/api/item/" + encodeURIComponent(id));
+  const d = await r.json();
+  if (!r.ok) { say(d.error || "Could not load the item", "err"); return; }
+  $("reader-title").textContent = d.title || d.id;
+  $("reader-meta").innerHTML = `<code>${esc(d.id)}</code>${d.date ? " · " + esc(d.date) : ""}${d.fetched_at ? " · frozen " + esc(d.fetched_at.slice(0, 16).replace("T", " ")) : ""}${d.url ? ` · <a href="${esc(d.url)}" target="_blank" rel="noopener">original ↗</a>` : ""}`;
+  const body = $("reader-body");
+  if (d.text !== undefined) { body.className = "reader-body"; body.textContent = d.text; }
+  else { body.className = "reader-body mono"; body.textContent = JSON.stringify(d.json, null, 1); }
+  $("reader").classList.add("open");
+}
+$("reader-close").onclick = () => $("reader").classList.remove("open");
+$("reader").onclick = e => { if (e.target.id === "reader") $("reader").classList.remove("open"); };
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("reader").classList.remove("open"); });
 $("dag").onclick = e => { const g = e.target.closest("[data-id]"); if (g) { dagSelected = g.dataset.id; renderDag(lastDag); } };
-$("dag-detail").onclick = e => { const id = e.target.dataset.go; if (id) { dagSelected = id; renderDag(lastDag); } };
+$("dag-detail").onclick = e => { const id = e.target.dataset.go; if (id) { dagSelected = id; renderDag(lastDag); }
+  const rid = e.target.dataset.read; if (rid) openReader(rid); };
 
 // --- actions ------------------------------------------------------------------------------
 function say(text, cls) { const m = $("msg"); m.textContent = text; m.className = cls; }

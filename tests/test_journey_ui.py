@@ -101,4 +101,4 @@ def test_dag_handles_projections_and_speeches_items():
     snap.add(Item.make("fed.sep.2026-09-16", "projections", "t", {"url": "u", "years": ["2026"], "medians": {"Federal funds rate": {"2026": 4.1}}, "previous": {}}))
     g = dag.build(entry_for(snap, []), snap)
     ids = {n["id"] for n in g["nodes"]}
-    assert "fed.speeches" in ids and "fed.sep.2026-09-16" in ids
+    assert "fed.comms" in ids and "fed.sep.2026-09-16" in ids and "fed.speeches" not in ids

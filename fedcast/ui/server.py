@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import re
 import threading
+import urllib.parse
 from email.parser import BytesParser
 from email.policy import default as email_policy
 import traceback
@@ -355,6 +356,46 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, INDEX.read_bytes(), "text/html; charset=utf-8")
         if self.path == "/api/state":
             return self._send(200, state())
+        if self.path.startswith("/api/item/"):
+            return self._send_item(urllib.parse.unquote(self.path[len("/api/item/"):]))
+        if self.path.startswith("/api/file/"):
+            return self._send_file(urllib.parse.unquote(self.path[len("/api/file/"):]))
+        self._send(404, {"error": "not found"})
+
+    def _send_item(self, item_id: str) -> None:
+        """The frozen content of one snapshot item from the latest forecast's snapshot (a speech by index)."""
+        entries = ledger.read(LEDGER)
+        if not entries:
+            return self._send(404, {"error": "no forecast yet"})
+        snap = _snapshot_by_hash(entries[-1]["forecast"]["snapshot_hash"])
+        base, _, sub = item_id.partition("#")
+        if snap is None or base not in snap.items:
+            return self._send(404, {"error": f"{item_id} is not in the snapshot"})
+        item = snap.items[base]
+        content = snap.get(base)
+        if base == "fed.speeches" and sub:
+            sp = content["speeches"][int(sub)]
+            return self._send(200, {"id": item_id, "kind": "speech", "title": f"{sp['speaker']}: {sp['title']}",
+                                    "date": sp["date"], "url": sp["url"], "text": sp["text"]})
+        if isinstance(content, dict) and "text" in content:
+            return self._send(200, {"id": item_id, "kind": item.kind, "title": content.get("title", base),
+                                    "url": content.get("url", ""), "text": content["text"], "fetched_at": item.fetched_at})
+        return self._send(200, {"id": item_id, "kind": item.kind, "title": base, "url": "",
+                                "json": content, "fetched_at": item.fetched_at})
+
+    def _send_file(self, doc_id: str) -> None:
+        """An uploaded document's original file, if one was uploaded; otherwise its frozen text."""
+        if not re.fullmatch(r"H5-\d{3,}", doc_id):
+            return self._send(404, {"error": "not found"})
+        files = list((DOCS / "files").glob(doc_id + ".*")) if (DOCS / "files").exists() else []
+        if files:
+            path = files[0]
+            ctype = {".pdf": "application/pdf", ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8",
+                     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}.get(path.suffix.lower(), "application/octet-stream")
+            return self._send(200, path.read_bytes(), ctype)
+        docs = {d.id: d for d in docs_store.load_documents(DOCS)}
+        if doc_id in docs:
+            return self._send(200, docs[doc_id].text.encode("utf-8"), "text/plain; charset=utf-8")
         self._send(404, {"error": "not found"})
 
     def do_POST(self) -> None:

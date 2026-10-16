@@ -11,9 +11,14 @@ Each node carries three explanations: `what` it is, `why` it bears on the decisi
 from __future__ import annotations
 
 from fedcast import OUTCOMES_BP, config
+import re
+
 from fedcast.journey import _dist, _label
 from fedcast.signals import base_rates, comms, financial, inflation, labour, sep
 from fedcast.snapshot import Snapshot
+
+# speeches whose title suggests a policy signal (the rest are regulatory and listed only)
+_POLICY_SPEECH = re.compile(r"econom|monetary|policy|outlook|inflation|labou?r|employment|mandate|rates?(?![a-z])", re.I)
 
 COLUMNS = ("Frozen evidence", "Signals", "Models", "Pool", "Your input", "Forecast")
 
@@ -84,9 +89,16 @@ def _top(probs: dict) -> str:
 
 
 def _node(id: str, col: int, label: str, summary: str, kind: str, status: str, what: str,
-          why: str = "", how: str = "", rows: list | None = None, evidence: list | None = None) -> dict:
+          why: str = "", how: str = "", rows: list | None = None, evidence: list | None = None,
+          sources: list | None = None) -> dict:
     return {"id": id, "col": col, "label": label, "summary": summary, "kind": kind, "status": status,
-            "detail": {"body": what, "why": why, "how": how, "rows": rows or [], "evidence": evidence or []}}
+            "detail": {"body": what, "why": why, "how": how, "rows": rows or [], "evidence": evidence or [],
+                       "sources": sources or []}}
+
+
+def _src(item_id: str, label: str, url: str | None = None, frozen: bool = True) -> dict:
+    """One clickable source: `url` opens the original on the web, `frozen` opens the snapshot text."""
+    return {"id": item_id, "label": label, "url": url, "frozen": frozen}
 
 
 def _try(fn, snap: Snapshot):
@@ -130,7 +142,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
             "meeting and which the committee will not yet have seen.",
         how="Parsed from the calendar page; the next scheduled decision on or after the snapshot date is the target.",
         rows=[["Next decision", cal["next_meeting"]], ["Meetings in window", ", ".join(cal["meetings"])]],
-        evidence=["calendar"]))
+        evidence=["calendar"],
+        sources=[_src("calendar", "FOMC calendar page", "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm")]))
     nodes.append(_node(
         "effr", 0, "Overnight rate (EFFR)", f"{effr['effr']:.2f}% on {effr['date']}", "source", "live",
         what="The effective federal funds rate: the volume-weighted median rate at which banks actually lent "
@@ -143,7 +156,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         rows=[["EFFR", f"{effr['effr']:.2f}%"], ["Date", effr["date"]],
               ["Target range", f"{effr['target_low']:.2f}% to {effr['target_high']:.2f}%"],
               ["Spread to range bottom", f"{(effr['effr'] - effr['target_low']) * 100:.0f} bp"]],
-        evidence=["effr"]))
+        evidence=["effr"],
+        sources=[_src("effr", "New York Fed EFFR", "https://www.newyorkfed.org/markets/reference-rates/effr")]))
 
     contract_id = next(e for e in m["evidence"] if e.startswith("futures."))
     contract = snap.get(contract_id)
@@ -162,7 +176,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         rows=[["Symbol", contract["symbol"]], ["Price", str(contract["price"])],
               ["Implied average rate", f"100 − {contract['price']} = {100 - contract['price']:.3f}%"],
               ["Volume", str(contract.get("volume"))]],
-        evidence=[contract_id]))
+        evidence=[contract_id],
+        sources=[_src(contract_id, contract["symbol"] + " quote", f"https://finance.yahoo.com/quote/{contract['symbol']}")]))
     others = sorted(i for i in snap.items if i.startswith("futures.") and i != contract_id)
     if others:
         months = ", ".join(snap.get(i)["contract_month"] for i in others)
@@ -177,7 +192,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
             how="Not read by any model yet.",
             rows=[[i.split(".")[1], f"price {snap.get(i)['price']} (implies {100 - snap.get(i)['price']:.3f}%)"]
                   for i in others],
-            evidence=others))
+            evidence=others,
+            sources=[_src(i, snap.get(i)["symbol"], f"https://finance.yahoo.com/quote/{snap.get(i)['symbol']}") for i in others]))
 
     group_signal = {"Inflation data": infl, "Labour data": lab, "Market data": fin}
     for label, series in FRED_GROUPS.items():
@@ -200,50 +216,45 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                 f"fred.{label}", 0, label, f"{len(ids)} series, {'read by ' + reader if used else 'not yet used'}",
                 "source", status, what=what, why=why,
                 how=how + (f" Read by the {reader} signal." if used else " Nothing reads this yet."),
-                rows=rows, evidence=ids))
+                rows=rows, evidence=ids,
+                sources=[_src(i, f"{i.split('.')[1]} on FRED", f"https://fred.stlouisfed.org/series/{i.split('.')[1]}") for i in ids]))
 
-    for d in sorted(i for i in snap.items if i.startswith("fed.") and snap.items[i].kind == "document"):
-        text = snap.get(d)["text"]
-        kind = "statement" if ".statement." in d else "minutes" if ".minutes." in d else "press conference"
-        if kind == "press conference":
-            why = ("The Chair's prepared remarks and answers to reporters are the most candid official guidance: how the "
-                   "committee weighs the risks, what would make it move, and what it declines to pre-commit to.")
-            how = "Planned: the communications analyst reads the transcript and must quote it."
-        elif kind == "statement":
-            why = ("The statement is drafted word by word and changes are deliberate: a phrase added or dropped "
-                   "('additional firming', 'the extent and timing of') is how the committee signals its next move. "
-                   "The vote and any dissents show how united it is.")
-            how = ("Planned: fetch the previous statement and compute a word-level diff, parse the vote "
-                   "mechanically, then have the communications analyst read the diff and quote every claim.")
-        else:
-            why = ("The minutes, released three weeks after the meeting, show the range of views: how 'many', "
-                   "'several' or 'a few' participants leaned, and what would change their minds. That reveals "
-                   "the direction of travel before it reaches the statement.")
-            how = "Planned: count the participant-weighting phrases and let the analyst quote the key passages."
-        read = kind == "statement" and tone is not None and d in tone["evidence"]
-        rows = [["Opens with", text[:320].strip() + "…"]]
-        if read:
-            v = comms.vote(text)
-            rows.insert(0, ["Vote", f"{v['for']} – {v['against']}" + (f", against: {v['dissenters']}" if v["dissenters"] else "")])
-        nodes.append(_node(
-            d, 0, f"Fed {kind} {d[-10:]}", f"{len(text.split())} words, {'read by tone' if read else 'not yet used'}",
-            "source", "computed" if read else "idle",
-            what=f"The full text of the FOMC {kind}, frozen as published.", why=why,
-            how=how + (" Read by the communication-tone signal." if read else " No model reads it yet."),
-            rows=rows, evidence=[d]))
-
+    docs_fed = sorted(i for i in snap.items if i.startswith("fed.") and snap.items[i].kind == "document")
     sp = snap.get("fed.speeches") if has("fed.speeches") else None
-    if sp:
+    if docs_fed or sp:
+        read_ids = set(tone["evidence"]) if tone else set()
+        rows, sources = [], []
+        for d in docs_fed:
+            kind = "Statement" if ".statement." in d else "Minutes" if ".minutes." in d else "Press conference"
+            text = snap.get(d)["text"]
+            extra = ""
+            if kind == "Statement" and d in read_ids:
+                v = comms.vote(text)
+                extra = f"; vote {v['for']} – {v['against']}" + (f", against: {v['dissenters']}" if v["dissenters"] else "")
+            rows.append([f"{kind} {d[-10:]}", f"{len(text.split()):,} words" + extra
+                         + (" · read by tone" if d in read_ids else " · not yet read")])
+            sources.append(_src(d, f"{kind} {d[-10:]}", snap.get(d).get("url")))
+        if sp:
+            policy = [x for x in sp["speeches"] if _POLICY_SPEECH.search(x["title"])]
+            rows.append([f"Speeches since {sp['since']}", f"{len(sp['speeches'])} ({len(policy)} on the economy or policy)"])
+            for k, x in enumerate(sp["speeches"]):
+                sources.append(_src(f"fed.speeches#{k}", f"{x['date']} {x['speaker']}: {x['title']}", x["url"]))
+        n_read = sum(1 for d in docs_fed if d in read_ids)
         nodes.append(_node(
-            "fed.speeches", 0, "Fed speeches", f"{len(sp['speeches'])} since {sp['since']}", "source", "idle",
-            what=f"Speeches by Board members since the last decision ({sp['since']}), from the Fed's own feed, as text.",
-            why="Between meetings this is where the signal moves: officials use speeches to prepare markets for the next "
-                "decision, and the balance of hawkish and dovish voices shifts before the statement does.",
-            how="Each speech is frozen as text. Planned: the communications analyst reads the ones on the economy and "
-                "policy and must quote them; regulatory speeches are listed but carry no policy signal. No model reads "
-                "them yet.",
-            rows=[[s_["date"], f"{s_['speaker']}: {s_['title']}"] for s_ in sp["speeches"]],
-            evidence=["fed.speeches"]))
+            "fed.comms", 0, "Fed communications",
+            f"{len(docs_fed)} documents, {len(sp['speeches']) if sp else 0} speeches", "source",
+            "computed" if n_read else "idle",
+            what="Everything the committee and its members have said, frozen as text: the latest two statements, the "
+                 "latest minutes, the Chair's press-conference transcript, and every speech since the last decision. "
+                 "The snapshot keeps only this window, so the set does not grow over time.",
+            why="The statement is drafted word by word, so additions and deletions signal the next move; the vote and "
+                "dissents show how united the committee is; the minutes show the balance of views in the committee's "
+                "own weighting words; the press conference is the most candid official guidance; and between "
+                "meetings the speeches are where the signal moves first.",
+            how="The communication-tone signal reads the two statements (vote, word diff, lexicon). The LLM "
+                "communications analyst reads all of these and must quote them; the minutes digest reads the minutes. "
+                "Regulatory speeches are listed but carry no policy signal.",
+            rows=rows, evidence=docs_fed + (["fed.speeches"] if sp else []), sources=sources))
 
     sep_ids = sorted(i for i in snap.items if i.startswith("fed.sep."))
     if sep_ids:
@@ -263,7 +274,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                    if y in sd["previous"].get("Federal funds rate", {}) else "")] for y, v in ffr.items()]
                  + [[f"{var} median, {sd['years'][0]}", f"{vals[sd['years'][0]]:.1f}"] for var, vals in sd["medians"].items()
                     if var != "Federal funds rate" and sd["years"][0] in vals],
-            evidence=[sep_ids[-1]]))
+            evidence=[sep_ids[-1]], sources=[_src(sep_ids[-1], "Projections table", sd.get("url"))]))
 
     n_watch = len([w for w in (watchlist or []) if w.get("status") == "active"])
     nodes.append(_node(
@@ -287,7 +298,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         how="Only the LLM analysts will read these, quoting them like any other item; the quant models never see "
             "them and they never move the number directly. Enter a view if you want the number to move.",
         rows=[[snap.get(d)["id"], f"{snap.get(d)['title']} ({snap.get(d)['relevance']})"] for d in docs],
-        evidence=docs))
+        evidence=docs,
+        sources=[_src(d, snap.get(d)["title"], f"/api/file/{snap.get(d)['id']}") for d in docs]))
 
     pm_items = sorted(i for i in snap.items if i.startswith("human.pm."))
     pmm = fc["models"].get("prediction_market")
@@ -304,7 +316,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         rows=[[snap.get(i)["id"], f"{snap.get(i)['venue']} at {snap.get(i)['observed_at'].replace('T', ' ')}: "
                                    + ", ".join(f"{_label(int(k))} {v:g}%" for k, v in snap.get(i)["prices"].items())]
               for i in pm_items],
-        evidence=pm_items))
+        evidence=pm_items,
+        sources=[_src(i, f"{snap.get(i)['venue']} {snap.get(i)['id']}", snap.get(i).get("url") or None) for i in pm_items]))
 
     if has("history.meetings") and has("history.target_rate"):
         hm, ht = snap.get("history.meetings")["meetings"], snap.get("history.target_rate")["changes"]
@@ -318,7 +331,9 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                 "changed. Both are frozen in the snapshot like any other item.",
             rows=[["Meetings", f"{hm[0]['date']} to {hm[-1]['date']}"], ["Target changes", f"{ht[0]['date']} to {ht[-1]['date']}"],
                   ["Latest target (upper bound)", f"{ht[-1]['target']:.2f}% since {ht[-1]['date']}"]],
-            evidence=["history.meetings", "history.target_rate"]))
+            evidence=["history.meetings", "history.target_rate"],
+            sources=[_src("history.meetings", "FOMC history pages", "https://www.federalreserve.gov/monetarypolicy/fomc_historical_year.htm"),
+                     _src("history.target_rate", "DFEDTARU on FRED", "https://fred.stlouisfed.org/series/DFEDTARU")]))
 
     # --- column 1: signals ---------------------------------------------------------------
     nodes.append(_node(
@@ -455,8 +470,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                                "score from counts of hawkish and dovish terms. Crude by design: it is the floor the LLM "
                                "communications analyst must beat and the check it is held against. Not in today's number.",
                            rows=rows, evidence=tone["evidence"]))
-        for e in tone["evidence"]:
-            link(e, "sig.tone", "computed")
+        link("fed.comms", "sig.tone", "computed")
     else:
         nodes.append(_node("sig.tone", 1, "Communication tone", "planned", "signal", "planned", what=tone_what,
                            why=tone_why, how="Needs a statement in the snapshot."))
@@ -613,10 +627,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
     naive = (analyses or {}).get("naive")
     specialists = {k: v for k, v in (analyses or {}).items() if v and k not in ("naive",)}
     llm_srcs = ["sig.tone", "sig.inflation", "sig.labour", "sig.sep", "watchouts", "documents"]
-    for d_ in sorted(i for i in snap.items if i.startswith("fed.presconf.")):
-        link(d_, "sig.tone", "planned")
-    if has("fed.speeches"):
-        link("fed.speeches", "sig.tone", "planned")
+    if "fed.comms" in {n["id"] for n in nodes}:
+        link("fed.comms", "model.llm", "planned" if not specialists else "computed")
     if specialists:
         rows = []
         for name, rec in specialists.items():
