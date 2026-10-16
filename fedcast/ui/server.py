@@ -20,7 +20,7 @@ from pathlib import Path
 
 import yaml
 
-from fedcast import config, dag, forecast, journey, ledger, snapshot
+from fedcast import config, dag, evals, forecast, journey, ledger, snapshot
 from fedcast.human import documents as docs_store
 from fedcast.human import prediction_markets as pm_store
 from fedcast.human.extract import SUPPORTED, extract_text
@@ -113,7 +113,8 @@ def state() -> dict:
         analyses = analyst_mod.latest_all(last["forecast"]["snapshot_hash"])
         out["latest"] = {"entry": last, "journey": journey.build(last, snap) if snap else None,
                          "dag": dag.build(last, snap, out["watchlist"], analyses) if snap else None,
-                         "analyses": {k: _trim_analysis(v) for k, v in analyses.items()}}
+                         "analyses": {k: _trim_analysis(v) for k, v in analyses.items()},
+                         "measurements": evals.measure(analyses)}
         if out["snapshot"]:
             out["latest"]["stale"] = not out["snapshot"]["name"].endswith(last["forecast"]["snapshot_hash"][:12])
     out["job"] = JOB
@@ -173,6 +174,8 @@ def act_analyse(body: dict) -> dict:
         raise ValueError("an analysis is already running")
     names = body.get("analysts") or list(analyst_mod.SPECIALISTS) + ["naive"]
     runs = max(1, min(10, int(body.get("runs") or 1)))
+    if body.get("analysts") == "all":
+        names = list(analyst_mod.SPECIALISTS) + ["naive"]
     JOB.update({"running": True, "progress": [f"starting {', '.join(names)} ({runs} run(s) each)"],
                 "started_at": datetime.now().replace(microsecond=0).isoformat(), "finished_at": None, "error": None})
     threading.Thread(target=_analysis_job, args=(names, runs), daemon=True).start()

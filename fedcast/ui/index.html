@@ -193,7 +193,9 @@
     <button class="btn" id="btn-snapshot" title="Pull live evidence from the Fed, FRED, the New York Fed and futures quotes, and freeze it as a fingerprinted snapshot.">Pull evidence</button>
     <button class="btn primary" id="btn-forecast" title="Run the models and your views on the latest snapshot and record the result in the ledger.">Run forecast</button>
     <button class="btn" id="btn-replay" title="Two checks: the ledger chain is intact, and every entry recomputes exactly from its frozen snapshot.">Verify ledger</button>
-    <button class="btn" id="btn-analyse" title="Run the five specialist analysts and the naive control on the latest snapshot (about a minute per call, in the background).">Run analysts</button>
+    <button class="btn" id="btn-analyse" title="Run the five specialist analysts and the naive control on the latest forecast's snapshot (about a minute per call, in the background).">Run analysts</button>
+    <select id="runs-n" class="btn" title="Runs per analyst. Repeatability (S1) needs several.">
+      <option value="1">×1</option><option value="3">×3</option><option value="5">×5</option></select>
   </div>
   <div id="msg"></div>
   <div id="job" class="job" style="display:none"></div>
@@ -328,6 +330,11 @@
         <p class="sub">The yardstick the tool is judged by. Fixed before any forecasting code was written; changes need a logged amendment.</p>
         <div class="scroll"><table id="scorecard"></table></div>
       </div>
+      <div class="card">
+        <h3>Measured on the latest forecast's snapshot</h3>
+        <p class="sub">From the analyses run on that snapshot: arm A is the naive prompt, arm D the harnessed specialists. A dimension passes only if every arm it applies to meets the pre-registered mark.</p>
+        <div class="scroll"><table id="measured"></table></div>
+      </div>
     </section>
 
   </div>
@@ -449,6 +456,14 @@ function render(s) {
       <td>${esc(e.meeting)}</td><td>${t(e.machine_only)}</td><td>${t(e.human_adjusted)}</td><td>${e.n_views}</td>
       <td><code>${esc(e.snapshot)}</code></td><td><code>${esc(e.code)}</code></td></tr>`).join("") : `<tr><td colspan="8" class="empty">Empty.</td></tr>`);
 
+  const ms = latest && latest.measurements || [];
+  $("measured").innerHTML = ms.length ? `<tr><th></th><th>Dimension</th><th>Arm</th><th>Measured</th><th>Pass mark</th><th>Result</th><th>What was measured</th></tr>` +
+    ms.map(m => `<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${esc(m.arm)}</td>
+      <td>${m.value === null ? "—" : esc(String(m.value)) + " " + esc(m.unit)}</td>
+      <td style="white-space:nowrap">${m.threshold === 0 ? "exactly 0" : (m.direction === "max" ? "at most " : "at least ") + m.threshold}</td>
+      <td>${m.pass === null ? `<span class="flag">not measurable</span>` : m.pass ? `<span class="flag ok">pass</span>` : `<span class="flag bad">fail</span>`}</td>
+      <td class="sub" style="margin:0">${esc(m.note)}${m.runs ? " · " + m.runs + " run(s)" : ""}</td></tr>`).join("")
+    : `<tr><td class="empty">No analyses on this snapshot yet. Click "Run analysts" (×5 for repeatability).</td></tr>`;
   const unit = d => ({pp: " pp", pct: "%", count: "", score: " / 5"}[d.unit]);
   const mark = d => d.threshold === 0 ? "exactly 0" : (d.unit === "pct" && d.threshold === 100) ? "100%" : `${d.direction === "max" ? "at most" : "at least"} ${d.threshold}${unit(d)}`;
   $("scorecard").innerHTML = `<tr><th></th><th>Dimension</th><th>How it is measured</th><th>Pass mark</th><th>Status today</th></tr>` +
@@ -493,7 +508,7 @@ function renderJob(job) {
     if (!s.job.running) { clearInterval(jobTimer); jobTimer = null; }
   }, 4000);
 }
-$("btn-analyse").onclick = () => post("/api/analyse", {runs: 1}, "Starting analysts…");
+$("btn-analyse").onclick = () => post("/api/analyse", {runs: Number($("runs-n").value)}, "Starting analysts…");
 
 // --- factor graph -------------------------------------------------------------------------
 let lastDag = null, dagSelected = null, dagFocus = false;
