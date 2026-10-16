@@ -604,16 +604,23 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
               "and its own last move, rather than assuming the weights. Its evaluation on a split fixed in advance says "
               "how much it adds over simple base rates.")
     if pb:
-        ev = pb["evaluation"]; cp = pb["class_probabilities"]
+        ew = pb["evaluation"]; cp = pb["class_probabilities"]; c1 = pb["class_probabilities_v1"]
+        def _ls(name, k):
+            c = ew[name][k]
+            return f"{c['log_score']:+.2f} ({c['accuracy']:.0%})" if c["n"] else "n/a"
         rows = [["Features (today)", ", ".join(f"{k} {v:+.2f}" for k, v in pb["features"].items())],
-                ["Contributions to the index", ", ".join(f"{k} {v:+.2f}" for k, v in pb["contributions"].items())],
-                ["Class probabilities", f"cut {cp['cut']:.0%}, hold {cp['hold']:.0%}, hike {cp['hike']:.0%}"],
-                ["Distribution", _dist(pb["probabilities"])],
-                ["Fitted on", f"{pb['rows']} scheduled decisions ({pb['fitted_on']})"],
-                ["Held-out test (since " + ev["train_end"] + ")", f"{ev['test_n']} decisions: probit log score {ev['probit']['log_score']:+.3f} "
-                 f"vs base rate given previous {ev['base_given_previous']['log_score']:+.3f} vs unconditional {ev['base_unconditional']['log_score']:+.3f}"],
-                ["Held-out accuracy", f"probit {ev['probit']['accuracy']:.0%}, base given previous {ev['base_given_previous']['accuracy']:.0%}"]]
-        nodes.append(_node("model.probit", 2, "Ordered probit", f"hike {cp['hike']:.0%}, hold {cp['hold']:.0%}", "model", "computed",
+                ["Contributions to the index (v2)", ", ".join(f"{k} {v:+.2f}" for k, v in pb["contributions"].items())],
+                ["v2 (shrunk 50% to base rate)", f"cut {cp['cut']:.0%}, hold {cp['hold']:.0%}, hike {cp['hike']:.0%}"],
+                ["v1, for the record", f"cut {c1['cut']:.0%}, hold {c1['hold']:.0%}, hike {c1['hike']:.0%}"],
+                ["Distribution (v2)", _dist(pb["probabilities"])],
+                ["Fitted on", f"{pb['rows']} scheduled decisions since 2000 ({pb['fitted_on']})"],
+                ["Expanding-window log score (accuracy), all / 2010-17 / 2018 on",
+                 "base given previous " + " / ".join(_ls("base_given_previous", k) for k in ("all", "before_split", "from_split"))],
+                ["", "probit v1 " + " / ".join(_ls("probit_v1", k) for k in ("all", "before_split", "from_split"))],
+                ["", "probit v2 " + " / ".join(_ls("probit_v2", k) for k in ("all", "before_split", "from_split"))],
+                ["Caveat", "v2's features were chosen after seeing v1 fail on 2018 on; its score there is optimistic. "
+                           "The gate is live decisions from here, recorded in the ledger."]]
+        nodes.append(_node("model.probit", 2, "Ordered probit", f"v2: hike {cp['hike']:.0%}, hold {cp['hold']:.0%}", "model", "computed",
                            what=pb_what, why=pb_why,
                            how="Pre-registered spec in fedcast/models/probit.py: seven features as known the day before each "
                                "decision, two cutpoints, maximum likelihood, one fixed train/test split, no re-specification. "
@@ -627,12 +634,27 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         for s_ in ("sig.inflation", "sig.labour", "sig.financial", "sig.history"):
             link(s_, "model.probit", "planned")
 
+    hb = fc["models"].get("historical_base_rates")
+    hb_what = "The next decision's distribution given only what the previous decision was, from the record since 1994."
+    hb_why = ("It is the simplest model there is and the yardstick every fitted model must beat; on the expanding-window "
+              "evaluation it beat the ordered probit. It also says how often the Fed surprises, which is what the interim "
+              "surprise floor stands in for.")
+    if hb:
+        g = hb["class_probabilities"]; co = hb["conditioned_on"]
+        nodes.append(_node("model.base", 2, "Historical base rates", f"after a {co['decision']}: hike {g['hike']:.0%}", "model", "computed",
+                           what=hb_what, why=hb_why,
+                           how=f"Last decision was a {co['decision']} ({co['date']}); among the {hb['n_cases']} scheduled decisions that "
+                               f"followed a {co['decision']}, the next was cut {g['cut']:.0%}, hold {g['hold']:.0%}, hike {g['hike']:.0%}. "
+                               f"Cuts and hikes are split 25 / 50+ bp by the historical share of large moves ({hb['large_move_shares']}). "
+                               "No parameters. Not in the number until an amendment sets a weight.",
+                           rows=[["Distribution", _dist(hb["probabilities"])]], evidence=hb["evidence"]))
+        link("sig.history", "model.base", "computed")
+    else:
+        nodes.append(_node("model.base", 2, "Historical base rates", "not run", "model", "planned", what=hb_what, why=hb_why,
+                           how="Needs the decision history in the snapshot."))
+        link("sig.history", "model.base", "planned")
+
     planned_models = [
-        ("model.base", "Historical base rates",
-         "Outcome frequencies in comparable situations.",
-         "Keeps every model honest about surprises.",
-         "Tables from past meetings. Not built yet.",
-         ["sig.history"]),
     ]
     for mid, label, what, why, how, srcs in planned_models:
         nodes.append(_node(mid, 2, label, "planned", "model", "planned", what=what, why=why, how=how))
@@ -704,6 +726,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
     link("model.taylor", "pool", "live" if tr else "planned")
     link("model.pm", "pool", "live" if pmm else "planned")
     link("model.probit", "pool", "planned")
+    link("model.base", "pool", "planned")
     for mid, *_ in planned_models:
         link(mid, "pool", "planned")
 

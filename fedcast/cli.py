@@ -143,15 +143,20 @@ def _cmd_probit(args: argparse.Namespace) -> None:
         probit.PANELS_PATH.parent.mkdir(parents=True, exist_ok=True)
         probit.PANELS_PATH.write_text(json.dumps(panels), encoding="utf-8")
     rec = probit.fit_and_save(panels, meetings, path, snap.as_of)
-    ev, m = rec["evaluation"], rec["model"]
+    ev, ew, m1, m2 = rec["evaluation_v1_split"], rec["evaluation_expanding"], rec["model_v1"], rec["model_v2"]
     print(f"dataset: {rec['rows']} scheduled decisions, {rec['first_date']} to {rec['last_date']}")
-    print(f"pre-registered split: train {ev['train_n']} (< {ev['train_end']}), test {ev['test_n']}; test classes cut/hold/hike {ev['test_class_counts']}")
+    print(f"v1 single split (record): train {ev['train_n']} (< {ev['train_end']}), test {ev['test_n']}; classes cut/hold/hike {ev['test_class_counts']}")
     for name in ("probit", "base_given_previous", "base_unconditional"):
         print(f"  {name:22s} log score {ev[name]['log_score']:+.3f}   accuracy {ev[name]['accuracy']:.0%}")
-    print("coefficients (standardised features), fitted on all rows:")
-    for f, b in m["beta"].items():
+    print(f"expanding window from {ew['start']} (each decision predicted from strictly earlier ones):")
+    print(f"  {'model':22s} {'all':>18s} {'2010-2017':>18s} {'2018 on':>18s}")
+    for name in ("base_unconditional", "base_given_previous", "probit_v1", "probit_v2"):
+        cells = [f"{ew[name][k]['log_score']:+.3f} / {ew[name][k]['accuracy']:.0%}" for k in ("all", "before_split", "from_split")]
+        print(f"  {name:22s} {cells[0]:>18s} {cells[1]:>18s} {cells[2]:>18s}")
+    print("v2 coefficients (standardised), fitted on all rows:")
+    for f, b in m2["beta"].items():
         print(f"  {f:9s} {b:+.3f}")
-    print(f"cutpoints {m['cuts'][0]:+.3f} / {m['cuts'][1]:+.3f}; converged {m['converged']}; large-move shares {rec['size_shares']}")
+    print(f"v2 cutpoints {m2['cuts'][0]:+.3f} / {m2['cuts'][1]:+.3f}; shrinkage {m2['shrink']}; converged {m2['converged']}; large-move shares {rec['size_shares']}")
     print(f"saved {probit.MODEL_PATH.relative_to(config.ROOT)}")
 
 
