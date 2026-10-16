@@ -49,3 +49,13 @@ def test_model_uses_latest_entry_for_the_next_meeting_only():
 def test_model_is_skipped_without_an_entry():
     fc = forecast.compute(macro_snapshot(), [])
     assert "prediction_market" in fc["models_skipped"] and "prediction_market" not in fc["models"]
+
+
+def test_stale_odds_are_skipped_with_a_reason():
+    snap = macro_snapshot()  # as_of 2026-10-02
+    old = odds("H6-009", observed=datetime(2026, 9, 20, 9, 0))
+    snap.add(Item.make("human.pm.H6-009", "prediction_market", "t", old.model_dump(mode="json")))
+    with pytest.raises(ValueError, match="older than"):
+        prediction_market(snap)
+    fc = forecast.compute(snap, [])
+    assert "prediction_market" in fc["models_skipped"] and "older than" in fc["models_skipped"]["prediction_market"]
