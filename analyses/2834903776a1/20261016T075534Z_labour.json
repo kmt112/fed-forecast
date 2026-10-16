@@ -1,0 +1,782 @@
+{
+ "analyst": "labour",
+ "arm": "D",
+ "prompt_version": "specialists-v2",
+ "prompt_chars": 4937,
+ "created_at": "2026-10-16T07:55:34+00:00",
+ "snapshot_hash": "2834903776a14bd959d76d7f59cbe2c23564f0a30490d5896b44a8695906fe31",
+ "backend": "replay",
+ "runs": [
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "Unemployment sits exactly at the estimated natural rate, so the slack gap is zero — a neutral, balanced labour market signal.",
+       "quote": "gap_pp: 0.0",
+       "item": "signal.labour",
+       "lean": "neutral"
+      },
+      {
+       "text": "Three-month average payroll gains are well below the estimated breakeven pace, pointing to a cooling in hiring that argues modestly for easier policy.",
+       "quote": "payrolls_3m_avg_k: 50.7",
+       "item": "signal.labour",
+       "lean": "dovish"
+      },
+      {
+       "text": "The breakeven payroll pace exceeds recent payroll gains, reinforcing that job creation is running short of what is needed to hold labour-market balance.",
+       "quote": "breakeven_payrolls_k: 75.0",
+       "item": "signal.labour",
+       "lean": "dovish"
+      },
+      {
+       "text": "The Sahm indicator is very low, showing no recessionary deterioration in the labour market, which removes any urgency to cut.",
+       "quote": "sahm: 0.033",
+       "item": "signal.labour",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Four-week average initial claims remain low, consistent with limited layoffs and a still-firm labour market.",
+       "quote": "claims_4wk_k: 198.5",
+       "item": "signal.labour",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The committee's unemployment projections are flat at 4.1 percent across the horizon, implying no expected rise in joblessness and little labour-market reason to ease.",
+       "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+       "item": "signal.projections",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The latest statement characterises employment as steady, with hiring matching labour-force growth and a stable jobless rate — a neutral read on the mandate.",
+       "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+       "item": "fed.statement.2026-09-16",
+       "lean": "neutral"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": -1,
+     "confidence": "medium",
+     "summary": "The labour-market evidence is close to balanced, with a slight dovish tilt. The pre-read shows unemployment exactly at the natural rate (gap_pp 0.0), a very low Sahm reading (0.033), and low initial claims (198.5k), all signalling a firm, non-deteriorating labour market that provides no urgency to cut. Offsetting this, three-month payroll gains (50.7k) are running below the breakeven pace (75.0k), indicating hiring is cooling. The committee's projections hold unemployment flat at 4.1 percent across the horizon, implying no expected labour-market weakening. The September statement describes job gains keeping pace with the workforce and little change in the unemployment rate — a neutral characterisation. Netting the sub-breakeven payroll softness against otherwise firm indicators and a stable unemployment forecast yields a marginally dovish tilt of -1bp; the labour market is, on balance, arguing for a hold.</parameter>\n"
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 34.1,
+    "prompt_hash": "f3d4320573b93530",
+    "meta": {
+     "session_id": "6df1022e-beb0-4847-891d-0939dc854d6a",
+     "cost_usd": 0.17685849999999997,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 8159,
+      "cache_read_input_tokens": 70197,
+      "output_tokens": 2406,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 8159,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 443,
+        "cache_read_input_tokens": 70197,
+        "cache_creation_input_tokens": 4657,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 4657
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "Unemployment sits exactly at the estimated natural rate, so the slack gap is zero — a neutral, balanced labour market signal.",
+      "quote": "gap_pp: 0.0",
+      "item": "signal.labour",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Three-month average payroll gains are well below the estimated breakeven pace, pointing to a cooling in hiring that argues modestly for easier policy.",
+      "quote": "payrolls_3m_avg_k: 50.7",
+      "item": "signal.labour",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The breakeven payroll pace exceeds recent payroll gains, reinforcing that job creation is running short of what is needed to hold labour-market balance.",
+      "quote": "breakeven_payrolls_k: 75.0",
+      "item": "signal.labour",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The Sahm indicator is very low, showing no recessionary deterioration in the labour market, which removes any urgency to cut.",
+      "quote": "sahm: 0.033",
+      "item": "signal.labour",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Four-week average initial claims remain low, consistent with limited layoffs and a still-firm labour market.",
+      "quote": "claims_4wk_k: 198.5",
+      "item": "signal.labour",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The committee's unemployment projections are flat at 4.1 percent across the horizon, implying no expected rise in joblessness and little labour-market reason to ease.",
+      "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+      "item": "signal.projections",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The latest statement characterises employment as steady, with hiring matching labour-force growth and a stable jobless rate — a neutral read on the mandate.",
+      "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+      "item": "fed.statement.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 7,
+    "n_verified": 7,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": -1.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The labour-slack pre-read shows unemployment sitting exactly at the estimated natural rate with a zero gap, which is neutral for policy — neither excess slack arguing for a cut nor overheating arguing for a hike.",
+       "quote": "u_star: 4.2\nunemployment: 4.2\nunemployment_year_ago: 4.3\ngap_pp: 0.0",
+       "item": "signal.labour",
+       "lean": "neutral"
+      },
+      {
+       "text": "Job growth is running well below the breakeven pace, a sign of a cooling labour market that leans dovish.",
+       "quote": "payrolls_3m_avg_k: 50.7\npayrolls_12m_avg_k: 41.3\nbreakeven_payrolls_k: 75.0",
+       "item": "signal.labour",
+       "lean": "dovish"
+      },
+      {
+       "text": "The Sahm-rule reading is very low and jobless claims are subdued, indicating no recessionary deterioration that would force a cut — this offsets the soft payrolls.",
+       "quote": "sahm: 0.033\npayrolls_3m_avg_k: 50.7\npayrolls_12m_avg_k: 41.3\nbreakeven_payrolls_k: 75.0\nclaims_4wk_k: 198.5\nclaims_26wk_k: 207.5",
+       "item": "signal.labour",
+       "lean": "neutral"
+      },
+      {
+       "text": "The committee's unemployment projections are flat at 4.1 percent through the horizon and were revised down from the prior SEP's 4.3, implying a firmer labour market than previously expected — mildly hawkish.",
+       "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+       "item": "fed.sep.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The latest statement characterises employment as balanced and steady, describing no deterioration — a neutral signal consistent with a hold on employment grounds.",
+       "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+       "item": "fed.statement.2026-09-16",
+       "lean": "neutral"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": -1,
+     "confidence": "medium",
+     "summary": "On balance the labour-market evidence argues for a hold, with a very slight dovish tilt. The pre-read shows unemployment at the natural rate (gap_pp 0.0), and the statement says job gains have kept pace with the workforce and the unemployment rate has changed little — both neutral. The one soft spot is payroll growth (50.7k 3-month average) running well below the 75.0k breakeven, which leans dovish, but a low Sahm reading (0.033) and subdued claims rule out a recessionary case for cutting. The SEP's unemployment path is flat at 4.1% and revised down from 4.3%, a mildly hawkish offset. Net: close to neutral."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 44.0,
+    "prompt_hash": "f337c66bb7266086",
+    "meta": {
+     "session_id": "157724ba-a059-4941-ac22-ae68af8db164",
+     "cost_usd": 0.17456449999999998,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 5612,
+      "cache_read_input_tokens": 73699,
+      "output_tokens": 3263,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 5612,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 353,
+        "cache_read_input_tokens": 70197,
+        "cache_creation_input_tokens": 5612,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 5612
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The labour-slack pre-read shows unemployment sitting exactly at the estimated natural rate with a zero gap, which is neutral for policy — neither excess slack arguing for a cut nor overheating arguing for a hike.",
+      "quote": "u_star: 4.2\nunemployment: 4.2\nunemployment_year_ago: 4.3\ngap_pp: 0.0",
+      "item": "signal.labour",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Job growth is running well below the breakeven pace, a sign of a cooling labour market that leans dovish.",
+      "quote": "payrolls_3m_avg_k: 50.7\npayrolls_12m_avg_k: 41.3\nbreakeven_payrolls_k: 75.0",
+      "item": "signal.labour",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The Sahm-rule reading is very low and jobless claims are subdued, indicating no recessionary deterioration that would force a cut — this offsets the soft payrolls.",
+      "quote": "sahm: 0.033\npayrolls_3m_avg_k: 50.7\npayrolls_12m_avg_k: 41.3\nbreakeven_payrolls_k: 75.0\nclaims_4wk_k: 198.5\nclaims_26wk_k: 207.5",
+      "item": "signal.labour",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The committee's unemployment projections are flat at 4.1 percent through the horizon and were revised down from the prior SEP's 4.3, implying a firmer labour market than previously expected — mildly hawkish.",
+      "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+      "item": "fed.sep.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The latest statement characterises employment as balanced and steady, describing no deterioration — a neutral signal consistent with a hold on employment grounds.",
+      "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+      "item": "fed.statement.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 5,
+    "n_verified": 5,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": -1.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The unemployment gap is zero, with the actual rate equal to the estimated natural rate, so the level of unemployment is not by itself arguing for either a hike or a cut.",
+       "quote": "gap_pp: 0.0",
+       "item": "signal.labour",
+       "lean": "neutral"
+      },
+      {
+       "text": "The three-month average pace of payroll gains is well below the estimated breakeven pace, a softening in hiring that leans toward easier policy.",
+       "quote": "payrolls_3m_avg_k: 50.7",
+       "item": "signal.labour",
+       "lean": "dovish"
+      },
+      {
+       "text": "The breakeven payrolls pace is far above the recent three-month average, reinforcing that job growth has slowed relative to what is needed to hold the unemployment rate steady.",
+       "quote": "breakeven_payrolls_k: 75.0",
+       "item": "signal.labour",
+       "lean": "dovish"
+      },
+      {
+       "text": "The Sahm indicator is very low, showing no recessionary deterioration in the labour market and arguing against an urgent cut.",
+       "quote": "sahm: 0.033",
+       "item": "signal.labour",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The committee projects the unemployment rate to hold steady around 4.1 percent across the projection horizon, consistent with a labour market near balance rather than deteriorating.",
+       "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+       "item": "fed.sep.2026-09-16",
+       "lean": "neutral"
+      },
+      {
+       "text": "The most recent statement characterises employment as stable, describing job gains as keeping pace and the unemployment rate as little changed, which is a neutral read on the labour market.",
+       "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+       "item": "fed.statement.2026-09-16",
+       "lean": "neutral"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": -2,
+     "confidence": "medium",
+     "summary": "The labour-market evidence is close to balanced with a mild dovish lean. The unemployment gap is 0.0 (rate equal to u_star), the Sahm value is low (0.033), the September SEP projects unemployment holding near 4.1 percent, and the September statement says job gains have kept pace and the unemployment rate has changed little — all pointing to a labour market near balance, not arguing for a cut on recession grounds. The dovish element is slowing hiring: the three-month payroll average (50.7k) is well below the breakeven pace (75.0k). Netting a stable, at-natural-rate labour market against the softening in job growth yields a slightly dovish tilt of -2 bp. Confidence is medium because the signals partly offset each other; no watch-outs were specified."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 36.4,
+    "prompt_hash": "ae6c58c8e990ee8a",
+    "meta": {
+     "session_id": "b93f7505-4d2c-471b-aa04-977f900568d9",
+     "cost_usd": 0.1582945,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 5175,
+      "cache_read_input_tokens": 73699,
+      "output_tokens": 2787,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 5175,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 298,
+        "cache_read_input_tokens": 70197,
+        "cache_creation_input_tokens": 5175,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 5175
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The unemployment gap is zero, with the actual rate equal to the estimated natural rate, so the level of unemployment is not by itself arguing for either a hike or a cut.",
+      "quote": "gap_pp: 0.0",
+      "item": "signal.labour",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The three-month average pace of payroll gains is well below the estimated breakeven pace, a softening in hiring that leans toward easier policy.",
+      "quote": "payrolls_3m_avg_k: 50.7",
+      "item": "signal.labour",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The breakeven payrolls pace is far above the recent three-month average, reinforcing that job growth has slowed relative to what is needed to hold the unemployment rate steady.",
+      "quote": "breakeven_payrolls_k: 75.0",
+      "item": "signal.labour",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The Sahm indicator is very low, showing no recessionary deterioration in the labour market and arguing against an urgent cut.",
+      "quote": "sahm: 0.033",
+      "item": "signal.labour",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The committee projects the unemployment rate to hold steady around 4.1 percent across the projection horizon, consistent with a labour market near balance rather than deteriorating.",
+      "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+      "item": "fed.sep.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The most recent statement characterises employment as stable, describing job gains as keeping pace and the unemployment rate as little changed, which is a neutral read on the labour market.",
+      "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+      "item": "fed.statement.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 6,
+    "n_verified": 6,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": -2.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "Unemployment sits exactly at the estimated natural rate with no slack, which argues for neither a hike nor a cut on labour grounds.",
+       "quote": "u_star: 4.2\nunemployment: 4.2\nunemployment_year_ago: 4.3\ngap_pp: 0.0",
+       "item": "signal.labour",
+       "lean": "neutral"
+      },
+      {
+       "text": "Three-month average payrolls of 50.7k are running below the 75.0k breakeven pace, signalling cooling hiring that leans toward easier policy.",
+       "quote": "payrolls_3m_avg_k: 50.7\npayrolls_12m_avg_k: 41.3\nbreakeven_payrolls_k: 75.0",
+       "item": "signal.labour",
+       "lean": "dovish"
+      },
+      {
+       "text": "A Sahm value of 0.033 and low jobless claims show no recessionary deterioration, undercutting any case for cutting on labour weakness.",
+       "quote": "sahm: 0.033\npayrolls_3m_avg_k: 50.7",
+       "item": "signal.labour",
+       "lean": "neutral"
+      },
+      {
+       "text": "The committee's unemployment-rate projections hold at 4.1 through 2029, revised down from the prior path, implying an expectation of a persistently tight labour market that leans hawkish.",
+       "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+       "item": "fed.sep.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The latest statement characterises employment as stable, with gains matching the workforce and little change in unemployment, consistent with holding rather than moving on labour grounds.",
+       "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+       "item": "fed.statement.2026-09-16",
+       "lean": "neutral"
+      }
+     ],
+     "tilt_bp": -1,
+     "confidence": "medium",
+     "summary": "The labour-market evidence points to a hold with only a very slight dovish lean. The computed pre-read shows unemployment (4.2) exactly at the natural rate (u_star 4.2) with a gap of 0.0, a low Sahm reading (0.033) and low jobless claims, indicating a labour market with no slack and no recessionary stress. The one softening signal is payroll growth (3m avg 50.7k) running below the 75.0k breakeven, a modest dovish cue. Offsetting this, the committee's SEP unemployment projections sit at 4.1 through 2029, revised down from the prior path, implying an expectation of continued tightness (hawkish). The September statement describes job gains keeping pace with the workforce and little change in unemployment (neutral). On balance these roughly offset, leaving a near-neutral tilt tilted marginally dovish by slowing payrolls.",
+     "watchouts": []
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 49.0,
+    "prompt_hash": "640dd2012cb4ed59",
+    "meta": {
+     "session_id": "f58505cd-67f3-4e34-a041-3e73b737bb82",
+     "cost_usd": 0.1829345,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 5784,
+      "cache_read_input_tokens": 73699,
+      "output_tokens": 3529,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 5784,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 431,
+        "cache_read_input_tokens": 70197,
+        "cache_creation_input_tokens": 5784,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 5784
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "Unemployment sits exactly at the estimated natural rate with no slack, which argues for neither a hike nor a cut on labour grounds.",
+      "quote": "u_star: 4.2\nunemployment: 4.2\nunemployment_year_ago: 4.3\ngap_pp: 0.0",
+      "item": "signal.labour",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Three-month average payrolls of 50.7k are running below the 75.0k breakeven pace, signalling cooling hiring that leans toward easier policy.",
+      "quote": "payrolls_3m_avg_k: 50.7\npayrolls_12m_avg_k: 41.3\nbreakeven_payrolls_k: 75.0",
+      "item": "signal.labour",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A Sahm value of 0.033 and low jobless claims show no recessionary deterioration, undercutting any case for cutting on labour weakness.",
+      "quote": "sahm: 0.033\npayrolls_3m_avg_k: 50.7",
+      "item": "signal.labour",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The committee's unemployment-rate projections hold at 4.1 through 2029, revised down from the prior path, implying an expectation of a persistently tight labour market that leans hawkish.",
+      "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+      "item": "fed.sep.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The latest statement characterises employment as stable, with gains matching the workforce and little change in unemployment, consistent with holding rather than moving on labour grounds.",
+      "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+      "item": "fed.statement.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 5,
+    "n_verified": 5,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": -1.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The labour-slack pre-read shows unemployment exactly at the estimated natural rate, with a gap of zero — a balanced labour market that is neither tight nor slack, arguing for a hold.",
+       "quote": "gap_pp: 0.0",
+       "item": "signal.labour",
+       "lean": "neutral"
+      },
+      {
+       "text": "Unemployment of 4.2 against a u_star of 4.2 confirms the labour market is at full employment, a neutral reading for policy.",
+       "quote": "unemployment: 4.2",
+       "item": "signal.labour",
+       "lean": "neutral"
+      },
+      {
+       "text": "Three-month average payrolls of 50.7k are running well below the estimated breakeven pace of 75.0k, signalling a softening labour market that leans dovish.",
+       "quote": "payrolls_3m_avg_k: 50.7",
+       "item": "signal.labour",
+       "lean": "dovish"
+      },
+      {
+       "text": "The breakeven payrolls pace of 75.0k exceeds recent job growth, implying hiring is below the rate needed to hold unemployment steady — a mildly dovish signal.",
+       "quote": "breakeven_payrolls_k: 75.0",
+       "item": "signal.labour",
+       "lean": "dovish"
+      },
+      {
+       "text": "Initial claims four-week average of 198.5k is low, indicating little layoff stress and a resilient labour market, which leans slightly hawkish against cuts.",
+       "quote": "claims_4wk_k: 198.5",
+       "item": "signal.labour",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The Sahm indicator at 0.033 is far from any recession-trigger level, showing no evidence of labour-market deterioration that would force a cut.",
+       "quote": "sahm: 0.033",
+       "item": "signal.labour",
+       "lean": "neutral"
+      },
+      {
+       "text": "The committee's projections hold the unemployment rate flat at 4.1 through 2029, a lower and steadier path than before, consistent with a sturdy labour market rather than one needing easing.",
+       "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+       "item": "fed.sep.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The SEP marked down the unemployment path from a previous 4.3 for 2026 and 2027, an upward revision to labour-market strength that argues against cutting.",
+       "quote": "\"Unemployment rate\": {\"2026\": 4.3, \"2027\": 4.3, \"2028\": 4.2, \"2029\": 4.2}",
+       "item": "fed.sep.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The latest statement characterises employment as solid, describing job gains keeping pace and unemployment little changed — a neutral labour-market description that supports holding.",
+       "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+       "item": "fed.statement.2026-09-16",
+       "lean": "neutral"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": -1,
+     "confidence": "medium",
+     "summary": "The labour-market evidence is close to balanced and argues mainly for a hold, with a very slight dovish tilt. The pre-read shows unemployment sitting exactly at the natural rate (gap_pp 0.0, unemployment 4.2 vs u_star 4.2) and a very low Sahm reading (0.033), indicating no deterioration. The one clearly dovish strand is hiring momentum: three-month payrolls (50.7k) are below the breakeven pace (75.0k), a softening signal. Offsetting this, initial claims are low (198.5k) and the SEP marked down the unemployment path to a flat 4.1 through 2029 from a previous 4.3, both signs of underlying strength. The September statement's employment language is neutral. On net these forces roughly cancel, leaving a marginally dovish -1 bp tilt driven by the below-breakeven payrolls. Confidence is medium because the softening-payrolls signal and the low-claims/steady-unemployment signals point in opposite directions."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 42.5,
+    "prompt_hash": "250b6667c6a9dc0a",
+    "meta": {
+     "session_id": "bc4f152a-f972-4154-8a9b-f0db56a610b3",
+     "cost_usd": 0.1731045,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 5521,
+      "cache_read_input_tokens": 73699,
+      "output_tokens": 3241,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 5521,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 418,
+        "cache_read_input_tokens": 70197,
+        "cache_creation_input_tokens": 5521,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 5521
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The labour-slack pre-read shows unemployment exactly at the estimated natural rate, with a gap of zero — a balanced labour market that is neither tight nor slack, arguing for a hold.",
+      "quote": "gap_pp: 0.0",
+      "item": "signal.labour",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Unemployment of 4.2 against a u_star of 4.2 confirms the labour market is at full employment, a neutral reading for policy.",
+      "quote": "unemployment: 4.2",
+      "item": "signal.labour",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Three-month average payrolls of 50.7k are running well below the estimated breakeven pace of 75.0k, signalling a softening labour market that leans dovish.",
+      "quote": "payrolls_3m_avg_k: 50.7",
+      "item": "signal.labour",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The breakeven payrolls pace of 75.0k exceeds recent job growth, implying hiring is below the rate needed to hold unemployment steady — a mildly dovish signal.",
+      "quote": "breakeven_payrolls_k: 75.0",
+      "item": "signal.labour",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Initial claims four-week average of 198.5k is low, indicating little layoff stress and a resilient labour market, which leans slightly hawkish against cuts.",
+      "quote": "claims_4wk_k: 198.5",
+      "item": "signal.labour",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The Sahm indicator at 0.033 is far from any recession-trigger level, showing no evidence of labour-market deterioration that would force a cut.",
+      "quote": "sahm: 0.033",
+      "item": "signal.labour",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The committee's projections hold the unemployment rate flat at 4.1 through 2029, a lower and steadier path than before, consistent with a sturdy labour market rather than one needing easing.",
+      "quote": "\"Unemployment rate\": {\"2026\": 4.1, \"2027\": 4.1, \"2028\": 4.1, \"2029\": 4.1, \"Longer run\": 4.2}",
+      "item": "fed.sep.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The SEP marked down the unemployment path from a previous 4.3 for 2026 and 2027, an upward revision to labour-market strength that argues against cutting.",
+      "quote": "\"Unemployment rate\": {\"2026\": 4.3, \"2027\": 4.3, \"2028\": 4.2, \"2029\": 4.2}",
+      "item": "fed.sep.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The latest statement characterises employment as solid, describing job gains keeping pace and unemployment little changed — a neutral labour-market description that supports holding.",
+      "quote": "Job gains have kept pace with the workforce, and the unemployment rate has changed little.",
+      "item": "fed.statement.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 9,
+    "n_verified": 9,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": -1.0,
+    "tilt_clipped": false
+   }
+  }
+ ],
+ "summary": {
+  "runs": 5,
+  "tilt_mean_bp": -1.2,
+  "tilt_std_bp": 0.4,
+  "groundedness_pct_mean": 100.0,
+  "leakage_total": 0,
+  "watchouts_missing_total": 0
+ }
+}

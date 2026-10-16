@@ -1,0 +1,1706 @@
+{
+ "analyst": "minutes_digest",
+ "arm": "D",
+ "prompt_version": "specialists-v2",
+ "prompt_chars": 36516,
+ "created_at": "2026-10-16T07:49:15+00:00",
+ "snapshot_hash": "2834903776a14bd959d76d7f59cbe2c23564f0a30490d5896b44a8695906fe31",
+ "backend": "replay",
+ "runs": [
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "On inflation composition, several participants saw elevated core services (ex-housing) price increases.",
+       "quote": "Several participants observed that the rate of price increases in core services excluding housing remained elevated.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants also saw core goods inflation remaining elevated, tied to the AI buildout as tariff effects waned.",
+       "quote": "Several participants observed that the rate of price increases in the core goods category also remained elevated, as effects of the AI buildout appeared to increase while the effects of tariff increases waned.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A few participants flagged software and portfolio management fees as large contributors likely reduced by BEA methodology changes.",
+       "quote": "A few participants noted that certain items in the PCE price index—software and portfolio management fees in particular—had made relatively large contributions to recent PCE inflation readings, and that those contributions would likely be reduced somewhat with the upcoming changes to the BEA's methodology.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "Some participants judged underlying inflation above 2 percent and moving sideways.",
+       "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants noted elevated short-term inflation expectations even as longer-term ones were anchored.",
+       "quote": "Several participants noted that market- and survey-based measures of short-term inflation expectations were elevated.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants relayed increased cost pressures from business contacts and surveys.",
+       "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants observed firmer pass-through of costs to consumers.",
+       "quote": "Some participants noted that businesses appeared to have been more successful in passing cost increases through to consumers.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "On inflation risk, some participants saw those risks becoming more skewed to the upside recently.",
+       "quote": "some participants remarked that those risks had become more skewed to the upside in recent months",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants warned that persistently elevated energy prices risked broadening price pressures.",
+       "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants saw the AI buildout risking demand outpacing supply and raising inflation.",
+       "quote": "Some participants commented that the AI buildout could cause aggregate demand to outpace aggregate supply over the medium term, putting upward pressure on inflation.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants flagged possible further tariff increases as an upside inflation risk.",
+       "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants worried prolonged above-target inflation could unanchor expectations and affect wage/price setting.",
+       "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A majority of participants judged the labor market had strengthened a bit recently.",
+       "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants noted unusually low labor market dynamism.",
+       "quote": "Several participants noted that dynamism in the labor market was unusually low, as reflected by low rates of hiring and layoffs, a low job-finding rate, and a persistently elevated long-term unemployment rate.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "neutral"
+      },
+      {
+       "text": "Some participants cited strong AI-sector wage gains for skilled workers.",
+       "quote": "Some participants observed that strong demand for skilled workers in sectors related to the ongoing AI buildout had been driving strong wage gains for these workers.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants countered that aggregate wage growth was moderate and not an inflationary source.",
+       "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "On policy, all participants supported the 1/4 point hike at this meeting.",
+       "quote": "all participants supported raising the target range for the federal funds rate 1/4 percentage point to 3-3/4 to 4 percent",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants saw a higher path as prudent insurance against persistent inflation.",
+       "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A number of participants saw a higher path as necessary on their modal outlooks.",
+       "quote": "A number of participants viewed a higher path for the target range as necessary based on their modal outlooks rather than on risk-management grounds.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants viewed current policy as not restrictive or only mildly restrictive.",
+       "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Most participants expected another rate increase would likely be appropriate by year end.",
+       "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "On what would change their minds, participants said future decisions are data-dependent and approached with an open mind.",
+       "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "neutral"
+      },
+      {
+       "text": "Almost all participants assessed labor-market risks had diminished and were now broadly balanced while inflation risks tilted up.",
+       "quote": "almost all participants assessed that, while inflation risks were tilted to the upside, risks to the labor market had diminished and were now broadly balanced",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": 6,
+     "confidence": "high",
+     "summary": "The September 15-16, 2026 minutes lean clearly hawkish. On inflation, participants said it \"remained elevated and that they had not seen sufficient progress on lowering inflation in recent months\"; several cited elevated core services and core goods, some saw underlying inflation above 2 percent moving sideways, and many relayed increased business cost pressures with some noting firmer pass-through. Risks were \"generally assessed\" as skewed to the upside, with some seeing them more skewed recently, many warning elevated energy prices could broaden pressures, several citing tariffs, and some worried about unanchoring expectations. On the labor market, a majority saw it strengthening \"a bit\" and participants viewed it \"close to maximum employment,\" though several noted low dynamism and some argued aggregate wage growth was moderate (the main dovish notes). On policy, all participants backed the 1/4 point hike to 3-3/4 to 4 percent, several saw policy as not or only mildly restrictive, many/a number favored a higher path, and crucially \"most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end.\" What would change minds: they stressed an \"open mind\" and dependence on \"incoming information and its implications for the outlook and the balance of risks.\" Net lean for the 2026-10-28 decision is hawkish (+6 bp), driven mainly by the \"most participants\" expectation of a further year-end hike, tempered only by data-dependence language."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 60.9,
+    "prompt_hash": "d982965ceb7a429b",
+    "meta": {
+     "session_id": "30f9e809-9dc8-4bbf-9b73-3058b2a32dd3",
+     "cost_usd": 0.46454850000000003,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 30053,
+      "cache_read_input_tokens": 70197,
+      "output_tokens": 5156,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 30053,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 690,
+        "cache_read_input_tokens": 70197,
+        "cache_creation_input_tokens": 16900,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 16900
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "On inflation composition, several participants saw elevated core services (ex-housing) price increases.",
+      "quote": "Several participants observed that the rate of price increases in core services excluding housing remained elevated.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants also saw core goods inflation remaining elevated, tied to the AI buildout as tariff effects waned.",
+      "quote": "Several participants observed that the rate of price increases in the core goods category also remained elevated, as effects of the AI buildout appeared to increase while the effects of tariff increases waned.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A few participants flagged software and portfolio management fees as large contributors likely reduced by BEA methodology changes.",
+      "quote": "A few participants noted that certain items in the PCE price index—software and portfolio management fees in particular—had made relatively large contributions to recent PCE inflation readings, and that those contributions would likely be reduced somewhat with the upcoming changes to the BEA's methodology.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants judged underlying inflation above 2 percent and moving sideways.",
+      "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants noted elevated short-term inflation expectations even as longer-term ones were anchored.",
+      "quote": "Several participants noted that market- and survey-based measures of short-term inflation expectations were elevated.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants relayed increased cost pressures from business contacts and surveys.",
+      "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants observed firmer pass-through of costs to consumers.",
+      "quote": "Some participants noted that businesses appeared to have been more successful in passing cost increases through to consumers.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On inflation risk, some participants saw those risks becoming more skewed to the upside recently.",
+      "quote": "some participants remarked that those risks had become more skewed to the upside in recent months",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants warned that persistently elevated energy prices risked broadening price pressures.",
+      "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants saw the AI buildout risking demand outpacing supply and raising inflation.",
+      "quote": "Some participants commented that the AI buildout could cause aggregate demand to outpace aggregate supply over the medium term, putting upward pressure on inflation.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants flagged possible further tariff increases as an upside inflation risk.",
+      "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants worried prolonged above-target inflation could unanchor expectations and affect wage/price setting.",
+      "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A majority of participants judged the labor market had strengthened a bit recently.",
+      "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants noted unusually low labor market dynamism.",
+      "quote": "Several participants noted that dynamism in the labor market was unusually low, as reflected by low rates of hiring and layoffs, a low job-finding rate, and a persistently elevated long-term unemployment rate.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants cited strong AI-sector wage gains for skilled workers.",
+      "quote": "Some participants observed that strong demand for skilled workers in sectors related to the ongoing AI buildout had been driving strong wage gains for these workers.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants countered that aggregate wage growth was moderate and not an inflationary source.",
+      "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On policy, all participants supported the 1/4 point hike at this meeting.",
+      "quote": "all participants supported raising the target range for the federal funds rate 1/4 percentage point to 3-3/4 to 4 percent",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants saw a higher path as prudent insurance against persistent inflation.",
+      "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A number of participants saw a higher path as necessary on their modal outlooks.",
+      "quote": "A number of participants viewed a higher path for the target range as necessary based on their modal outlooks rather than on risk-management grounds.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants viewed current policy as not restrictive or only mildly restrictive.",
+      "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Most participants expected another rate increase would likely be appropriate by year end.",
+      "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On what would change their minds, participants said future decisions are data-dependent and approached with an open mind.",
+      "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Almost all participants assessed labor-market risks had diminished and were now broadly balanced while inflation risks tilted up.",
+      "quote": "almost all participants assessed that, while inflation risks were tilted to the upside, risks to the labor market had diminished and were now broadly balanced",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 23,
+    "n_verified": 23,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 6.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "On inflation, several participants saw continued elevated core services and core goods price increases.",
+       "quote": "Several participants observed that the rate of price increases in core services excluding housing remained elevated. Several participants observed that the rate of price increases in the core goods category also remained elevated, as effects of the AI buildout appeared to increase while the effects of tariff increases waned.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants judged underlying inflation was above 2 percent and moving sideways.",
+       "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants noted short-term inflation expectations were elevated.",
+       "quote": "Several participants noted that market- and survey-based measures of short-term inflation expectations were elevated.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants cited increased cost pressures from business contacts and surveys.",
+       "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Participants generally assessed inflation risk as skewed to the upside, with some seeing it more skewed recently.",
+       "quote": "Participants generally assessed inflation risk as skewed to the upside; some participants remarked that those risks had become more skewed to the upside in recent months.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants saw a risk that prolonged elevated energy prices could broaden price pressures.",
+       "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants viewed further tariff increases as an upside risk to inflation.",
+       "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants worried prolonged above-target inflation could affect expectations and wage- and price-setting.",
+       "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A majority of participants assessed the labor market had strengthened a bit recently.",
+       "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants said aggregate wage growth was moderate and the labor market was not a source of inflationary pressures.",
+       "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "Many participants emphasized a higher rate path as prudent risk-management insurance.",
+       "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A number of participants saw a higher path as necessary based on their modal outlooks.",
+       "quote": "A number of participants viewed a higher path for the target range as necessary based on their modal outlooks rather than on risk-management grounds.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants viewed the current policy rate as not restrictive or only mildly restrictive.",
+       "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Most participants assessed another rate increase would likely be appropriate by year end.",
+       "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "On what would change their minds, participants said future decisions depend on incoming data, the outlook, and the balance of risks.",
+       "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "neutral"
+      },
+      {
+       "text": "Many participants viewed financial conditions as supportive of growth despite higher yields.",
+       "quote": "Many participants commented that, despite the recent rise in longer-term Treasury yields, financial conditions appeared to be supportive of economic growth, with equity prices having risen substantially this year and spreads on corporate bonds having remained narrow.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": 6,
+     "confidence": "high",
+     "summary": "The September 15-16, 2026 minutes lean clearly hawkish. On inflation, several participants saw elevated core services and core goods prices, some judged underlying inflation above 2 percent and sideways, and several noted elevated short-term inflation expectations; participants generally assessed inflation risk skewed to the upside (some more so recently), with many flagging energy-driven broadening, several flagging tariff risks, and some worried about expectations becoming unanchored. On the labor market, a majority saw it strengthen a bit recently and participants generally viewed it near maximum employment, though some said wage growth was moderate and not a source of inflation pressure (the main dovish counterpoint). On policy, many emphasized a higher path as prudent risk-management insurance, a number saw it as necessary on modal outlooks, several viewed the current rate as not restrictive or only mildly restrictive, and most expected another increase by year end. What would change their minds: future decisions depend on incoming information, the outlook, and the balance of risks. Net tilt is modestly hawkish (+6). There were no watch-outs to address. All quotes are from item fed.minutes.2026-09-16, the only item in evidence."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 53.7,
+    "prompt_hash": "c5d4bfcb21b809a4",
+    "meta": {
+     "session_id": "e4504ec0-783e-46e1-bc9c-498d111f4895",
+     "cost_usd": 0.308015,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 16067,
+      "cache_read_input_tokens": 83350,
+      "output_tokens": 4226,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 16067,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 496,
+        "cache_read_input_tokens": 70197,
+        "cache_creation_input_tokens": 16067,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 16067
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "On inflation, several participants saw continued elevated core services and core goods price increases.",
+      "quote": "Several participants observed that the rate of price increases in core services excluding housing remained elevated. Several participants observed that the rate of price increases in the core goods category also remained elevated, as effects of the AI buildout appeared to increase while the effects of tariff increases waned.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants judged underlying inflation was above 2 percent and moving sideways.",
+      "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants noted short-term inflation expectations were elevated.",
+      "quote": "Several participants noted that market- and survey-based measures of short-term inflation expectations were elevated.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants cited increased cost pressures from business contacts and surveys.",
+      "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Participants generally assessed inflation risk as skewed to the upside, with some seeing it more skewed recently.",
+      "quote": "Participants generally assessed inflation risk as skewed to the upside; some participants remarked that those risks had become more skewed to the upside in recent months.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants saw a risk that prolonged elevated energy prices could broaden price pressures.",
+      "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants viewed further tariff increases as an upside risk to inflation.",
+      "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants worried prolonged above-target inflation could affect expectations and wage- and price-setting.",
+      "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A majority of participants assessed the labor market had strengthened a bit recently.",
+      "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants said aggregate wage growth was moderate and the labor market was not a source of inflationary pressures.",
+      "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants emphasized a higher rate path as prudent risk-management insurance.",
+      "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A number of participants saw a higher path as necessary based on their modal outlooks.",
+      "quote": "A number of participants viewed a higher path for the target range as necessary based on their modal outlooks rather than on risk-management grounds.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants viewed the current policy rate as not restrictive or only mildly restrictive.",
+      "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Most participants assessed another rate increase would likely be appropriate by year end.",
+      "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On what would change their minds, participants said future decisions depend on incoming data, the outlook, and the balance of risks.",
+      "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants viewed financial conditions as supportive of growth despite higher yields.",
+      "quote": "Many participants commented that, despite the recent rise in longer-term Treasury yields, financial conditions appeared to be supportive of economic growth, with equity prices having risen substantially this year and spreads on corporate bonds having remained narrow.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 16,
+    "n_verified": 16,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 6.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "Several participants saw elevated core services ex-housing inflation.",
+       "quote": "Several participants observed that the rate of price increases in core services excluding housing remained elevated.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants judged underlying inflation above target and moving sideways.",
+       "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Inflation risk seen skewed up, with some seeing it more skewed recently.",
+       "quote": "Participants generally assessed inflation risk as skewed to the upside; some participants remarked that those risks had become more skewed to the upside in recent months.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants cited business contacts reporting increased cost pressures.",
+       "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants saw risk of elevated energy prices broadening into wider price pressures.",
+       "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants flagged further tariff increases as an upside inflation risk.",
+       "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants worried prolonged above-target inflation could unanchor expectations.",
+       "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A few participants noted a decline in 3-month core PCE but cautioned it understates inflation.",
+       "quote": "A few participants observed that the 3-month change measure of core PCE inflation showed a material decline since the start of the year but cautioned that this measure is more volatile than the 12-month change measure and has shown a strong tendency to understate inflation in the second half of the year compared with the first half.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "neutral"
+      },
+      {
+       "text": "A majority judged the labor market had strengthened a bit recently.",
+       "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants said wage growth was moderate and not a source of inflation.",
+       "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "Several participants noted unusually low labor market dynamism.",
+       "quote": "Several participants noted that dynamism in the labor market was unusually low, as reflected by low rates of hiring and layoffs, a low job-finding rate, and a persistently elevated long-term unemployment rate.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "All participants supported the 1/4 point hike to 3-3/4 to 4 percent.",
+       "quote": "all participants supported raising the target range for the federal funds rate 1/4 percentage point to 3-3/4 to 4 percent.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Almost all saw inflation risks tilted up while labor risks had diminished to balanced.",
+       "quote": "almost all participants assessed that, while inflation risks were tilted to the upside, risks to the labor market had diminished and were now broadly balanced.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many emphasized a higher path on risk-management grounds as insurance.",
+       "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A number viewed a higher path as necessary based on modal outlooks.",
+       "quote": "A number of participants viewed a higher path for the target range as necessary based on their modal outlooks rather than on risk-management grounds.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several viewed current policy as not restrictive or only mildly restrictive.",
+       "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Most participants expected another increase would likely be appropriate by year end.",
+       "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Decisions to change minds would depend on incoming data and the balance of risks.",
+       "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "neutral"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": 7,
+     "confidence": "high",
+     "summary": "The September 2026 minutes are strongly hawkish. All participants supported the 1/4-point hike to 3-3/4 to 4 percent, and 'most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end.' On inflation, participants saw it elevated with risks skewed to the upside ('some' saw risks more skewed recently), with 'many' citing cost pressures from energy and the AI buildout and 'several' flagging tariffs. On the labor market, a 'majority' saw recent strengthening and 'almost all' judged labor-market risks diminished and broadly balanced, though 'some' noted moderate wage growth and 'several' noted low dynamism (modest dovish offsets). 'Several' viewed policy as not restrictive or only mildly restrictive, and 'a number' viewed a higher path as necessary on modal outlooks. What would change minds: participants stressed an open mind with future decisions depending on incoming information and the balance of risks. Net lean toward the October 28 decision is clearly hawkish, hence +7."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 51.3,
+    "prompt_hash": "98e0ec4c271e0518",
+    "meta": {
+     "session_id": "c538c18e-f739-432a-b427-cc411a4caa7c",
+     "cost_usd": 0.31676999999999994,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 16255,
+      "cache_read_input_tokens": 83350,
+      "output_tokens": 4501,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 16255,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 583,
+        "cache_read_input_tokens": 70197,
+        "cache_creation_input_tokens": 16255,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 16255
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "Several participants saw elevated core services ex-housing inflation.",
+      "quote": "Several participants observed that the rate of price increases in core services excluding housing remained elevated.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants judged underlying inflation above target and moving sideways.",
+      "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Inflation risk seen skewed up, with some seeing it more skewed recently.",
+      "quote": "Participants generally assessed inflation risk as skewed to the upside; some participants remarked that those risks had become more skewed to the upside in recent months.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants cited business contacts reporting increased cost pressures.",
+      "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants saw risk of elevated energy prices broadening into wider price pressures.",
+      "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants flagged further tariff increases as an upside inflation risk.",
+      "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants worried prolonged above-target inflation could unanchor expectations.",
+      "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A few participants noted a decline in 3-month core PCE but cautioned it understates inflation.",
+      "quote": "A few participants observed that the 3-month change measure of core PCE inflation showed a material decline since the start of the year but cautioned that this measure is more volatile than the 12-month change measure and has shown a strong tendency to understate inflation in the second half of the year compared with the first half.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A majority judged the labor market had strengthened a bit recently.",
+      "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants said wage growth was moderate and not a source of inflation.",
+      "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants noted unusually low labor market dynamism.",
+      "quote": "Several participants noted that dynamism in the labor market was unusually low, as reflected by low rates of hiring and layoffs, a low job-finding rate, and a persistently elevated long-term unemployment rate.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "All participants supported the 1/4 point hike to 3-3/4 to 4 percent.",
+      "quote": "all participants supported raising the target range for the federal funds rate 1/4 percentage point to 3-3/4 to 4 percent.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Almost all saw inflation risks tilted up while labor risks had diminished to balanced.",
+      "quote": "almost all participants assessed that, while inflation risks were tilted to the upside, risks to the labor market had diminished and were now broadly balanced.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many emphasized a higher path on risk-management grounds as insurance.",
+      "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A number viewed a higher path as necessary based on modal outlooks.",
+      "quote": "A number of participants viewed a higher path for the target range as necessary based on their modal outlooks rather than on risk-management grounds.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several viewed current policy as not restrictive or only mildly restrictive.",
+      "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Most participants expected another increase would likely be appropriate by year end.",
+      "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Decisions to change minds would depend on incoming data and the balance of risks.",
+      "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 18,
+    "n_verified": 18,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 7.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "On inflation, participants said they had not yet made sufficient progress, with inflation still elevated.",
+       "quote": "Participants noted that inflation remained elevated and that they had not seen sufficient progress on lowering inflation in recent months.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants flagged elevated core goods inflation tied to the AI buildout.",
+       "quote": "Several participants observed that the rate of price increases in the core goods category also remained elevated, as effects of the AI buildout appeared to increase while the effects of tariff increases waned.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants saw underlying inflation above 2 percent and moving sideways.",
+       "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A few participants cautioned that some recent PCE inflation came from items likely to be reduced by BEA methodology changes.",
+       "quote": "A few participants noted that certain items in the PCE price index—software and portfolio management fees in particular—had made relatively large contributions to recent PCE inflation readings, and that those contributions would likely be reduced somewhat with the upcoming changes to the BEA's methodology.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "Several participants noted elevated short-term inflation expectations.",
+       "quote": "Several participants noted that market- and survey-based measures of short-term inflation expectations were elevated.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants cited business contacts reporting increased cost pressures.",
+       "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "On the labor market, a majority judged it had strengthened a bit recently.",
+       "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants noted unusually low labor market dynamism.",
+       "quote": "Several participants noted that dynamism in the labor market was unusually low, as reflected by low rates of hiring and layoffs, a low job-finding rate, and a persistently elevated long-term unemployment rate.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "Some participants said wage growth was moderate and not a source of inflation pressure.",
+       "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "On risks, some participants said inflation risks had become more skewed to the upside recently.",
+       "quote": "Participants generally assessed inflation risk as skewed to the upside; some participants remarked that those risks had become more skewed to the upside in recent months.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants saw elevated energy prices risking broader price pressures.",
+       "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants cited possible further tariff increases as an upside inflation risk.",
+       "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants worried persistent inflation could begin to affect expectations and wage/price setting.",
+       "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "On the policy path, many emphasized a higher path was prudent on risk-management grounds.",
+       "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants viewed current policy as not restrictive or only mildly restrictive.",
+       "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Most participants expected another rate increase would likely be appropriate by year end.",
+       "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "On what would change their minds, participants said decisions would depend on incoming data and the balance of risks.",
+       "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "neutral"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": 7,
+     "confidence": "high",
+     "summary": "The minutes are decisively hawkish. Participants judged inflation remained elevated with insufficient recent progress; several cited elevated core goods inflation, some saw underlying inflation above 2 percent moving sideways, and several noted elevated short-term inflation expectations, while many cited increased business cost pressures. On the labor market, a majority saw a bit of recent strengthening near maximum employment, though several noted low dynamism and some said wages were not a source of inflation pressure. Inflation risks were generally skewed to the upside (some said increasingly so), with upside risks from energy prices, further tariffs, and the AI buildout. On policy, all backed the September hike to 3-3/4 to 4 percent, many framed a higher path as prudent risk management, several saw policy as not restrictive or only mildly restrictive, and most expected another increase by year end. The chief offsets are a few participants flagging BEA methodology softening recent PCE and some noting moderate wages. The stated mind-changer is incoming data and the balance of risks. Net lean for the 2026-10-28 decision is hawkish."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 73.3,
+    "prompt_hash": "9f2690645f100cc5",
+    "meta": {
+     "session_id": "012b2644-de88-4d38-bcf1-35ee152ead89",
+     "cost_usd": 0.449298,
+     "num_turns": 3,
+     "usage": {
+      "input_tokens": 848,
+      "cache_creation_input_tokens": 18741,
+      "cache_read_input_tokens": 169746,
+      "output_tokens": 6911,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 18741,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 844,
+        "output_tokens": 546,
+        "cache_read_input_tokens": 86396,
+        "cache_creation_input_tokens": 2542,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 2542
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "On inflation, participants said they had not yet made sufficient progress, with inflation still elevated.",
+      "quote": "Participants noted that inflation remained elevated and that they had not seen sufficient progress on lowering inflation in recent months.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants flagged elevated core goods inflation tied to the AI buildout.",
+      "quote": "Several participants observed that the rate of price increases in the core goods category also remained elevated, as effects of the AI buildout appeared to increase while the effects of tariff increases waned.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants saw underlying inflation above 2 percent and moving sideways.",
+      "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A few participants cautioned that some recent PCE inflation came from items likely to be reduced by BEA methodology changes.",
+      "quote": "A few participants noted that certain items in the PCE price index—software and portfolio management fees in particular—had made relatively large contributions to recent PCE inflation readings, and that those contributions would likely be reduced somewhat with the upcoming changes to the BEA's methodology.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants noted elevated short-term inflation expectations.",
+      "quote": "Several participants noted that market- and survey-based measures of short-term inflation expectations were elevated.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants cited business contacts reporting increased cost pressures.",
+      "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On the labor market, a majority judged it had strengthened a bit recently.",
+      "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants noted unusually low labor market dynamism.",
+      "quote": "Several participants noted that dynamism in the labor market was unusually low, as reflected by low rates of hiring and layoffs, a low job-finding rate, and a persistently elevated long-term unemployment rate.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants said wage growth was moderate and not a source of inflation pressure.",
+      "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On risks, some participants said inflation risks had become more skewed to the upside recently.",
+      "quote": "Participants generally assessed inflation risk as skewed to the upside; some participants remarked that those risks had become more skewed to the upside in recent months.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants saw elevated energy prices risking broader price pressures.",
+      "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants cited possible further tariff increases as an upside inflation risk.",
+      "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants worried persistent inflation could begin to affect expectations and wage/price setting.",
+      "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On the policy path, many emphasized a higher path was prudent on risk-management grounds.",
+      "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants viewed current policy as not restrictive or only mildly restrictive.",
+      "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Most participants expected another rate increase would likely be appropriate by year end.",
+      "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On what would change their minds, participants said decisions would depend on incoming data and the balance of risks.",
+      "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 17,
+    "n_verified": 17,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 7.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "On inflation, several participants saw continued elevated price increases in core services excluding housing.",
+       "quote": "Several participants observed that the rate of price increases in core services excluding housing remained elevated.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants also flagged elevated core goods price increases tied to the AI buildout.",
+       "quote": "Several participants observed that the rate of price increases in the core goods category also remained elevated, as effects of the AI buildout appeared to increase while the effects of tariff increases waned.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants judged underlying inflation to be above target and moving sideways.",
+       "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A few participants pointed to a decline in the 3-month core PCE measure but cautioned it was unreliable.",
+       "quote": "A few participants observed that the 3-month change measure of core PCE inflation showed a material decline since the start of the year but cautioned that this measure is more volatile than the 12-month change measure and has shown a strong tendency to understate inflation in the second half of the year compared with the first half.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants noted elevated short-term inflation expectations.",
+       "quote": "Several participants noted that market- and survey-based measures of short-term inflation expectations were elevated.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants cited business contacts reporting increased cost pressures.",
+       "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants noted firms were increasingly passing cost increases through to consumers.",
+       "quote": "Some participants noted that businesses appeared to have been more successful in passing cost increases through to consumers.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants said inflation risks had become more skewed to the upside recently.",
+       "quote": "some participants remarked that those risks had become more skewed to the upside in recent months",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants warned that persistently elevated energy prices risked broader price pressures.",
+       "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants saw the AI buildout potentially pushing demand above supply and raising inflation.",
+       "quote": "Some participants commented that the AI buildout could cause aggregate demand to outpace aggregate supply over the medium term, putting upward pressure on inflation.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants cited possible further tariff increases as an upside inflation risk.",
+       "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants worried prolonged above-target inflation could unanchor expectations.",
+       "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "On the labor market, a majority of participants assessed it had strengthened a bit recently.",
+       "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants noted unusually low labor market dynamism.",
+       "quote": "Several participants noted that dynamism in the labor market was unusually low, as reflected by low rates of hiring and layoffs, a low job-finding rate, and a persistently elevated long-term unemployment rate.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "Some participants saw strong AI-sector demand driving strong wage gains for skilled workers.",
+       "quote": "Some participants observed that strong demand for skilled workers in sectors related to the ongoing AI buildout had been driving strong wage gains for these workers.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Some participants said aggregate wage growth was moderate and not a source of inflationary pressure.",
+       "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "dovish"
+      },
+      {
+       "text": "On policy path, most participants assessed another rate increase would likely be appropriate by year end.",
+       "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants viewed a higher path as prudent risk-management insurance against persistent inflation.",
+       "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A number of participants viewed a higher path as necessary based on their modal outlooks.",
+       "quote": "A number of participants viewed a higher path for the target range as necessary based on their modal outlooks rather than on risk-management grounds.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Several participants viewed the current policy rate as not restrictive or only mildly restrictive.",
+       "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "A couple of participants raised their estimate of the neutral rate and thus the appropriate target range.",
+       "quote": "A couple of participants remarked on having increased their estimate of the neutral federal funds rate and thus their view of the appropriate setting of the target range for the federal funds rate.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "On what would change their minds, participants stressed future decisions would depend on incoming data and the balance of risks.",
+       "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "neutral"
+      },
+      {
+       "text": "On the overall balance of risks, almost all participants saw inflation risks tilted up but labor-market risks now balanced.",
+       "quote": "almost all participants assessed that, while inflation risks were tilted to the upside, risks to the labor market had diminished and were now broadly balanced",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Many participants judged financial conditions supportive of growth despite higher long-term yields.",
+       "quote": "Many participants commented that, despite the recent rise in longer-term Treasury yields, financial conditions appeared to be supportive of economic growth, with equity prices having risen substantially this year and spreads on corporate bonds having remained narrow.",
+       "item": "fed.minutes.2026-09-16",
+       "lean": "hawkish"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": 6,
+     "confidence": "high",
+     "summary": "The September 15-16, 2026 minutes read decidedly hawkish. On inflation, participants viewed it as still elevated with upside risks: several cited elevated core services and core goods price increases, some saw underlying inflation above target and moving sideways, many cited increased business cost pressures, and several flagged tariff and energy risks. On the labor market, a majority assessed it had strengthened a bit and most viewed it near maximum employment, though several noted low dynamism and some said wage growth was moderate and not inflationary. On the policy path, most participants assessed a further rate increase would likely be appropriate by year end, many emphasized risk-management grounds, and several viewed the current rate as not or only mildly restrictive. Almost all saw inflation risks tilted up while labor-market risks were balanced. On what would change their minds, participants stressed data-dependence and an open mind at each meeting. With the next decision on 2026-10-28 and 'most' participants pointing to another hike by year end, the net lean is hawkish (+6 bp), tempered only by the stated data-dependence and a minority dovish labor/wage view."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 64.7,
+    "prompt_hash": "426bedc15da24817",
+    "meta": {
+     "session_id": "f81bb0db-591a-439e-a732-b0e802b99aa3",
+     "cost_usd": 0.35553500000000005,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 17264,
+      "cache_read_input_tokens": 83350,
+      "output_tokens": 5648,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 17264,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 721,
+        "cache_read_input_tokens": 70197,
+        "cache_creation_input_tokens": 17264,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 17264
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "On inflation, several participants saw continued elevated price increases in core services excluding housing.",
+      "quote": "Several participants observed that the rate of price increases in core services excluding housing remained elevated.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants also flagged elevated core goods price increases tied to the AI buildout.",
+      "quote": "Several participants observed that the rate of price increases in the core goods category also remained elevated, as effects of the AI buildout appeared to increase while the effects of tariff increases waned.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants judged underlying inflation to be above target and moving sideways.",
+      "quote": "Some participants noted that, according to various modeling approaches, underlying inflation appeared to be above the Committee's 2 percent objective and to have moved sideways in recent months.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A few participants pointed to a decline in the 3-month core PCE measure but cautioned it was unreliable.",
+      "quote": "A few participants observed that the 3-month change measure of core PCE inflation showed a material decline since the start of the year but cautioned that this measure is more volatile than the 12-month change measure and has shown a strong tendency to understate inflation in the second half of the year compared with the first half.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants noted elevated short-term inflation expectations.",
+      "quote": "Several participants noted that market- and survey-based measures of short-term inflation expectations were elevated.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants cited business contacts reporting increased cost pressures.",
+      "quote": "Many participants cited their business contacts and business surveys as reporting increased cost pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants noted firms were increasingly passing cost increases through to consumers.",
+      "quote": "Some participants noted that businesses appeared to have been more successful in passing cost increases through to consumers.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants said inflation risks had become more skewed to the upside recently.",
+      "quote": "some participants remarked that those risks had become more skewed to the upside in recent months",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants warned that persistently elevated energy prices risked broader price pressures.",
+      "quote": "Many participants assessed that the longer energy prices remained elevated, the greater the risk that cost increases in certain sectors could lead to broader price pressures.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants saw the AI buildout potentially pushing demand above supply and raising inflation.",
+      "quote": "Some participants commented that the AI buildout could cause aggregate demand to outpace aggregate supply over the medium term, putting upward pressure on inflation.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants cited possible further tariff increases as an upside inflation risk.",
+      "quote": "Several participants noted that the possibility of further tariff increases was also an upside risk to inflation.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants worried prolonged above-target inflation could unanchor expectations.",
+      "quote": "Some participants expressed concerns that, after more than five years of inflation above 2 percent, elevated inflation rates could begin to affect inflation expectations and wage- and price-setting decisions.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On the labor market, a majority of participants assessed it had strengthened a bit recently.",
+      "quote": "A majority of participants assessed that the labor market had strengthened a bit recently, pointing to developments such as employment gains modestly outpacing labor force growth.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants noted unusually low labor market dynamism.",
+      "quote": "Several participants noted that dynamism in the labor market was unusually low, as reflected by low rates of hiring and layoffs, a low job-finding rate, and a persistently elevated long-term unemployment rate.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants saw strong AI-sector demand driving strong wage gains for skilled workers.",
+      "quote": "Some participants observed that strong demand for skilled workers in sectors related to the ongoing AI buildout had been driving strong wage gains for these workers.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Some participants said aggregate wage growth was moderate and not a source of inflationary pressure.",
+      "quote": "some participants also commented that aggregate wage growth was moderate and consistent with inflation moving toward 2 percent, or that the labor market was not currently a source of inflationary pressures",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On policy path, most participants assessed another rate increase would likely be appropriate by year end.",
+      "quote": "most participants assessed that another increase in the target range for the federal funds rate would likely be appropriate by year end",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants viewed a higher path as prudent risk-management insurance against persistent inflation.",
+      "quote": "Many participants emphasized that a higher path for the target range would be prudent on risk-management grounds, providing insurance against inflation remaining persistently above target due to stronger-than-expected demand or further adverse supply shocks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A number of participants viewed a higher path as necessary based on their modal outlooks.",
+      "quote": "A number of participants viewed a higher path for the target range as necessary based on their modal outlooks rather than on risk-management grounds.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Several participants viewed the current policy rate as not restrictive or only mildly restrictive.",
+      "quote": "Several participants stated that they viewed the current policy rate as not restrictive or only mildly restrictive.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "A couple of participants raised their estimate of the neutral rate and thus the appropriate target range.",
+      "quote": "A couple of participants remarked on having increased their estimate of the neutral federal funds rate and thus their view of the appropriate setting of the target range for the federal funds rate.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On what would change their minds, participants stressed future decisions would depend on incoming data and the balance of risks.",
+      "quote": "Participants emphasized, however, that they approached each meeting with an open mind and decisions at future meetings would depend on incoming information and its implications for the outlook and the balance of risks.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "On the overall balance of risks, almost all participants saw inflation risks tilted up but labor-market risks now balanced.",
+      "quote": "almost all participants assessed that, while inflation risks were tilted to the upside, risks to the labor market had diminished and were now broadly balanced",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Many participants judged financial conditions supportive of growth despite higher long-term yields.",
+      "quote": "Many participants commented that, despite the recent rise in longer-term Treasury yields, financial conditions appeared to be supportive of economic growth, with equity prices having risen substantially this year and spreads on corporate bonds having remained narrow.",
+      "item": "fed.minutes.2026-09-16",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 24,
+    "n_verified": 24,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 6.0,
+    "tilt_clipped": false
+   }
+  }
+ ],
+ "summary": {
+  "runs": 5,
+  "tilt_mean_bp": 6.4,
+  "tilt_std_bp": 0.49,
+  "groundedness_pct_mean": 100.0,
+  "leakage_total": 0,
+  "watchouts_missing_total": 0
+ }
+}
