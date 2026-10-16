@@ -40,7 +40,11 @@
   /* main */
   main { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
   .topbar { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--line); }
-  .topbar h1 { font-size: 16px; margin-right: auto; }
+  .topbar h1 { font-size: 16px; }
+  .fresh { margin-right: auto; font-size: 12px; color: var(--muted); padding: 3px 9px; border: 1px solid var(--line); border-radius: 99px; white-space: nowrap; }
+  .fresh.ok { color: var(--ok); border-color: var(--ok); } .fresh.warn { color: var(--warn); border-color: var(--warn); }
+  .fresh b { font-weight: 600; }
+  .focusbar { display: flex; gap: 10px; align-items: center; margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
   .content { padding: 18px 20px 40px; overflow: auto; flex: 1; }
   .view { display: none; } .view.active { display: block; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
@@ -185,7 +189,8 @@
 <main>
   <div class="topbar">
     <h1 id="view-title">Forecast</h1>
-    <button class="btn" id="btn-snapshot" title="Fetch live data from the Fed, FRED, the New York Fed and futures quotes, and freeze it as a fingerprinted bundle.">Take snapshot</button>
+    <span class="fresh" id="fresh" title="When the evidence was last pulled. Each pull is frozen as a fingerprinted snapshot; the forecast is only as fresh as its snapshot."></span>
+    <button class="btn" id="btn-snapshot" title="Pull live evidence from the Fed, FRED, the New York Fed and futures quotes, and freeze it as a fingerprinted snapshot.">Pull evidence</button>
     <button class="btn primary" id="btn-forecast" title="Run the models and your views on the latest snapshot and record the result in the ledger.">Run forecast</button>
     <button class="btn" id="btn-replay" title="Two checks: the ledger chain is intact, and every entry recomputes exactly from its frozen snapshot.">Verify ledger</button>
     <button class="btn" id="btn-analyse" title="Run the five specialist analysts and the naive control on the latest snapshot (about a minute per call, in the background).">Run analysts</button>
@@ -206,7 +211,7 @@
     <section class="view" data-view="evidence">
       <div class="legend"><span><i></i>live: in today's number</span><span><i class="computed"></i>computed: calculated, not yet in the number</span><span><i class="idle"></i>idle: in the snapshot, nothing reads it yet</span><span><i class="planned"></i>planned: not built</span><span><i class="human"></i>your input</span></div>
       <div class="graph-layout">
-        <div class="card"><div id="dag"></div></div>
+        <div class="card"><div class="focusbar" id="focusbar"></div><div id="dag"></div></div>
         <div class="card detail-pane" id="dag-detail"></div>
       </div>
     </section>
@@ -366,6 +371,14 @@ function render(s) {
   const days = snap ? Math.round((new Date(snap.next_meeting) - new Date(s.today)) / 864e5) : null;
   if (snap && !$("v-exp").value) $("v-exp").value = snap.next_meeting;
 
+  const fr = $("fresh");
+  if (snap) {
+    const ageH = (Date.now() - new Date(snap.created_at)) / 36e5;
+    const age = ageH < 1 ? "under an hour ago" : ageH < 48 ? Math.round(ageH) + " hours ago" : Math.round(ageH / 24) + " days ago";
+    const staleFc = latest && latest.stale;
+    fr.className = "fresh " + (ageH < 24 && !staleFc ? "ok" : "warn");
+    fr.innerHTML = `Evidence pulled <b>${age}</b> (${esc(snap.as_of)})${staleFc ? " · forecast is on an older snapshot" : ""}`;
+  } else { fr.className = "fresh warn"; fr.textContent = "No evidence pulled yet"; }
   $("side-status").innerHTML = snap ? `<div>Next decision<br><b>${esc(snap.next_meeting)}</b> · ${days} days</div>
     <div>Latest snapshot<br><b>${esc(snap.as_of)}</b> · ${snap.n_items} items${snap.complete ? "" : " · incomplete"}</div>
     <div>Ledger<br><b>${s.ledger.length} entr${s.ledger.length === 1 ? "y" : "ies"}</b> · chain ${s.chain_ok ? "intact" : "broken"}</div>` : `<div>No snapshot yet</div>`;
@@ -483,11 +496,33 @@ function renderJob(job) {
 $("btn-analyse").onclick = () => post("/api/analyse", {runs: 1}, "Starting analysts…");
 
 // --- factor graph -------------------------------------------------------------------------
-let lastDag = null, dagSelected = null;
-function renderDag(dag) {
-  lastDag = dag;
-  const el = $("dag"), det = $("dag-detail");
-  if (!dag) { el.innerHTML = `<div class="empty">Run a forecast to see what feeds it.</div>`; det.innerHTML = ""; return; }
+let lastDag = null, dagSelected = null, dagFocus = false;
+function connected(dag, id) {
+  // everything upstream of `id` (its inputs, recursively) plus everything downstream (what it feeds)
+  const up = new Set([id]), down = new Set([id]);
+  let grew = true;
+  while (grew) { grew = false; dag.edges.forEach(e => {
+    if (up.has(e.to) && !up.has(e.from)) { up.add(e.from); grew = true; }
+    if (down.has(e.from) && !down.has(e.to)) { down.add(e.to); grew = true; } }); }
+  return new Set([...up, ...down]);
+}
+function renderDag(full) {
+  lastDag = full;
+  const el = $("dag"), det = $("dag-detail"), fb = $("focusbar");
+  if (!full) { el.innerHTML = `<div class="empty">Run a forecast to see what feeds it.</div>`; det.innerHTML = ""; fb.innerHTML = ""; return; }
+  const selFull = dagSelected && full.nodes.some(n => n.id === dagSelected) ? dagSelected : null;
+  let dag = full;
+  if (selFull && dagFocus) {
+    const keep = connected(full, selFull);
+    const nodes = full.nodes.filter(n => keep.has(n.id));
+    const usedCols = [...new Set(nodes.map(n => n.col))].sort((a, b) => a - b);
+    dag = {columns: usedCols.map(c => full.columns[c]), edges: full.edges.filter(e => keep.has(e.from) && keep.has(e.to)),
+           nodes: nodes.map(n => ({...n, col: usedCols.indexOf(n.col)}))};
+    const selNode = full.nodes.find(n => n.id === selFull);
+    fb.innerHTML = `<span>Showing only what <strong>${esc(selNode.label)}</strong> uses and feeds (${nodes.length} of ${full.nodes.length} boxes).</span><button class="link" id="focus-off">Show everything</button>`;
+  } else {
+    fb.innerHTML = selFull ? `<span>All evidence shown.</span><button class="link" id="focus-on">Show only what the selected box uses</button>` : `<span>Click a model to see only the inputs it uses.</span>`;
+  }
   const COLW = 178, W = 150, H = 46, GAP = 12, PAD = 14, TOP = 22;
   const cols = {};
   dag.nodes.forEach(n => (cols[n.col] = cols[n.col] || []).push(n));
@@ -544,7 +579,9 @@ async function openReader(id) {
 $("reader-close").onclick = () => $("reader").classList.remove("open");
 $("reader").onclick = e => { if (e.target.id === "reader") $("reader").classList.remove("open"); };
 document.addEventListener("keydown", e => { if (e.key === "Escape") $("reader").classList.remove("open"); });
-$("dag").onclick = e => { const g = e.target.closest("[data-id]"); if (g) { dagSelected = g.dataset.id; renderDag(lastDag); } };
+$("dag").onclick = e => { const g = e.target.closest("[data-id]"); if (g) { dagSelected = g.dataset.id;
+  const n = lastDag.nodes.find(x => x.id === dagSelected); dagFocus = ["model", "pool", "output", "signal"].includes(n.kind); renderDag(lastDag); } };
+$("focusbar").onclick = e => { if (e.target.id === "focus-off") { dagFocus = false; renderDag(lastDag); } if (e.target.id === "focus-on") { dagFocus = true; renderDag(lastDag); } };
 $("dag-detail").onclick = e => { const id = e.target.dataset.go; if (id) { dagSelected = id; renderDag(lastDag); }
   const rid = e.target.dataset.read; if (rid) openReader(rid); };
 
@@ -563,7 +600,7 @@ async function post(path, body, busyText) {
   } catch (e) { say(e.message, "err"); return false; }
   finally { document.querySelectorAll("button").forEach(b => b.disabled = false); }
 }
-$("btn-snapshot").onclick = () => post("/api/snapshot", {}, "Fetching live data from the Fed, FRED, the New York Fed and futures quotes…");
+$("btn-snapshot").onclick = () => post("/api/snapshot", {}, "Pulling evidence from the Fed, FRED, the New York Fed and futures quotes (about a minute)…");
 $("btn-forecast").onclick = () => post("/api/forecast", {}, "Running models…");
 $("btn-replay").onclick = () => post("/api/replay", {}, "Recomputing every ledger entry…");
 $("view-form").onsubmit = async e => { e.preventDefault();
