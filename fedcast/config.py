@@ -3,10 +3,20 @@
 from __future__ import annotations
 
 import os
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 SNAPSHOT_DIR = ROOT / "snapshots"
+
+# Evidence is dated in the data's own timezone. FRED's real-time vintages and the Fed's releases follow the US
+# day; a snapshot taken from Asia in the morning would otherwise be dated "tomorrow" and FRED rejects it.
+DATA_TZ = ZoneInfo("America/New_York")
+
+
+def today() -> date:
+    return datetime.now(DATA_TZ).date()
 
 # FRED series captured in every snapshot (id -> why it is there).
 FRED_SERIES: dict[str, str] = {

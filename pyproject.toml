@@ -8,6 +8,7 @@ dependencies = [
     "pyyaml>=6",
     "pypdf>=4",
     "python-docx>=1",
+    "tzdata>=2024.1",
 ]
 
 [project.optional-dependencies]

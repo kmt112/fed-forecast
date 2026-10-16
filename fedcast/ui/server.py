@@ -183,7 +183,7 @@ def act_analyse(body: dict) -> dict:
 def act_snapshot(_: dict) -> dict:
     from fedcast.collect import build
 
-    snap = build(date.today())
+    snap = build(config.today())
     try:
         path = snap.write(config.SNAPSHOT_DIR)
     except FileExistsError:

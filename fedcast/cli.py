@@ -24,7 +24,7 @@ def _bars(probs: dict) -> None:
 def _cmd_snapshot(args: argparse.Namespace) -> None:
     from fedcast.collect import build  # network only when asked for
 
-    snap = build(date.today())
+    snap = build(config.today())
     path = snap.write(config.SNAPSHOT_DIR)
     print(f"snapshot {path.name}: {len(snap.items)} items, complete={snap.complete}")
     for item_id, reason in snap.missing.items():
