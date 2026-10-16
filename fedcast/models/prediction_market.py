@@ -9,9 +9,9 @@ from __future__ import annotations
 from fedcast.human.prediction_markets import MarketOdds
 from fedcast.snapshot import Snapshot
 
-# Odds older than this at snapshot time are ignored: a hand-entered price from two weeks ago says nothing
-# about today's market, and letting it linger in the pool would be a silent, stale nudge (audit 2026-10-16).
-MAX_AGE_DAYS = 7
+# Odds older than this at snapshot time are flagged as stale in the output and on the page. They are still
+# used: the owner decided (2026-10-16) that the entered odds stand until replaced, with the age always visible.
+STALE_AFTER_DAYS = 7
 
 
 def prediction_market(snap: Snapshot) -> dict:
@@ -22,15 +22,13 @@ def prediction_market(snap: Snapshot) -> dict:
         raise ValueError(f"no prediction-market odds entered for the {meeting} meeting")
     latest = max(entries, key=lambda e: e.observed_at)
     age = (snap.as_of - latest.observed_at.date()).days
-    if age > MAX_AGE_DAYS:
-        raise ValueError(f"latest odds ({latest.id}) were observed {age} days before the snapshot; "
-                         f"older than {MAX_AGE_DAYS} days, so not used. Enter fresh odds.")
     return {
         "model": "prediction_market",
         "meeting": meeting,
         "venue": latest.venue,
         "observed_at": latest.observed_at.isoformat(),
         "age_days": age,
+        "stale": age > STALE_AFTER_DAYS,
         "raw_prices_pct": latest.prices,
         "raw_total_pct": round(sum(latest.prices.values()), 1),
         "volume_usd": latest.volume_usd,

@@ -585,7 +585,8 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
             why="An independent read of the same question; small weight because the market is thin.",
             how=f"Latest entry ({pmm['venue']}, {pmm['observed_at'].replace('T', ' ')}) with raw prices summing to "
                 f"{pmm['raw_total_pct']:g}%, divided through by that total.",
-            rows=[["Raw prices", ", ".join(f"{_label(int(k))} {v:g}%" for k, v in pmm["raw_prices_pct"].items())],
+            rows=[["Age at snapshot", f"{pmm.get('age_days', '?')} days" + (" (stale: enter fresh odds)" if pmm.get("stale") else "")],
+                  ["Raw prices", ", ".join(f"{_label(int(k))} {v:g}%" for k, v in pmm["raw_prices_pct"].items())],
                   ["Volume", f"${pmm['volume_usd']:,.0f}" if pmm.get("volume_usd") else "not recorded"],
                   ["Distribution", _dist(pmm["probabilities"])]],
             evidence=pmm["evidence"]))
