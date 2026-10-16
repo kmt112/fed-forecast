@@ -74,8 +74,8 @@ NAIVE_SCHEMA = {
 _POLICY_SPEECH = re.compile(r"econom|monetary|policy|outlook|inflation|labou?r|employment|mandate|rates?\b", re.I)
 
 
-_QUOTE_MAP = str.maketrans({"’": "'", "‘": "'", "“": '"', "”": '"', "–": "-", "—": "-",
-                            " ": " ", "�": "'"})
+_QUOTE_MAP = str.maketrans({chr(0x2019): "'", chr(0x2018): "'", chr(0x201C): "", chr(0x201D): "", '"': "",
+                            chr(0x2013): "-", chr(0x2014): "-", chr(0xA0): " ", chr(0xFFFD): "'"})  # typography and JSON quotes fold away
 
 
 def _norm(s: str) -> str:
@@ -202,6 +202,25 @@ def build_prompt(snap: Snapshot, watchlist: list[dict], spec: Spec | None = None
     return "\n".join(parts)
 
 
+def _number_forms(n: str) -> set[str]:
+    """A number as written, plus its percent and fraction forms (65.3 <-> 0.653, 3.75 <-> 375)."""
+    forms = {n}
+    try:
+        v = float(n)
+    except ValueError:
+        return forms
+    for alt in (v / 100, v * 100):
+        for fmt in ("{:g}", "{:.1f}", "{:.2f}", "{:.3f}", "{:.4f}"):
+            forms.add(fmt.format(alt))
+    return {f for f in forms if f and f != "0"}
+
+
+def _number_in_evidence(n: str, evidence_numbers: set[str]) -> bool:
+    """True if the number, or its percent / fraction form, occurs as a whole number token in the evidence
+    (so a claim's "6" is not excused by the 6 inside "2026")."""
+    return any(f in evidence_numbers for f in _number_forms(n.replace(",", "")))
+
+
 def verify(output: dict, snap: Snapshot, watchlist: list[dict], spec: Spec | None = None) -> dict:
     spec = spec or SPECIALISTS["communications"]
     texts = {}
@@ -222,12 +241,13 @@ def verify(output: dict, snap: Snapshot, watchlist: list[dict], spec: Spec | Non
         if t:
             texts["signal.tone"] = _norm(json.dumps({"vote": t["vote"], "lexicon": t["lexicon"], "diff": t["diff"]}, ensure_ascii=False))
 
+    evidence_numbers = set(re.findall(r"[0-9]+(?:[.][0-9]+)?", " ".join(texts.values()).replace(",", "")))
     claims = []
     for c in output.get("claims", []):
         item_text = texts.get(c.get("item", ""), "")
         quote_ok = bool(c.get("quote")) and _norm(c["quote"]) in item_text
         nums = set(re.findall(r"\d+(?:[.,]\d+)?", c.get("text", "")))
-        leaked = sorted(n for n in nums if n.replace(",", "") not in item_text.replace(",", ""))
+        leaked = sorted(n for n in nums if not _number_in_evidence(n, evidence_numbers))
         claims.append({**c, "verified": quote_ok, "leaked_numbers": leaked})
     n = len(claims)
     verified = sum(c["verified"] for c in claims)
@@ -308,6 +328,26 @@ def run_naive(snap: Snapshot, backend: LLMBackend, runs: int = 1, log: Callable[
             "leakage_total": sum(r["numbers_from_memory"] for r in results),
         },
     }
+
+
+def reverify(rec: dict, snap: Snapshot, watchlist: list[dict]) -> dict:
+    """Re-run the code verifier over a recorded analysis (after a verifier change); no model calls."""
+    if rec["analyst"] == "naive":
+        return rec
+    spec = SPECIALISTS[rec["analyst"]]
+    for r in rec["runs"]:
+        r["verification"] = verify(r["completion"]["output"], snap, watchlist, spec)
+    tilts = [r["verification"]["tilt_bp"] for r in rec["runs"]]
+    runs = len(rec["runs"])
+    rec["summary"].update({
+        "tilt_mean_bp": round(statistics.mean(tilts), 2),
+        "tilt_std_bp": round(statistics.pstdev(tilts), 2) if runs > 1 else None,
+        "groundedness_pct_mean": round(statistics.mean(r["verification"]["groundedness_pct"] for r in rec["runs"]), 1),
+        "leakage_total": sum(r["verification"]["leakage_count"] for r in rec["runs"]),
+        "watchouts_missing_total": sum(len(r["verification"]["watchouts_missing"]) for r in rec["runs"]),
+    })
+    rec["reverified_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return rec
 
 
 def save(rec: dict) -> Path:

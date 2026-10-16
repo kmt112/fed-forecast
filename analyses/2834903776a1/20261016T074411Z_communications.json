@@ -838,9 +838,7 @@
       "item": "fed.presconf.2026-09-16",
       "lean": "hawkish",
       "verified": true,
-      "leaked_numbers": [
-       "3.75"
-      ]
+      "leaked_numbers": []
      },
      {
       "text": "The committee stressed data-dependence and an open mind for future meetings, which tempers the strength of the hawkish signal for any single meeting.",
@@ -870,7 +868,7 @@
     "n_claims": 11,
     "n_verified": 11,
     "groundedness_pct": 100.0,
-    "leakage_count": 1,
+    "leakage_count": 0,
     "watchouts_required": [],
     "watchouts_missing": [],
     "tilt_bp": 6.0,
@@ -1086,7 +1084,8 @@
   "tilt_mean_bp": 6.2,
   "tilt_std_bp": 0.4,
   "groundedness_pct_mean": 100.0,
-  "leakage_total": 1,
+  "leakage_total": 0,
   "watchouts_missing_total": 0
- }
+ },
+ "reverified_at": "2026-10-16T08:04:41+00:00"
 }

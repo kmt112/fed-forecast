@@ -48,9 +48,25 @@ def test_prompt_contains_only_snapshot_evidence_and_watchouts():
 def test_verifier_counts_quotes_numbers_and_watchouts():
     v = analyst.verify(GOOD, comms_snapshot(), WATCH)
     assert v["n_claims"] == 4 and v["n_verified"] == 4 and v["groundedness_pct"] == 100.0
-    # "6" in the fourth claim is not in the item ("six" is), so it counts as a number from outside the evidence
+    # "6" in the fourth claim is not anywhere in the evidence ("six" is), so it counts as a number from outside
     assert v["leakage_count"] == 1 and v["claims"][3]["leaked_numbers"] == ["6"]
     assert v["watchouts_missing"] == [] and v["tilt_bp"] == 6
+
+
+def test_numbers_in_percent_or_fraction_form_and_elsewhere_in_the_snapshot_are_not_leaks():
+    assert analyst._number_in_evidence("65.3", {"0.653"})
+    assert analyst._number_in_evidence("0.653", {"65.3"})
+    assert analyst._number_in_evidence("3.75", {"3.75", "4.00"})
+    assert not analyst._number_in_evidence("7.25", {"3.75", "4.00"})
+    assert not analyst._number_in_evidence("6", {"2026", "16"})
+    out = json.loads(json.dumps(GOOD))
+    out["claims"][0]["text"] = "The committee raised rates to 3-3/4 to 4 percent."  # numbers in the other statement item
+    v = analyst.verify(out, comms_snapshot(), WATCH)
+    assert v["claims"][0]["leaked_numbers"] == []
+
+
+def test_json_quotation_marks_do_not_break_quote_matching():
+    assert analyst._norm('"given_last": {"cut": 0.0}') == analyst._norm("given_last: {cut: 0.0}")
 
 
 def test_verifier_catches_fabricated_quotes_missing_watchouts_and_clips_tilt():

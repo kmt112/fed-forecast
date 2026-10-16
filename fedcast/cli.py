@@ -92,6 +92,16 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
     path = Path(args.snapshot) if args.snapshot else snapshot.latest(config.SNAPSHOT_DIR)
     snap = snapshot.load(path)
     watchlist = (yaml.safe_load((config.ROOT / "human" / "watchlist.yaml").read_text(encoding="utf-8")) or {}).get("items") or []
+    if args.reverify:
+        for name, rec in analyst.latest_all(snap.hash).items():
+            if rec and name != "naive":
+                rec = analyst.reverify(rec, snap, watchlist)
+                folder = analyst.ANALYSES_DIR / snap.hash[:12]
+                latest_file = sorted(folder.glob(f"*_{name}.json"))[-1]
+                latest_file.write_text(json.dumps(rec, indent=1, ensure_ascii=False), encoding="utf-8")
+                s = rec["summary"]
+                print(f"  {name:15s} tilt {s['tilt_mean_bp']:+.1f} bp, grounded {s['groundedness_pct_mean']}%, leaked {s['leakage_total']}, watch-outs missing {s['watchouts_missing_total']}")
+        return
     live = make_backend(args.model)
     backend = ReplayBackend(config.ROOT / "analyses" / "replay", live) if args.replay else live
     names = list(analyst.SPECIALISTS) if args.arm == "all" else ["communications" if args.arm == "comms" else args.arm]
@@ -186,6 +196,7 @@ def main() -> None:
     a.add_argument("--snapshot", help="snapshot directory (default: latest)")
     a.add_argument("--model", help="claude model id (default: the CLI's default)")
     a.add_argument("--replay", action="store_true", help="serve recorded completions when available, record new ones")
+    a.add_argument("--reverify", action="store_true", help="re-run the code verifier over the latest recorded analyses, no model calls")
     a.set_defaults(fn=_cmd_analyse)
     pr = sub.add_parser("probit", help="fit and evaluate the ordered probit on history as first published")
     pr.add_argument("--refetch", action="store_true", help="re-download the ALFRED panels")
