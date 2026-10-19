@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import re
 import threading
+import time
 import urllib.parse
 from email.parser import BytesParser
 from email.policy import default as email_policy
@@ -20,7 +21,7 @@ from pathlib import Path
 
 import yaml
 
-from fedcast import config, dag, evals, forecast, journey, ledger, snapshot
+from fedcast import config, dag, evals, forecast, journey, ledger, snapshot, updates
 from fedcast.human import documents as docs_store
 from fedcast.human import prediction_markets as pm_store
 from fedcast.human.extract import SUPPORTED, extract_text
@@ -38,6 +39,7 @@ INDEX = Path(__file__).parent / "index.html"
 AUTHOR = "tankahming123"
 
 JOB: dict = {"running": False, "progress": [], "started_at": None, "finished_at": None, "error": None}
+UPDATES: dict = {"result": None, "at": 0.0}  # cached for a few minutes: one check is ~12 requests
 
 _VIEWS_HEADER = """# H2 views. Each one tilts the human_adjusted forecast by a bounded amount until it expires.
 # strength: 1 = mild (3 pp), 2 = firm (6 pp), 3 = strong (10 pp). Total tilt is capped at 10 pp.
@@ -401,6 +403,16 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, state())
         if self.path == "/api/audit":
             return self._send(200, _audit())
+        if self.path.startswith("/api/updates"):
+            force = "force=1" in self.path
+            if force or UPDATES["result"] is None or time.time() - UPDATES["at"] > 600 \
+                    or UPDATES["result"].get("snapshot") != snapshot.latest(config.SNAPSHOT_DIR).name[-12:]:
+                try:
+                    UPDATES["result"] = updates.check(snapshot.load(snapshot.latest(config.SNAPSHOT_DIR)))
+                except Exception as exc:
+                    UPDATES["result"] = {"error": f"{type(exc).__name__}: {exc}", "changes": []}
+                UPDATES["at"] = time.time()
+            return self._send(200, UPDATES["result"])
         if self.path.startswith("/api/analysis/"):
             rel = urllib.parse.unquote(self.path[len("/api/analysis/"):])
             parts = rel.split("/")

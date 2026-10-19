@@ -41,7 +41,7 @@
   main { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
   .topbar { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--line); }
   .topbar h1 { font-size: 16px; }
-  .fresh { margin-right: auto; font-size: 12px; color: var(--muted); padding: 3px 9px; border: 1px solid var(--line); border-radius: 99px; white-space: nowrap; }
+  .fresh { font-size: 12px; color: var(--muted); padding: 3px 9px; border: 1px solid var(--line); border-radius: 99px; white-space: nowrap; }
   .fresh.ok { color: var(--ok); border-color: var(--ok); } .fresh.warn { color: var(--warn); border-color: var(--warn); }
   .fresh b { font-weight: 600; }
   .focusbar { display: flex; gap: 10px; align-items: center; margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
@@ -195,6 +195,7 @@
   <div class="topbar">
     <h1 id="view-title">Forecast</h1>
     <span class="fresh" id="fresh" title="When the evidence was last pulled. Each pull is frozen as a fingerprinted snapshot; the forecast is only as fresh as its snapshot."></span>
+    <span class="fresh" id="updates" title="What the sources have now that the latest snapshot does not. Click to re-check." style="cursor:pointer;margin-right:auto"></span>
     <button class="btn" id="btn-snapshot" title="Pull live evidence from the Fed, FRED, the New York Fed and futures quotes, and freeze it as a fingerprinted snapshot.">Pull evidence</button>
     <button class="btn primary" id="btn-forecast" title="Run the models and your views on the latest snapshot and record the result in the ledger.">Run forecast</button>
     <button class="btn" id="btn-replay" title="Two checks: the ledger chain is intact, and every entry recomputes exactly from its frozen snapshot.">Verify ledger</button>
@@ -212,7 +213,7 @@
         <div class="card"><h3>Machine only</h3><p class="sub">Models and the pool, nothing else.</p><div id="bars-machine"></div></div>
         <div class="card"><h3>With your views <span id="tilt-note" class="sub" style="display:inline"></span></h3><p class="sub">Same forecast after your active views, tilt capped at 10 pp.</p><div id="bars-human"></div></div>
       </div>
-      <div class="card"><div class="meta" id="forecast-meta"></div></div>
+      <div class="card"><div class="meta" id="forecast-meta"></div><div id="updates-detail" class="sub" style="margin:8px 0 0"></div></div>
     </section>
 
     <section class="view" data-view="evidence">
@@ -481,6 +482,27 @@ function render(s) {
     s.scorecard.map(d => `<tr><td>${esc(d.id)}</td><td><strong>${esc(d.name)}</strong></td><td>${esc(d.metric)}</td><td style="white-space:nowrap">${mark(d)}</td><td>${esc(d.status)}</td></tr>`).join("");
 }
 
+// --- update check: what is new at the sources since the last pull ---------------------------------
+async function checkUpdates(force) {
+  const chip = $("updates"), det = $("updates-detail");
+  chip.className = "fresh"; chip.textContent = "checking sources…";
+  try {
+    const u = await (await fetch("/api/updates" + (force ? "?force=1" : ""))).json();
+    if (u.error) { chip.className = "fresh warn"; chip.textContent = "update check failed"; det.textContent = u.error; return; }
+    const n = u.changes.length;
+    if (!n) { chip.className = "fresh ok"; chip.textContent = "nothing new at the sources"; det.textContent = `Checked ${u.checked_at.replace("T", " ").slice(0, 16)} UTC: FRED, the New York Fed, the futures quotes and the Fed's feeds hold nothing the snapshot lacks.`; return; }
+    const parts = [];
+    if (u.releases) parts.push(`${u.releases} data release${u.releases > 1 ? "s" : ""}`);
+    if (u.fed) parts.push(`${u.fed} Fed publication${u.fed > 1 ? "s" : ""}`);
+    if (u.market) parts.push(`${u.market} market move${u.market > 1 ? "s" : ""}`);
+    chip.className = "fresh " + (u.releases || u.fed ? "warn" : "");
+    chip.textContent = `new since last pull: ${parts.join(", ")}`;
+    det.innerHTML = `<strong class="plbl">New at the sources since the ${esc(u.snapshot_as_of)} pull</strong> (checked ${esc(u.checked_at.replace("T", " ").slice(0, 16))} UTC). Pull evidence, then run a forecast, to use it:<ul style="margin:4px 0 0 18px;padding:0">`
+      + u.changes.map(c => `<li><strong>${esc(c.label)}</strong>: snapshot has ${esc(c.snapshot)}, source has ${esc(c.now)}${c.detail ? " (" + esc(c.detail) + ")" : ""}</li>`).join("") + "</ul>";
+  } catch (e) { chip.className = "fresh warn"; chip.textContent = "update check failed"; }
+}
+$("updates").onclick = () => checkUpdates(true);
+
 // --- audit trail --------------------------------------------------------------------------------
 async function renderAudit() {
   const el = $("audit");
@@ -656,6 +678,7 @@ async function post(path, body, busyText) {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || "Request failed");
     render(data.state); say(data.message, "ok");
+    if (path === "/api/snapshot") checkUpdates(true);
     return true;
   } catch (e) { say(e.message, "err"); return false; }
   finally { document.querySelectorAll("button").forEach(b => b.disabled = false); }
@@ -686,7 +709,7 @@ $("markets").onclick = e => { const id = e.target.dataset.withdrawMarket; if (id
 $("documents").onclick = e => { const id = e.target.dataset.withdraw; if (id) post("/api/documents/withdraw", {id}, "Withdrawing…"); };
 $("views").onclick = e => { const id = e.target.dataset.expire; if (id) post("/api/views/expire", {id}, "Expiring view…"); };
 
-fetch("/api/state").then(r => r.json()).then(render).catch(e => say(e.message, "err"));
+fetch("/api/state").then(r => r.json()).then(s => { render(s); checkUpdates(false); }).catch(e => say(e.message, "err"));
 </script>
 </body>
 </html>
