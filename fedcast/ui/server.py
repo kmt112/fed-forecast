@@ -182,6 +182,46 @@ def act_analyse(body: dict) -> dict:
     return {"message": "Analysts started. Each call takes about a minute; progress shows below the buttons."}
 
 
+def _audit() -> dict:
+    """Every recorded analysis, grouped by snapshot, newest first, with the scorecard measured per snapshot."""
+    groups: dict[str, dict] = {}
+    for folder in sorted(analyst_mod.ANALYSES_DIR.glob("*")):
+        if not folder.is_dir() or folder.name == "replay":
+            continue
+        recs = []
+        for f in sorted(folder.glob("*.json")):
+            rec = json.loads(f.read_text(encoding="utf-8"))
+            runs = []
+            for i, r in enumerate(rec["runs"]):
+                c = r["completion"]
+                if rec["analyst"] == "naive":
+                    runs.append({"i": i + 1, "probabilities": r["probabilities"], "numbers_from_memory": r["numbers_from_memory"],
+                                 "model": c.get("model"), "duration_s": c.get("duration_s")})
+                else:
+                    v = r["verification"]
+                    runs.append({"i": i + 1, "tilt_bp": v["tilt_bp"], "n_claims": v["n_claims"], "n_verified": v["n_verified"],
+                                 "leakage": v["leakage_count"], "watchouts_missing": len(v["watchouts_missing"]),
+                                 "confidence": c["output"].get("confidence"), "model": c.get("model"), "duration_s": c.get("duration_s"),
+                                 "summary": c["output"].get("summary", "")[:300]})
+            recs.append({"file": f.name, "analyst": rec["analyst"], "arm": rec["arm"], "created_at": rec["created_at"],
+                         "backend": rec["backend"], "prompt_version": rec.get("prompt_version"), "prompt_chars": rec.get("prompt_chars"),
+                         "reverified_at": rec.get("reverified_at"), "summary": rec["summary"], "runs": runs})
+        if not recs:
+            continue
+        latest = {}
+        for r in recs:  # the latest record per analyst is what the scorecard measures
+            latest[r["analyst"]] = r
+        full_latest = {name: json.loads((folder / r["file"]).read_text(encoding="utf-8")) for name, r in latest.items()}
+        as_of = None
+        for sdir in config.SNAPSHOT_DIR.glob(f"*_{folder.name}"):
+            as_of = json.loads((sdir / "manifest.json").read_text(encoding="utf-8"))["as_of"]
+        used_by = [e["seq"] for e in ledger.read(LEDGER) if e["forecast"]["snapshot_hash"].startswith(folder.name)]
+        groups[folder.name] = {"snapshot": folder.name, "as_of": as_of, "ledger_entries": used_by, "analyses": recs,
+                               "measurements": evals.measure(full_latest),
+                               "first": min(r["created_at"] for r in recs), "last": max(r["created_at"] for r in recs)}
+    return {"snapshots": sorted(groups.values(), key=lambda g: g["last"], reverse=True)}
+
+
 # --- actions ------------------------------------------------------------------------------------
 
 def act_snapshot(_: dict) -> dict:
@@ -359,6 +399,17 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, INDEX.read_bytes(), "text/html; charset=utf-8")
         if self.path == "/api/state":
             return self._send(200, state())
+        if self.path == "/api/audit":
+            return self._send(200, _audit())
+        if self.path.startswith("/api/analysis/"):
+            rel = urllib.parse.unquote(self.path[len("/api/analysis/"):])
+            parts = rel.split("/")
+            if len(parts) != 2 or not re.fullmatch(r"[0-9a-f]{12}", parts[0]) or not re.fullmatch(r"[A-Za-z0-9_.-]+\.json", parts[1]):
+                return self._send(404, {"error": "not found"})
+            f = analyst_mod.ANALYSES_DIR / parts[0] / parts[1]
+            if not f.exists():
+                return self._send(404, {"error": "not found"})
+            return self._send(200, {"id": rel, "kind": "analysis", "title": parts[1], "url": "", "text": f.read_text(encoding="utf-8")})
         if self.path.startswith("/api/item/"):
             return self._send_item(urllib.parse.unquote(self.path[len("/api/item/"):]))
         if self.path.startswith("/api/file/"):

@@ -155,6 +155,10 @@
   .item { border-top: 1px solid var(--line); padding: 9px 0; }
   .item .head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
   .item .why { color: var(--muted); margin-top: 2px; font-size: 12.5px; }
+  .runs-table td { font-size: 12.5px; padding: 3px 10px 3px 0; }
+  .audit-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+  .mchip { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 99px; border: 1px solid var(--line); margin: 2px 4px 2px 0; color: var(--muted); }
+  .mchip.ok { color: var(--ok); border-color: var(--ok); } .mchip.bad { color: var(--bad); border-color: var(--bad); }
   .doc-text { white-space: pre-wrap; color: var(--muted); font-size: 12.5px; margin-top: 4px; max-height: 80px; overflow: hidden; }
 
   /* methodology */
@@ -181,6 +185,7 @@
     <button data-view="ledger">Ledger <span class="k">5</span></button>
     <button data-view="scorecard">Scorecard <span class="k">6</span></button>
     <button data-view="analysts">Analysts <span class="k">7</span></button>
+    <button data-view="audit">Audit <span class="k">8</span></button>
   </nav>
   <div class="side-status" id="side-status"></div>
 </aside>
@@ -324,6 +329,11 @@
       <div id="analysts"></div>
     </section>
 
+    <section class="view" data-view="audit">
+      <p class="sub">Every recorded analyst run, by snapshot, newest first: what each analyst produced, how code scored it, and the scorecard measured on that snapshot. Each record is a file in <code>analyses/</code>, committed to git; nothing here can be edited without showing.</p>
+      <div id="audit"><div class="card"><div class="empty">Loading…</div></div></div>
+    </section>
+
     <section class="view" data-view="scorecard">
       <div class="card">
         <h3>Process scorecard</h3>
@@ -349,8 +359,9 @@ const pct = p => (p * 100).toFixed(1) + "%";
 const topOf = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return [label(o), p[o] || 0]; };
 
 // --- navigation ------------------------------------------------------------------------
-const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard", analysts: "Analysts"};
+const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard", analysts: "Analysts", audit: "Audit trail"};
 function showView(v) {
+  if (v === "audit") renderAudit();
   document.querySelectorAll(".view").forEach(s => s.classList.toggle("active", s.dataset.view === v));
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.view === v));
   $("view-title").textContent = TITLES[v];
@@ -469,6 +480,40 @@ function render(s) {
   $("scorecard").innerHTML = `<tr><th></th><th>Dimension</th><th>How it is measured</th><th>Pass mark</th><th>Status today</th></tr>` +
     s.scorecard.map(d => `<tr><td>${esc(d.id)}</td><td><strong>${esc(d.name)}</strong></td><td>${esc(d.metric)}</td><td style="white-space:nowrap">${mark(d)}</td><td>${esc(d.status)}</td></tr>`).join("");
 }
+
+// --- audit trail --------------------------------------------------------------------------------
+async function renderAudit() {
+  const el = $("audit");
+  let d;
+  try { d = await (await fetch("/api/audit")).json(); } catch (e) { el.innerHTML = `<div class="card"><div class="empty">Could not load the audit trail.</div></div>`; return; }
+  if (!d.snapshots.length) { el.innerHTML = `<div class="card"><div class="empty">No analyst runs recorded yet.</div></div>`; return; }
+  const fmt = t => t ? t.replace("T", " ").slice(0, 16) : "";
+  el.innerHTML = d.snapshots.map(g => `<div class="card">
+    <div class="audit-head"><h3>Snapshot <code>${esc(g.snapshot)}</code>${g.as_of ? " · evidence of " + esc(g.as_of) : ""}</h3>
+      <span class="sub" style="margin:0">${g.analyses.length} record(s), ${fmt(g.first)} to ${fmt(g.last)}${g.ledger_entries.length ? " · ledger entries #" + g.ledger_entries.join(", #") : " · no forecast on this snapshot"}</span></div>
+    <div style="margin:6px 0 10px">${g.measurements.map(m => `<span class="mchip ${m.pass === null ? "" : m.pass ? "ok" : "bad"}" title="${esc(m.note)}">${esc(m.id)} ${esc(m.arm)}: ${m.value === null ? "—" : esc(String(m.value)) + " " + esc(m.unit)} · ${m.pass === null ? "n/a" : m.pass ? "pass" : "fail"}</span>`).join("")}</div>
+    <div class="scroll"><table><tr><th>Recorded (UTC)</th><th>Analyst</th><th>Arm</th><th>Runs</th><th>Result</th><th>Grounded</th><th>Leaked</th><th>Watch-outs missing</th><th>Model · runtime</th><th></th></tr>
+    ${g.analyses.slice().reverse().map((a, idx) => { const s = a.summary; const id = g.snapshot + "/" + a.file;
+      const result = a.analyst === "naive" ? OUTCOMES.filter(o => s.mean_probabilities[o] >= 0.005).map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ") + (s.max_std_pp !== null ? ` (max std ${s.max_std_pp} pp)` : "")
+        : `tilt ${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp${s.tilt_std_bp !== null ? " ± " + s.tilt_std_bp : ""}`;
+      return `<tr><td>${fmt(a.created_at)}${a.reverified_at ? `<div class="sub" style="margin:0">re-scored ${fmt(a.reverified_at)}</div>` : ""}</td>
+        <td>${esc(a.analyst.replace("_", " "))}</td><td>${esc(a.arm)}</td><td>${s.runs}</td><td>${result}</td>
+        <td>${a.analyst === "naive" ? "0% (by construction)" : s.groundedness_pct_mean.toFixed(0) + "%"}</td><td>${s.leakage_total}</td>
+        <td>${a.analyst === "naive" ? "—" : s.watchouts_missing_total}</td><td class="sub" style="margin:0">${esc(a.runs[0] && a.runs[0].model || "")} · ${esc(a.backend)} · ${esc(a.prompt_version || "")}</td>
+        <td style="white-space:nowrap"><button class="link" data-toggle="r-${esc(g.snapshot)}-${idx}">runs</button> · <button class="link" data-open-analysis="${esc(id)}">record</button></td></tr>
+        <tr id="r-${esc(g.snapshot)}-${idx}" style="display:none"><td colspan="10"><table class="runs-table">${a.runs.map(r => a.analyst === "naive"
+          ? `<tr><td>run ${r.i}</td><td>${OUTCOMES.filter(o => r.probabilities[o] >= 0.005).map(o => label(o) + " " + (r.probabilities[o] * 100).toFixed(0) + "%").join(" · ")}</td><td>${r.numbers_from_memory} numbers from memory</td><td>${r.duration_s || ""}s</td></tr>`
+          : `<tr><td>run ${r.i}</td><td>tilt ${r.tilt_bp >= 0 ? "+" : ""}${r.tilt_bp} bp</td><td>${r.n_verified}/${r.n_claims} claims verified</td><td>${r.leakage} leaked</td><td>${r.watchouts_missing} watch-outs missing</td><td>${esc(r.confidence || "")}</td><td>${r.duration_s || ""}s</td><td class="sub" style="margin:0">${esc(r.summary)}</td></tr>`).join("")}</table></td></tr>`; }).join("")}
+    </table></div></div>`).join("");
+}
+$("audit").onclick = async e => {
+  const t = e.target.dataset.toggle; if (t) { const row = document.getElementById(t); row.style.display = row.style.display === "none" ? "" : "none"; }
+  const id = e.target.dataset.openAnalysis;
+  if (id) { const r = await fetch("/api/analysis/" + id.split("/").map(encodeURIComponent).join("/")); const d = await r.json();
+    if (!r.ok) { say(d.error || "Could not load", "err"); return; }
+    $("reader-title").textContent = d.title; $("reader-meta").innerHTML = `<code>${esc(d.id)}</code> · the stored record, as committed`;
+    const body = $("reader-body"); body.className = "reader-body mono"; body.textContent = d.text; $("reader").classList.add("open"); }
+};
 
 // --- analysts -------------------------------------------------------------------------------
 const AN_LABELS = {communications: "Communications", minutes_digest: "Minutes digest", inflation: "Inflation", labour: "Labour market", financial: "Financial conditions", naive: "Naive control (arm A)"};
