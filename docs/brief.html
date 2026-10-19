@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FedCast Brief</title>
+<style>
+  :root { --bg: #f6f5f1; --surface: #fff; --ink: #1d1f23; --muted: #666b75; --line: #e2e0d9; --accent: #1f5f8b; --accent-soft: #dbe8f1; --ok: #2c6e49; --warn: #a4501a; --bad: #a3312c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #15171a; --surface: #1e2125; --ink: #e9e7e1; --muted: #9aa0aa; --line: #30343a; --accent: #7db8de; --accent-soft: #23394a; --ok: #7cc49a; --warn: #e39a62; --bad: #e88580; } }
+  :root[data-theme="dark"] { --bg: #15171a; --surface: #1e2125; --ink: #e9e7e1; --muted: #9aa0aa; --line: #30343a; --accent: #7db8de; --accent-soft: #23394a; --ok: #7cc49a; --warn: #e39a62; --bad: #e88580; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 18px; margin: 34px 0 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+  h3 { font-size: 15px; margin: 18px 0 6px; }
+  p { margin: 0 0 10px; max-width: 72ch; }
+  .lede { color: var(--muted); font-size: 15px; margin-bottom: 8px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin: 12px 0; }
+  .thesis { border-left: 4px solid var(--accent); }
+  ol, ul { margin: 0 0 10px; padding-left: 22px; max-width: 72ch; }
+  li { margin: 4px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 14px; }
+  th, td { text-align: left; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 12.5px; }
+  .ok { color: var(--ok); font-weight: 600; } .bad { color: var(--bad); font-weight: 600; } .warn { color: var(--warn); font-weight: 600; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); margin-right: 4px; }
+  .tag.done { color: var(--ok); border-color: var(--ok); } .tag.todo { color: var(--warn); border-color: var(--warn); }
+  code { font: 13px ui-monospace, Consolas, monospace; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>FedCast: the brief</h1>
+  <p class="lede">A forecaster for the next Federal Reserve rate decision, built to be judged by its process rather than its luck.</p>
+  <p class="meta">Status as of 19 October 2026 · next decision 28 October 2026 · repository kmt112/fed-forecast</p>
+
+  <div class="card thesis">
+    <h3 style="margin-top:0">The thesis</h3>
+    <p>A large language model inside an engineered harness produces forecasts that are measurably more repeatable and more faithful to evidence than the same model asked naively. The way to prove that is not to wait for the forecasts to come true (eight decisions a year is far too few, and the market is already very good at this) but to measure the <em>process</em>: does the same question get the same answer, can every claim be traced to evidence, does any number come from memory, does human input flow only through channels that can be audited.</p>
+  </div>
+
+  <h2>1. The thought process</h2>
+  <p>Five principles were fixed at the start and everything since has been built to honour them.</p>
+  <ol>
+    <li><strong>Process over outcome.</strong> Accuracy is logged after each decision and never used to tune anything. A system that is right for the wrong reasons would have been found out eventually; one that is disciplined can be trusted before the record exists.</li>
+    <li><strong>Pre-register, then amend in the open.</strong> The ten-dimension scorecard, the pool weights, the surprise floor and every fitted model's specification were written down before use. Changes are numbered amendments with reasons, and a hash of the spec is pinned in the test suite so a silent change breaks the build. Five amendments so far.</li>
+    <li><strong>Frozen evidence.</strong> Every forecast runs on one fingerprinted snapshot of evidence, dated in US time. Models and analysts may read nothing else: no internet, no memory. Historical fits use data exactly as it was first published, never today's revised figures.</li>
+    <li><strong>Code computes, models read, code checks.</strong> Anything that can be arithmetic is arithmetic. Language models are used only for what arithmetic cannot do, reading text and weighing arguments, and everything they produce is verified by code before it counts.</li>
+    <li><strong>Human judgement through typed channels only.</strong> You can lean the forecast, add standing instructions, add your own documents and enter prediction-market odds, but each is a typed, bounded, recorded input. Nothing moves the number silently.</li>
+  </ol>
+
+  <h2>2. What has been built</h2>
+  <div class="grid">
+    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>Evidence layer</h3>
+      <p>Pull evidence freezes 21 items: the FOMC calendar, the overnight rate, fed-funds futures, eight FRED series as published on the day, both latest statements, the minutes, the press-conference transcript, the projections table, every speech since the last decision, 32 years of decision history, and your own inputs. Every item links to its original and to the frozen text the models saw. An update check says what the sources have that the snapshot does not.</p></div>
+    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>Signals (computed, shown)</h3>
+      <p>Inflation gap and momentum with a nowcast; labour slack; financial conditions; communication tone (vote, statement word-diff, lexicon); base rates from 256 decisions since 1994; committee projections. Each box on the evidence graph explains what it is, why it matters and how it is computed, with today's numbers.</p></div>
+    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>Models and pool</h3>
+      <p>In the pool: market-implied (0.7), the Fed's own four Taylor rules (0.2), hand-entered prediction-market odds (0.1), a 1.5% surprise floor. Computed but outside the pool pending evidence: historical base rates, and an ordered probit fitted on first-published data with an expanding-window evaluation. The pool is a fixed weighted average done in code.</p></div>
+    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>LLM analysts</h3>
+      <p>Five specialists plus controls, each seeing only its slice of the snapshot with every tool disabled, answering in a fixed schema with a verbatim quote per claim and a tilt bounded to ±10 bp. Code verifies every quote, number and watch-out; every run is recorded and replayable. Ablation arms A to D exist; E and F are planned.</p></div>
+    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>Governance and audit</h3>
+      <p>An append-only, hash-chained ledger of forecasts that must recompute exactly from their snapshots; an amendment log; a measured scorecard per snapshot; an audit view of every analyst run with its scores; everything committed to git.</p></div>
+    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>The app</h3>
+      <p>A local web app: Forecast, Evidence graph (click a model to see only what it uses), Your input, Methodology, Ledger, Scorecard, Analysts and Audit views. Runs on this machine or any clone; a cloud session can run everything but the page.</p></div>
+  </div>
+
+  <h2>3. What the measurements say so far</h2>
+  <p>On the 15 October snapshot, five runs each, same model, same question:</p>
+  <table>
+    <tr><th>Dimension (pre-registered mark)</th><th>Arm A: naive prompt</th><th>Arm D: harnessed specialists</th></tr>
+    <tr><td>S1 Repeatability (≤ 2 pp)</td><td class="bad">3.38 pp, fail</td><td class="ok">0.49 bp of tilt, pass</td></tr>
+    <tr><td>S2 Groundedness (≥ 95%)</td><td class="bad">0%, fail</td><td class="ok">100%, pass</td></tr>
+    <tr><td>S3 Leakage (exactly 0)</td><td class="bad">36 numbers from memory, fail</td><td class="ok">0, pass</td></tr>
+    <tr><td>S10 Watch-out discipline (100%)</td><td>n/a</td><td class="ok">100%, pass</td></tr>
+  </table>
+  <p>The naive prompt still believes the Fed is cutting (its memory is stale) and moves by three points between runs. The specialists converge on a mild hawkish lean (+4.4 bp average) that quotes the September hike, the unanimous vote, the minutes' tightening bias and the committee's own projections. Same model; the difference is the harness.</p>
+  <p>The quant side has had its own test. The first ordered probit, with its spec frozen in advance, <em>failed</em> its out-of-sample gate (log score −1.14 against −0.71 for a simple base rate) and was reported as such rather than tuned. A pre-registered v2 beats the base rate on an expanding-window evaluation (−0.47 against −0.58) but carries a declared contamination caveat, so it stays outside the pool until live decisions judge it.</p>
+  <p>Current forecast for 28 October (ledger entry #11): <strong>no change 62%, +25 bps 33%</strong>, with the market as the anchor.</p>
+
+  <h2>4. What is left</h2>
+  <table>
+    <tr><th>Item</th><th>Why it matters</th><th>Size</th></tr>
+    <tr><td><span class="tag todo">next</span>Score live decisions automatically</td><td>Until a few decisions are in, nothing can be said about calibration; the pool-weight decisions for the probit and the analysts wait on this record.</td><td>small</td></tr>
+    <tr><td><span class="tag todo">next</span>Settle the pool by amendment</td><td>Whether base rates enter, and how a tilt in bp becomes a probability shift. A decision, not a build.</td><td>decision</td></tr>
+    <tr><td><span class="tag todo">next</span>Exercise your inputs live</td><td>No watch-out or document has yet been in a run; S10 passes trivially until one is.</td><td>minutes</td></tr>
+    <tr><td>Arms E and F</td><td>E pools the five runs already recorded; F adds a hawk, a dove and a synthesiser.</td><td>medium, large</td></tr>
+    <tr><td>Scorecard S4 to S9</td><td>Directional sanity, noise invariance, paraphrase stability, coherence, reasoning quality, auditability automation. S4 to S6 are prompt perturbations plus the existing verifier.</td><td>medium</td></tr>
+    <tr><td>Evidence gaps</td><td>A pending-releases calendar; regional Fed presidents' speeches; a second futures price source; automated odds if the venue allows.</td><td>medium</td></tr>
+    <tr><td>Model backlog</td><td>Taylor inputs from the SEP; a calibrated market model (needs historical futures); probit v3 pre-registered; the model-by-model deep dive.</td><td>ongoing</td></tr>
+    <tr><td>Operations</td><td>Scheduled daily pulls; a second model family for any judge; the post-meeting review screen that turns expired views into watch-outs.</td><td>medium</td></tr>
+  </table>
+
+  <h2>5. How to read the app in two minutes</h2>
+  <ol>
+    <li>Top bar: when the evidence was last pulled, and what is new at the sources since.</li>
+    <li>Forecast: the machine number and the number after your views, side by side.</li>
+    <li>Evidence graph: click any box. Blue is in the number; grey is computed but not in it; dotted is planned. Click a model to see only what it uses.</li>
+    <li>Analysts: what each specialist concluded on this snapshot, every claim with its quote and a verified or not-found mark.</li>
+    <li>Scorecard and Audit: the yardstick, the measurements against it, and every recorded run over time.</li>
+  </ol>
+  <p class="meta">Documents: PLAN.md (design), docs/FACTORS.md (factor spec), docs/ANALYSTS.md (how the analysts work), docs/TODO.md (backlog), governance/AMENDMENTS.md (every change to the spec).</p>
+</main>
+</body>
+</html>

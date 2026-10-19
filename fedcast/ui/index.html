@@ -303,11 +303,15 @@
       <div class="card">
         <h3>The fixed rules every forecast follows</h3>
         <ol class="rules" style="margin-top:8px">
-          <li><strong>Freeze the evidence.</strong> Everything is fetched into one fingerprinted snapshot. Nothing outside it may be read: no internet, no memory.</li>
-          <li><strong>Compute in code.</strong> Signals and models are plain code; each one lists the snapshot items it used.</li>
-          <li><strong>Pool with fixed weights.</strong> No language model writes the final number; at most it proposes a bounded, cited nudge.</li>
-          <li><strong>Apply typed human input.</strong> Views tilt the number by a capped amount. Documents and watch-outs are evidence for the analysts, never a direct nudge.</li>
-          <li><strong>Record and verify.</strong> Every forecast goes into an append-only, hash-chained ledger and must recompute exactly from its snapshot.</li>
+          <li><strong>Judge the process, never tune on outcomes.</strong> Accuracy against the market is recorded after each decision and never used to adjust anything. With eight decisions a year, tuning on results would be fitting noise.</li>
+          <li><strong>Pre-register, then amend in the open.</strong> The scorecard, pool weights, surprise floor and every fitted model's specification are written down before use. Any change is a numbered entry in the amendment log, with its reason; a hash of the spec is pinned in the tests so a silent change fails the build.</li>
+          <li><strong>Freeze the evidence.</strong> Each pull is one fingerprinted snapshot, dated in US time. Nothing outside it may be read: no internet, no memory. Historical fits use data as first published, never revised data.</li>
+          <li><strong>Compute in code.</strong> Signals and models are plain code; each lists the snapshot items it used, and anything a model could compute is computed and handed to it rather than asked of it.</li>
+          <li><strong>Pool with fixed, recorded weights.</strong> No language model writes the final number. A model earns a weight only by amendment, after it has beaten the base rate on the expanding-window evaluation or passed the scorecard, and ideally on live decisions.</li>
+          <li><strong>Language models read; code checks.</strong> Analysts see only their slice of the snapshot with every tool disabled, answer in a fixed schema with a quote per claim and a bounded tilt, and code verifies every quote, number and watch-out. Their output is scored (S1 to S3, S10) and is not in the number until an amendment says so.</li>
+          <li><strong>Typed human input only.</strong> Views tilt the number by a capped amount and expire. Watch-outs, documents and prediction-market odds are evidence, frozen into the next snapshot, never a direct nudge. Everything you enter is visible in every forecast it touches.</li>
+          <li><strong>Measure techniques on a ladder.</strong> The same snapshot and scorecard are applied to arms A to F, each adding one technique, so the value of each technique is the difference between neighbouring arms.</li>
+          <li><strong>Record and verify.</strong> Every forecast goes into an append-only, hash-chained ledger and must recompute exactly from its snapshot; every analyst run is stored with its prompt hash and scores; everything is committed to git.</li>
         </ol>
       </div>
       <div class="card">
