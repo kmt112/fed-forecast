@@ -134,8 +134,9 @@ def _trim_analysis(rec: dict | None) -> dict | None:
     last = rec["runs"][-1]
     out = {k: rec[k] for k in ("analyst", "arm", "prompt_version", "created_at", "backend", "summary")}
     out["prompt_chars"] = rec.get("prompt_chars")
-    if rec["analyst"] == "naive":
-        out["last"] = {"probabilities": last["probabilities"], "reasoning": last["completion"]["output"].get("reasoning", "")}
+    if "probabilities" in last:
+        out["last"] = {"probabilities": last["probabilities"], "reasoning": last["completion"]["output"].get("reasoning", ""),
+                       "leaked_numbers": last.get("leaked_numbers", [])}
     else:
         o = last["completion"]["output"]
         out["last"] = {"summary": o.get("summary", ""), "confidence": o.get("confidence"), "watchouts": o.get("watchouts", []),
@@ -158,12 +159,16 @@ def _analysis_job(names: list[str], runs: int) -> None:
         for name in names:
             if name == "naive":
                 rec = analyst_mod.run_naive(snap, backend, runs=runs, log=log)
+            elif name == "evidence_only":
+                rec = analyst_mod.run_evidence_only(snap, backend, runs=runs, log=log)
+            elif name == "generalist":
+                rec = analyst_mod.run_specialist(analyst_mod.GENERALIST, snap, backend, watchlist, runs=runs, log=log)
             else:
                 rec = analyst_mod.run_specialist(analyst_mod.SPECIALISTS[name], snap, backend, watchlist, runs=runs, log=log)
             analyst_mod.save(rec)
             s = rec["summary"]
             JOB["progress"].append(f"{name}: " + (f"tilt {s['tilt_mean_bp']:+.1f} bp, {s['groundedness_pct_mean']:.0f}% grounded, "
-                                                  f"{s['leakage_total']} leaked" if name != "naive" else "done"))
+                                                  f"{s['leakage_total']} leaked" if "tilt_mean_bp" in s else "done"))
     except Exception as exc:  # the UI shows the failure; nothing is half-written
         JOB["error"] = f"{type(exc).__name__}: {exc}"
     finally:
@@ -174,10 +179,10 @@ def _analysis_job(names: list[str], runs: int) -> None:
 def act_analyse(body: dict) -> dict:
     if JOB["running"]:
         raise ValueError("an analysis is already running")
-    names = body.get("analysts") or list(analyst_mod.SPECIALISTS) + ["naive"]
+    names = body.get("analysts") or analyst_mod.ALL_ANALYSTS
     runs = max(1, min(10, int(body.get("runs") or 1)))
     if body.get("analysts") == "all":
-        names = list(analyst_mod.SPECIALISTS) + ["naive"]
+        names = analyst_mod.ALL_ANALYSTS
     JOB.update({"running": True, "progress": [f"starting {', '.join(names)} ({runs} run(s) each)"],
                 "started_at": datetime.now().replace(microsecond=0).isoformat(), "finished_at": None, "error": None})
     threading.Thread(target=_analysis_job, args=(names, runs), daemon=True).start()
@@ -196,7 +201,7 @@ def _audit() -> dict:
             runs = []
             for i, r in enumerate(rec["runs"]):
                 c = r["completion"]
-                if rec["analyst"] == "naive":
+                if "probabilities" in r:
                     runs.append({"i": i + 1, "probabilities": r["probabilities"], "numbers_from_memory": r["numbers_from_memory"],
                                  "model": c.get("model"), "duration_s": c.get("duration_s")})
                 else:

@@ -516,14 +516,14 @@ async function renderAudit() {
     <div style="margin:6px 0 10px">${g.measurements.map(m => `<span class="mchip ${m.pass === null ? "" : m.pass ? "ok" : "bad"}" title="${esc(m.note)}">${esc(m.id)} ${esc(m.arm)}: ${m.value === null ? "—" : esc(String(m.value)) + " " + esc(m.unit)} · ${m.pass === null ? "n/a" : m.pass ? "pass" : "fail"}</span>`).join("")}</div>
     <div class="scroll"><table><tr><th>Recorded (UTC)</th><th>Analyst</th><th>Arm</th><th>Runs</th><th>Result</th><th>Grounded</th><th>Leaked</th><th>Watch-outs missing</th><th>Model · runtime</th><th></th></tr>
     ${g.analyses.slice().reverse().map((a, idx) => { const s = a.summary; const id = g.snapshot + "/" + a.file;
-      const result = a.analyst === "naive" ? OUTCOMES.filter(o => s.mean_probabilities[o] >= 0.005).map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ") + (s.max_std_pp !== null ? ` (max std ${s.max_std_pp} pp)` : "")
+      const result = a.runs[0] && a.runs[0].probabilities ? OUTCOMES.filter(o => s.mean_probabilities[o] >= 0.005).map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ") + (s.max_std_pp !== null ? ` (max std ${s.max_std_pp} pp)` : "")
         : `tilt ${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp${s.tilt_std_bp !== null ? " ± " + s.tilt_std_bp : ""}`;
       return `<tr><td>${fmt(a.created_at)}${a.reverified_at ? `<div class="sub" style="margin:0">re-scored ${fmt(a.reverified_at)}</div>` : ""}</td>
         <td>${esc(a.analyst.replace("_", " "))}</td><td>${esc(a.arm)}</td><td>${s.runs}</td><td>${result}</td>
-        <td>${a.analyst === "naive" ? "0% (by construction)" : s.groundedness_pct_mean.toFixed(0) + "%"}</td><td>${s.leakage_total}</td>
-        <td>${a.analyst === "naive" ? "—" : s.watchouts_missing_total}</td><td class="sub" style="margin:0">${esc(a.runs[0] && a.runs[0].model || "")} · ${esc(a.backend)} · ${esc(a.prompt_version || "")}</td>
+        <td>${a.analyst === "naive" ? "0% (by construction)" : s.groundedness_pct_mean === null || s.groundedness_pct_mean === undefined ? "not measurable" : s.groundedness_pct_mean.toFixed(0) + "%"}</td><td>${s.leakage_total}</td>
+        <td>${s.watchouts_missing_total === undefined ? "—" : s.watchouts_missing_total}</td><td class="sub" style="margin:0">${esc(a.runs[0] && a.runs[0].model || "")} · ${esc(a.backend)} · ${esc(a.prompt_version || "")}</td>
         <td style="white-space:nowrap"><button class="link" data-toggle="r-${esc(g.snapshot)}-${idx}">runs</button> · <button class="link" data-open-analysis="${esc(id)}">record</button></td></tr>
-        <tr id="r-${esc(g.snapshot)}-${idx}" style="display:none"><td colspan="10"><table class="runs-table">${a.runs.map(r => a.analyst === "naive"
+        <tr id="r-${esc(g.snapshot)}-${idx}" style="display:none"><td colspan="10"><table class="runs-table">${a.runs.map(r => r.probabilities
           ? `<tr><td>run ${r.i}</td><td>${OUTCOMES.filter(o => r.probabilities[o] >= 0.005).map(o => label(o) + " " + (r.probabilities[o] * 100).toFixed(0) + "%").join(" · ")}</td><td>${r.numbers_from_memory} numbers from memory</td><td>${r.duration_s || ""}s</td></tr>`
           : `<tr><td>run ${r.i}</td><td>tilt ${r.tilt_bp >= 0 ? "+" : ""}${r.tilt_bp} bp</td><td>${r.n_verified}/${r.n_claims} claims verified</td><td>${r.leakage} leaked</td><td>${r.watchouts_missing} watch-outs missing</td><td>${esc(r.confidence || "")}</td><td>${r.duration_s || ""}s</td><td class="sub" style="margin:0">${esc(r.summary)}</td></tr>`).join("")}</table></td></tr>`; }).join("")}
     </table></div></div>`).join("");
@@ -538,7 +538,7 @@ $("audit").onclick = async e => {
 };
 
 // --- analysts -------------------------------------------------------------------------------
-const AN_LABELS = {communications: "Communications", minutes_digest: "Minutes digest", inflation: "Inflation", labour: "Labour market", financial: "Financial conditions", naive: "Naive control (arm A)"};
+const AN_LABELS = {communications: "Communications (arm D)", minutes_digest: "Minutes digest (arm D)", inflation: "Inflation (arm D)", labour: "Labour market (arm D)", financial: "Financial conditions (arm D)", generalist: "Generalist with verifier (arm C)", evidence_only: "Evidence shown, nothing verified (arm B)", naive: "Naive control (arm A)"};
 function renderAnalysts(an) {
   const el = $("analysts");
   if (!an || !Object.values(an).some(Boolean)) { el.innerHTML = `<div class="card"><div class="empty">No analyses on this snapshot yet. Click "Run analysts".</div></div>`; return; }
@@ -546,9 +546,9 @@ function renderAnalysts(an) {
     const a = an[k];
     if (!a) return `<div class="card"><h3>${title}</h3><div class="empty">Not run on this snapshot.</div></div>`;
     const s = a.summary;
-    if (k === "naive") return `<div class="card"><h3>${title}</h3>
+    if (a.last.probabilities) return `<div class="card"><h3>${title}</h3>
       <div class="an-head"><span class="tilt">${OUTCOMES.map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ")}</span>
-        <span class="sub" style="margin:0">${s.runs} run(s)${s.max_std_pp !== null ? ", max std " + s.max_std_pp + " pp" : ""} · groundedness 0% by construction · ${s.leakage_total} numbers from memory</span></div>
+        <span class="sub" style="margin:0">${s.runs} run(s)${s.max_std_pp !== null ? ", max std " + s.max_std_pp + " pp" : ""} · ${k === "naive" ? "groundedness 0% by construction" : "groundedness not measurable (no quotes)"} · ${s.leakage_total} number(s) ${k === "naive" ? "from memory" : "not in the evidence"}${a.last.leaked_numbers && a.last.leaked_numbers.length ? ": " + esc(a.last.leaked_numbers.join(", ")) : ""}</span></div>
       <p class="sub" style="margin:0">${esc(a.last.reasoning)}</p></div>`;
     const v = a.last.verification;
     return `<div class="card"><h3>${title}</h3>

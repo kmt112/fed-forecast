@@ -130,6 +130,24 @@ def _macro_pre(*fns: tuple[str, Callable]) -> Callable[[Snapshot], dict[str, str
     return inner
 
 
+def _all_pre(snap: Snapshot) -> dict[str, str]:
+    out = _tone_pre(snap)
+    out.update(_macro_pre(("signal.inflation", inflation.compute), ("signal.labour", labour.compute),
+                          ("signal.financial", financial.compute), ("signal.base_rates", base_rates.compute),
+                          ("signal.projections", sep.compute))(snap))
+    return out
+
+
+def _all_docs(snap: Snapshot) -> list[str]:
+    return (_docs(("fed.statement.", "fed.presconf.", "fed.minutes.", "fed.sep."))(snap)
+            + (["fed.speeches"] if "fed.speeches" in snap.items else []) + _docs(("human.doc.",))(snap))
+
+
+GENERALIST = Spec(
+    "generalist",
+    "From all of the evidence, which way does the next decision lean, and why?",
+    _all_docs, _all_pre)
+
 SPECIALISTS: dict[str, Spec] = {
     "communications": Spec(
         "communications",
@@ -280,7 +298,7 @@ def run_specialist(spec: Spec, snap: Snapshot, backend: LLMBackend, watchlist: l
         results.append({"completion": _dump(c), "verification": v})
     tilts = [r["verification"]["tilt_bp"] for r in results]
     return {
-        "analyst": spec.name, "arm": "D", "prompt_version": PROMPT_VERSION, "prompt_chars": len(prompt),
+        "analyst": spec.name, "arm": "C" if spec.name == "generalist" else "D", "prompt_version": PROMPT_VERSION, "prompt_chars": len(prompt),
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "snapshot_hash": snap.hash, "backend": backend.name, "runs": results,
         "summary": {
@@ -295,6 +313,53 @@ def run_specialist(spec: Spec, snap: Snapshot, backend: LLMBackend, watchlist: l
 
 def run_comms(snap: Snapshot, backend: LLMBackend, watchlist: list[dict], runs: int = 1) -> dict:
     return run_specialist(SPECIALISTS["communications"], snap, backend, watchlist, runs)
+
+
+def run_evidence_only(snap: Snapshot, backend: LLMBackend, runs: int = 1, log: Callable[[str], None] | None = None) -> dict:
+    """Ablation arm B: the full evidence is shown, but the model answers with a free-form distribution and
+    reasoning; nothing is cited, so groundedness cannot be measured. Leakage can: numbers in the reasoning
+    are checked against the evidence."""
+    say = log or (lambda m: print(m, file=sys.stderr, flush=True))
+    cal = snap.get("calendar")
+    parts = [f"Snapshot date: {snap.as_of.isoformat()}. Next FOMC decision: {cal['next_meeting']}.",
+             "Using ONLY the evidence below, give a probability for each outcome in basis points of change "
+             "(-50, -25, 0, 25, 50), summing to 1, and a short reasoning."]
+    for name, text in _all_pre(snap).items():
+        parts += ["", f"=== DETERMINISTIC PRE-READ (item: {name}) ===", text]
+    for item_id in _all_docs(snap):
+        parts += ["", f"=== ITEM {item_id} ===", _item_text(snap, item_id, 60000)]
+    prompt = "\n".join(parts)
+    texts = {}
+    for item_id in _all_docs(snap):
+        texts[item_id] = _norm(_item_text(snap, item_id, 10 ** 6))
+    for name, text in _all_pre(snap).items():
+        texts[name] = _norm(text)
+    evidence_numbers = set(re.findall(r"[0-9]+(?:[.][0-9]+)?", " ".join(texts.values()).replace(",", "")))
+    results = []
+    for i in range(runs):
+        t0 = time.time()
+        say(f"  evidence_only run {i + 1}/{runs}: calling {backend.name}…")
+        c = backend.complete(SYSTEM, prompt, NAIVE_SCHEMA, run=i)
+        say(f"  evidence_only run {i + 1}/{runs}: done in {time.time() - t0:.0f}s")
+        probs = {str(o): float(c.output["probabilities"].get(str(o), 0.0)) for o in OUTCOMES_BP}
+        z = sum(probs.values()) or 1.0
+        probs = {k: v / z for k, v in probs.items()}
+        nums = set(re.findall(r"\d+(?:[.,]\d+)?", c.output.get("reasoning", "")))
+        leaked = sorted(n for n in nums if not _number_in_evidence(n, evidence_numbers))
+        results.append({"completion": _dump(c), "probabilities": probs, "numbers_from_memory": len(leaked), "leaked_numbers": leaked})
+    by_outcome = {str(o): [r["probabilities"][str(o)] for r in results] for o in OUTCOMES_BP}
+    return {
+        "analyst": "evidence_only", "arm": "B", "prompt_version": "evidence-only-v1", "prompt_chars": len(prompt),
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "snapshot_hash": snap.hash, "backend": backend.name, "runs": results,
+        "summary": {
+            "runs": runs,
+            "mean_probabilities": {k: round(statistics.mean(v), 4) for k, v in by_outcome.items()},
+            "max_std_pp": round(100 * max(statistics.pstdev(v) for v in by_outcome.values()), 2) if runs > 1 else None,
+            "groundedness_pct_mean": None,
+            "leakage_total": sum(r["numbers_from_memory"] for r in results),
+        },
+    }
 
 
 def run_naive(snap: Snapshot, backend: LLMBackend, runs: int = 1, log: Callable[[str], None] | None = None) -> dict:
@@ -332,9 +397,9 @@ def run_naive(snap: Snapshot, backend: LLMBackend, runs: int = 1, log: Callable[
 
 def reverify(rec: dict, snap: Snapshot, watchlist: list[dict]) -> dict:
     """Re-run the code verifier over a recorded analysis (after a verifier change); no model calls."""
-    if rec["analyst"] == "naive":
+    if rec["analyst"] in ("naive", "evidence_only"):
         return rec
-    spec = SPECIALISTS[rec["analyst"]]
+    spec = GENERALIST if rec["analyst"] == "generalist" else SPECIALISTS[rec["analyst"]]
     for r in rec["runs"]:
         r["verification"] = verify(r["completion"]["output"], snap, watchlist, spec)
     tilts = [r["verification"]["tilt_bp"] for r in rec["runs"]]
@@ -367,8 +432,11 @@ def latest(snapshot_hash: str, analyst: str) -> dict | None:
     return json.loads(files[-1].read_text(encoding="utf-8")) if files else None
 
 
+ALL_ANALYSTS = list(SPECIALISTS) + ["generalist", "evidence_only", "naive"]
+
+
 def latest_all(snapshot_hash: str) -> dict[str, dict | None]:
-    return {name: latest(snapshot_hash, name) for name in list(SPECIALISTS) + ["naive"]}
+    return {name: latest(snapshot_hash, name) for name in ALL_ANALYSTS}
 
 
 def _dump(c: Completion) -> dict:

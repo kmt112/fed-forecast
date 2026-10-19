@@ -28,7 +28,20 @@ def measure(analyses: dict[str, dict | None]) -> list[dict]:
         rows.append(_row("S1", "A naive", s.get("max_std_pp"), "pp", "max std of any outcome probability across runs", s["runs"]))
         rows.append(_row("S2", "A naive", 0.0, "pct", "nothing to cite: groundedness is 0 by construction", s["runs"]))
         rows.append(_row("S3", "A naive", s["leakage_total"], "count", "numbers in the reasoning, all from memory", s["runs"]))
-    specialists = {k: v for k, v in analyses.items() if v and k != "naive"}
+    evid = analyses.get("evidence_only")
+    if evid:
+        s = evid["summary"]
+        rows.append(_row("S1", "B evidence", s.get("max_std_pp"), "pp", "max std of any outcome probability across runs", s["runs"]))
+        rows.append(_row("S2", "B evidence", None, "pct", "free-form answer: no quotes, so groundedness cannot be measured", s["runs"]))
+        rows.append(_row("S3", "B evidence", s["leakage_total"], "count", "numbers in the reasoning not found in the evidence", s["runs"]))
+    gen = analyses.get("generalist")
+    if gen:
+        s = gen["summary"]
+        rows.append(_row("S1", "C structure", s["tilt_std_bp"], "bp of tilt (proxy)", "std of tilt across runs; needs 2+ runs", s["runs"]))
+        rows.append(_row("S2", "C structure", s["groundedness_pct_mean"], "pct", "quote-verified share of claims", s["runs"]))
+        rows.append(_row("S3", "C structure", s["leakage_total"], "count", "numbers not in the evidence, all runs", s["runs"]))
+        rows.append(_row("S10", "C structure", 100.0 if s["watchouts_missing_total"] == 0 else 0.0, "pct", "every active watch-out addressed by id", s["runs"]))
+    specialists = {k: v for k, v in analyses.items() if v and k not in ("naive", "evidence_only", "generalist")}
     if specialists:
         n_runs = min(v["summary"]["runs"] for v in specialists.values())
         stds = [v["summary"]["tilt_std_bp"] for v in specialists.values() if v["summary"]["tilt_std_bp"] is not None]

@@ -104,11 +104,17 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
         return
     live = make_backend(args.model)
     backend = ReplayBackend(config.ROOT / "analyses" / "replay", live) if args.replay else live
-    names = list(analyst.SPECIALISTS) if args.arm == "all" else ["communications" if args.arm == "comms" else args.arm]
+    arm_map = {"A": ["naive"], "B": ["evidence_only"], "C": ["generalist"], "D": list(analyst.SPECIALISTS)}
+    names = (analyst.ALL_ANALYSTS if args.arm == "all" else arm_map.get(args.arm)
+             or ["communications" if args.arm == "comms" else args.arm])
     recs = []
     for name in names:
         if name == "naive":
             recs.append(analyst.run_naive(snap, backend, runs=args.runs))
+        elif name == "evidence_only":
+            recs.append(analyst.run_evidence_only(snap, backend, runs=args.runs))
+        elif name == "generalist":
+            recs.append(analyst.run_specialist(analyst.GENERALIST, snap, backend, watchlist, runs=args.runs))
         else:
             recs.append(analyst.run_specialist(analyst.SPECIALISTS[name], snap, backend, watchlist, runs=args.runs))
         analyst.save(recs[-1])
@@ -117,7 +123,7 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
     print(f"{rec['analyst']} (arm {rec['arm']}) on snapshot {snap.hash[:12]} via {rec['backend']}: {args.runs} run(s)")
     for k, v in rec["summary"].items():
         print(f"  {k}: {v}")
-    if rec["analyst"] != "naive":
+    if rec["analyst"] not in ("naive", "evidence_only"):
         v = rec["runs"][-1]["verification"]
         print("  last run claims:")
         for c in v["claims"]:
@@ -190,8 +196,9 @@ def main() -> None:
     f.set_defaults(fn=_cmd_forecast)
     sub.add_parser("replay", help="verify the ledger chain and recompute every entry").set_defaults(fn=_cmd_replay)
     a = sub.add_parser("analyse", help="run an LLM analyst on a snapshot and verify its claims")
-    a.add_argument("--arm", choices=["all", "comms", "communications", "minutes_digest", "inflation", "labour", "financial", "naive"],
-                   default="all", help="a specialist (arm D), all of them, or the naive control (arm A)")
+    a.add_argument("--arm", choices=["all", "A", "B", "C", "D", "comms", "communications", "minutes_digest", "inflation", "labour",
+                                     "financial", "generalist", "evidence_only", "naive"],
+                   default="all", help="an arm letter (A naive, B evidence only, C generalist with verifier, D specialists), an analyst name, or all")
     a.add_argument("--runs", type=int, default=1, help="repeat N times to measure repeatability (S1)")
     a.add_argument("--snapshot", help="snapshot directory (default: latest)")
     a.add_argument("--model", help="claude model id (default: the CLI's default)")
