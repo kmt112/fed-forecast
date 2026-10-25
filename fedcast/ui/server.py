@@ -408,6 +408,22 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, state())
         if self.path == "/api/audit":
             return self._send(200, _audit())
+        if self.path == "/api/agents":
+            snap = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR))
+            agents = analyst_mod.describe_agents(snap, _load_watchlist())
+            return self._send(200, {"snapshot": snap.hash[:12], "as_of": snap.as_of.isoformat(),
+                                    "agents": [{k: v for k, v in a.items() if k not in ("prompt", "system", "schema")} for a in agents]})
+        if self.path.startswith("/api/agent/"):
+            name = urllib.parse.unquote(self.path[len("/api/agent/"):]).split("/")[0]
+            snap = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR))
+            match = [a for a in analyst_mod.describe_agents(snap, _load_watchlist()) if a["name"] == name]
+            if not match:
+                return self._send(404, {"error": "unknown agent"})
+            a = match[0]
+            text = ("=== SYSTEM PROMPT (shared) ===\n" + a["system"] + "\n\n=== ANSWER SCHEMA (enforced by the runtime) ===\n"
+                    + json.dumps(a["schema"], indent=1) + "\n\n=== USER PROMPT (built from the snapshot) ===\n" + a["prompt"])
+            return self._send(200, {"id": f"agent:{name}", "kind": "prompt", "title": f"{name}: exactly what the model receives",
+                                    "url": "", "text": text, "fetched_at": a["prompt_hash"]})
         if self.path.startswith("/api/updates"):
             force = "force=1" in self.path
             if force or UPDATES["result"] is None or time.time() - UPDATES["at"] > 600 \

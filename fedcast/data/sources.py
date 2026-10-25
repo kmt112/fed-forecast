@@ -60,6 +60,26 @@ def fetch_fred(series_id: str, api_key: str, as_of: date, n_obs: int = 36,
     return {"series_id": series_id, "vintage": as_of.isoformat(), "observations": obs}
 
 
+_FRED_TODAY = re.compile(r"today's date \((\d{4}-\d{2}-\d{2})\)")
+
+
+def fred_latest_realtime(api_key: str, wanted: date) -> date:
+    """The latest real-time date FRED accepts. FRED's day rolls over on US Central time, later than our Eastern
+    date, so a snapshot pulled in the US evening (Asian morning) must be dated by FRED's clock or every vintage
+    request is refused."""
+    import urllib.error
+
+    try:
+        fetch_fred("UNRATE", api_key, wanted, n_obs=1)
+        return wanted
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", "replace") if exc.code == 400 else ""
+        m = _FRED_TODAY.search(body)
+        if m:
+            return date.fromisoformat(m.group(1))
+        raise
+
+
 def fetch_target_rate_path(api_key: str, as_of: date, start: str = "1990-01-01") -> dict:
     """The policy target as a list of change points: DFEDTAR (single target, to 2008-12-15) then DFEDTARU
     (upper bound of the range, from 2008-12-16). Daily values are collapsed to the days the target changed."""

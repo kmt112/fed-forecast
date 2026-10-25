@@ -64,3 +64,8 @@ def test_running_headers_and_page_numbers_are_stripped():
     out = sources.strip_running_headers(text)
     assert "Page" not in out and "Transcript FINAL" not in out
     assert "I'm\nnot going to prejudge." in out
+
+
+def test_fred_today_is_parsed_from_the_refusal_message():
+    msg = "Bad Request.  Variable realtime_start can not be after today's date (2026-10-24) unless it's equal to the real-time max date"
+    assert sources._FRED_TODAY.search(msg).group(1) == "2026-10-24"

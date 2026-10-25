@@ -18,6 +18,9 @@ def _add_months(year: int, month: int, k: int) -> tuple[int, int]:
 
 
 def build(as_of: date) -> Snapshot:
+    key = config.secret("FRED_API_KEY")
+    if key:
+        as_of = min(as_of, sources.fred_latest_realtime(key, as_of))  # date the evidence by FRED's clock
     snap = Snapshot(as_of)
 
     def attempt(item_id: str, kind: str, source: str, fn) -> None:
@@ -46,7 +49,6 @@ def build(as_of: date) -> Snapshot:
                 lambda y=y, m=m: sources.fetch_zq(y, m))
         y, m = _add_months(y, m, 1)
 
-    key = config.secret("FRED_API_KEY")
     for sid in config.FRED_SERIES:
         if key:
             attempt(f"fred.{sid}", "fred", f"api.stlouisfed.org/fred/series/observations?series_id={sid}",

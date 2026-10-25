@@ -186,6 +186,7 @@
     <button data-view="scorecard">Scorecard <span class="k">6</span></button>
     <button data-view="analysts">Analysts <span class="k">7</span></button>
     <button data-view="audit">Audit <span class="k">8</span></button>
+    <button data-view="agents">Agents <span class="k">9</span></button>
   </nav>
   <div class="side-status" id="side-status"></div>
 </aside>
@@ -339,6 +340,11 @@
       <div id="audit"><div class="card"><div class="empty">Loading…</div></div></div>
     </section>
 
+    <section class="view" data-view="agents">
+      <p class="sub">What each agent is, built live from the latest snapshot by the same code that builds the real prompts: the question, the evidence items it receives, the pre-computed numbers it is handed, the answer shape, and the full prompt text. If it is not on this page, the agent does not get it.</p>
+      <div id="agents"><div class="card"><div class="empty">Loading…</div></div></div>
+    </section>
+
     <section class="view" data-view="scorecard">
       <div class="card">
         <h3>Process scorecard</h3>
@@ -364,9 +370,10 @@ const pct = p => (p * 100).toFixed(1) + "%";
 const topOf = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return [label(o), p[o] || 0]; };
 
 // --- navigation ------------------------------------------------------------------------
-const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard", analysts: "Analysts", audit: "Audit trail"};
+const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard", analysts: "Analysts", audit: "Audit trail", agents: "Agents: exact inputs"};
 function showView(v) {
   if (v === "audit") renderAudit();
+  if (v === "agents") renderAgents();
   document.querySelectorAll(".view").forEach(s => s.classList.toggle("active", s.dataset.view === v));
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.view === v));
   $("view-title").textContent = TITLES[v];
@@ -506,6 +513,30 @@ async function checkUpdates(force) {
   } catch (e) { chip.className = "fresh warn"; chip.textContent = "update check failed"; }
 }
 $("updates").onclick = () => checkUpdates(true);
+
+// --- agents: exact inputs -------------------------------------------------------------------------
+async function renderAgents() {
+  const el = $("agents");
+  let d;
+  try { d = await (await fetch("/api/agents")).json(); } catch (e) { el.innerHTML = `<div class="card"><div class="empty">Could not load the agents.</div></div>`; return; }
+  const order = ["naive", "evidence_only", "generalist", "communications", "minutes_digest", "inflation", "labour", "financial"];
+  const byName = Object.fromEntries(d.agents.map(a => [a.name, a]));
+  el.innerHTML = `<div class="card"><div class="sub" style="margin:0">Built from snapshot <code>${esc(d.snapshot)}</code> (evidence of ${esc(d.as_of)}). The prompt hash is what the five repeats share; a different hash would mean a different agent.</div></div>`
+    + order.filter(n => byName[n]).map(n => { const a = byName[n]; return `<div class="card">
+    <div class="an-head"><h3>${esc(n.replace("_", " "))}</h3><span class="flag info">arm ${esc(a.arm)}</span><span class="sub" style="margin:0">${a.prompt_chars.toLocaleString()} characters · hash <code>${esc(a.prompt_hash)}</code></span></div>
+    <table class="kv" style="margin-top:8px">
+      <tr><td>Question</td><td>${esc(a.question)}</td></tr>
+      <tr><td>Evidence items in the prompt</td><td>${a.items.length ? a.items.map(i => `<code>${esc(i)}</code>`).join(" ") : "none"}</td></tr>
+      <tr><td>Pre-computed numbers handed over</td><td>${a.pre_reads.length ? a.pre_reads.map(i => `<code>${esc(i)}</code>`).join(" ") : "none"}</td></tr>
+      <tr><td>Answer shape</td><td>${esc(a.output)}</td></tr>
+    </table>
+    <div style="margin-top:8px"><button class="link" data-prompt="${esc(n)}">open the full prompt as the model receives it</button></div></div>`; }).join("");
+}
+$("agents").onclick = async e => { const n = e.target.dataset.prompt; if (!n) return;
+  const r = await fetch("/api/agent/" + encodeURIComponent(n) + "/prompt"); const d = await r.json();
+  if (!r.ok) { say(d.error || "Could not load", "err"); return; }
+  $("reader-title").textContent = d.title; $("reader-meta").innerHTML = `prompt hash <code>${esc(d.fetched_at)}</code> · system prompt, enforced schema, then the user prompt`;
+  const body = $("reader-body"); body.className = "reader-body mono"; body.textContent = d.text; $("reader").classList.add("open"); };
 
 // --- audit trail --------------------------------------------------------------------------------
 async function renderAudit() {

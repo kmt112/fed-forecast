@@ -1,0 +1,77 @@
+{
+ "id": "effr",
+ "kind": "effr",
+ "source": "markets.newyorkfed.org/api/rates/unsecured/effr",
+ "fetched_at": "2026-10-25T04:43:52+00:00",
+ "content": {
+  "latest": {
+   "date": "2026-10-22",
+   "effr": 3.88,
+   "target_low": 3.75,
+   "target_high": 4.0
+  },
+  "history": [
+   {
+    "date": "2026-10-22",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   },
+   {
+    "date": "2026-10-21",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   },
+   {
+    "date": "2026-10-20",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   },
+   {
+    "date": "2026-10-19",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   },
+   {
+    "date": "2026-10-16",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   },
+   {
+    "date": "2026-10-15",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   },
+   {
+    "date": "2026-10-14",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   },
+   {
+    "date": "2026-10-13",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   },
+   {
+    "date": "2026-10-09",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   },
+   {
+    "date": "2026-10-08",
+    "effr": 3.88,
+    "target_low": 3.75,
+    "target_high": 4.0
+   }
+  ]
+ },
+ "sha256": "51f84f4e9ff037b27263790f1c87a1df2b8fa8b493d4c635a3bd86132b3cb9e7"
+}

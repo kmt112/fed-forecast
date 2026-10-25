@@ -415,6 +415,39 @@ def reverify(rec: dict, snap: Snapshot, watchlist: list[dict]) -> dict:
     return rec
 
 
+def describe_agents(snap: Snapshot, watchlist: list[dict]) -> list[dict]:
+    """The exact inputs each agent receives on this snapshot: question, evidence items, pre-reads, the full prompt
+    text and its hash, the schema and the system prompt. Built by the same code that builds the real prompts."""
+    cal = snap.get("calendar")
+    out = []
+    for name, spec in list(SPECIALISTS.items()) + [("generalist", GENERALIST)]:
+        prompt = build_prompt(snap, watchlist, spec)
+        out.append({"name": name, "arm": "C" if name == "generalist" else "D", "question": spec.question,
+                    "items": spec.items(snap), "pre_reads": list(spec.pre_reads(snap)), "system": SYSTEM,
+                    "schema": SCHEMA, "prompt": prompt, "prompt_chars": len(prompt),
+                    "prompt_hash": prompt_hash(SYSTEM, prompt, SCHEMA, 0), "output": "claims with quotes, watch-outs, tilt ±10 bp"})
+    b_parts = [f"Snapshot date: {snap.as_of.isoformat()}. Next FOMC decision: {cal['next_meeting']}.",
+               "Using ONLY the evidence below, give a probability for each outcome in basis points of change "
+               "(-50, -25, 0, 25, 50), summing to 1, and a short reasoning."]
+    for n_, text in _all_pre(snap).items():
+        b_parts += ["", f"=== DETERMINISTIC PRE-READ (item: {n_}) ===", text]
+    for item_id in _all_docs(snap):
+        b_parts += ["", f"=== ITEM {item_id} ===", _item_text(snap, item_id, 60000)]
+    b_prompt = "\n".join(b_parts)
+    out.append({"name": "evidence_only", "arm": "B", "question": b_parts[1], "items": _all_docs(snap),
+                "pre_reads": list(_all_pre(snap)), "system": SYSTEM, "schema": NAIVE_SCHEMA, "prompt": b_prompt,
+                "prompt_chars": len(b_prompt), "prompt_hash": prompt_hash(SYSTEM, b_prompt, NAIVE_SCHEMA, 0),
+                "output": "probabilities and free-form reasoning"})
+    n_system = "You are a Fed watcher. Output only JSON matching the schema."
+    n_prompt = (f"Today is {snap.as_of.isoformat()}. What will the FOMC decide at its {cal['next_meeting']} meeting? "
+                "Give a probability for each outcome in basis points of change (-50, -25, 0, 25, 50), summing to 1, "
+                "and a short reasoning.")
+    out.append({"name": "naive", "arm": "A", "question": n_prompt, "items": [], "pre_reads": [], "system": n_system,
+                "schema": NAIVE_SCHEMA, "prompt": n_prompt, "prompt_chars": len(n_prompt),
+                "prompt_hash": prompt_hash(n_system, n_prompt, NAIVE_SCHEMA, 0), "output": "probabilities and free-form reasoning"})
+    return out
+
+
 def save(rec: dict) -> Path:
     folder = ANALYSES_DIR / rec["snapshot_hash"][:12]
     folder.mkdir(parents=True, exist_ok=True)
