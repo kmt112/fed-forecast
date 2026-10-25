@@ -115,5 +115,5 @@ def test_dag_shows_every_arm_without_treating_controls_as_specialists():
     g = dag.build(entry_for(snap, []), snap, [], analyses)
     llm = next(n for n in g["nodes"] if n["id"] == "model.llm")
     text = str(llm)
-    assert "Mean tilt across specialists" in text and "+6.0 bp (not in the number)" in text   # (5 + 7) / 2, generalist excluded
+    assert "Mean tilt across specialists" in text and "+6.0 bp (not in this entry's number)" in text   # (5 + 7) / 2, generalist excluded
     assert "Generalist (arm C)" in text and "Evidence shown, free-form answer (arm B)" in text and "Naive control (arm A)" in text

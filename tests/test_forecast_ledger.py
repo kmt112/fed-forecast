@@ -18,6 +18,25 @@ def test_compute_is_deterministic():
     assert forecast.compute(snap, [hawkish()]) == forecast.compute(snap, [hawkish()])
 
 
+def specialist_record(name, tilt):
+    return {"analyst": name, "arm": "D", "created_at": "2026-10-25T00:00:00+00:00", "prompt_version": "t",
+            "summary": {"runs": 5, "tilt_mean_bp": tilt, "tilt_std_bp": 0.4, "groundedness_pct_mean": 100.0, "leakage_total": 0, "watchouts_missing_total": 0}}
+
+
+def test_specialists_tilt_moves_the_machine_track_by_a_bounded_amount():
+    snap = make_snapshot()
+    none = forecast.compute(snap, [], analyses={})
+    assert none["analysts"]["applied_pp"] == 0 and none["machine_only"] == none["pooled"] and "no specialist" in none["analysts"]["note"]
+    an = {"communications": specialist_record("communications", 6.0), "labour": specialist_record("labour", -2.0), "naive": {"summary": {}}}
+    fc = forecast.compute(snap, [], analyses=an)
+    assert fc["analysts"]["tilts_bp"] == {"communications": 6.0, "labour": -2.0} and fc["analysts"]["mean_bp"] == 2.0
+    assert fc["analysts"]["applied_pp"] == 2.0
+    tv = 0.5 * sum(abs(fc["machine_only"][o] - fc["pooled"][o]) for o in fc["pooled"])
+    assert tv == pytest.approx(0.02, abs=1e-6)
+    big = {"communications": specialist_record("communications", 40.0)}
+    assert forecast.compute(snap, [], analyses=big)["analysts"]["applied_pp"] == 10.0   # capped like a view
+
+
 def test_tracks_are_identical_without_views():
     fc = forecast.compute(make_snapshot(), [])
     assert fc["machine_only"] == fc["human_adjusted"]

@@ -709,7 +709,9 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                          + f", {sm['groundedness_pct_mean']:.0f}% grounded, {sm['leakage_total']} leaked, "
                          + f"{sm['watchouts_missing_total']} watch-outs missing, {sm['runs']} run(s)"])
         tilts = [rec["summary"]["tilt_mean_bp"] for rec in specialists.values()]
-        rows.append(["Mean tilt across specialists", f"{sum(tilts) / len(tilts):+.1f} bp (not in the number)"])
+        rows.append(["Mean tilt across specialists", f"{sum(tilts) / len(tilts):+.1f} bp"
+                     + (f" -> {fc['analysts']['applied_pp']:+.1f} pp applied to the machine track (amendment #6)"
+                        if (fc.get("analysts") or {}).get("tilts_bp") else " (not in this entry's number)")])
         sm = {"tilt_mean_bp": sum(tilts) / len(tilts),
               "groundedness_pct_mean": sum(r["summary"]["groundedness_pct_mean"] for r in specialists.values()) / len(specialists)}
         if generalist:
@@ -729,21 +731,27 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                          f"{ns['runs']} run(s): " + ", ".join(f"{_label(int(k))} {v * 100:.0f}%" for k, v in ns["mean_probabilities"].items() if v >= 0.005)
                          + (f"; max std {ns['max_std_pp']:.1f} pp" if ns["max_std_pp"] is not None else "")
                          + f"; {ns['leakage_total']} numbers from memory, 0% groundedness"])
+        applied = (fc.get("analysts") or {}).get("applied_pp")
+        in_number = applied is not None and fc["analysts"]["tilts_bp"]
         nodes.append(_node("model.llm", 2, "LLM analysts", f"{len(specialists)} run, tilt {sm['tilt_mean_bp']:+.0f} bp, {sm['groundedness_pct_mean']:.0f}% grounded",
-                           "model", "computed", what=llm_what, why=llm_why,
+                           "model", "live" if in_number else "computed", what=llm_what, why=llm_why,
                            how="Each specialist reads its slice of the evidence plus the deterministic pre-reads and your "
                                "documents and watch-outs, and returns claims with verbatim quotes, a watch-out report and a "
-                               "tilt. Code verifies every quote. Computed and scored; not in the number until the arm passes "
-                               "the eval gate (S1-S3, S10 thresholds) and a weight is set by amendment. See the Analysts view.",
+                               "tilt. Code verifies every quote. "
+                               + (f"Amendment #6: the mean of the five specialists' tilts enters the machine track as a bounded "
+                                  f"shift, one basis point per percentage point, capped at 10 pp; on this entry {applied:+.1f} pp."
+                                  if in_number else
+                                  "Computed and scored; this entry predates amendment #6 or has no specialist record, so the tilt is not in its number.")
+                               + " See the Analyst results view.",
                            rows=rows))
         for s_ in llm_srcs:
-            link(s_, "model.llm", "computed")
+            link(s_, "model.llm", "live" if in_number else "computed")
     else:
         nodes.append(_node("model.llm", 2, "LLM analysts", "not run yet", "model", "planned", what=llm_what, why=llm_why,
                            how="Run `fedcast analyse` (needs the claude CLI signed in). Not in today's number."))
         for s_ in llm_srcs:
             link(s_, "model.llm", "planned")
-    link("model.llm", "pool", "planned")
+    link("model.llm", "pool", "live" if (fc.get("analysts") or {}).get("tilts_bp") else "planned")
 
     # --- columns 3-5: pool, human input, forecast ------------------------------------------
     weights = fc["pool_weights"]
@@ -758,12 +766,15 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
             f"{floor * 100:.1f}% surprise floor and the result is renormalised. Models that could not run are dropped "
             "and the remaining weights rescaled.",
         rows=[[name, f"weight {w:g}" + ("" if name in live_models else " (not run)")] for name, w in weights.items()]
-             + [["Surprise floor", f"{floor * 100:.1f}% per outcome"], ["machine_only", _dist(fc["machine_only"])]]))
+             + [["Surprise floor", f"{floor * 100:.1f}% per outcome"], ["Pooled", _dist(fc.get("pooled", fc["machine_only"]))]]
+             + ([["Specialists' tilt", f"{fc['analysts']['mean_bp']:+.1f} bp mean of {len(fc['analysts']['tilts_bp'])} specialists -> {fc['analysts']['applied_pp']:+.1f} pp"
+                  if fc["analysts"]["tilts_bp"] else "0 pp: " + fc["analysts"]["note"]]] if fc.get("analysts") else [])
+             + [["machine_only", _dist(fc["machine_only"])]]))
     link("model.market", "pool")
     link("model.taylor", "pool", "live" if tr else "planned")
     link("model.pm", "pool", "live" if pmm else "planned")
     link("model.probit", "pool", "planned")
-    link("model.base", "pool", "planned")
+    link("model.base", "pool", "live" if "historical_base_rates" in live_models else "planned")
     for mid, *_ in planned_models:
         link(mid, "pool", "planned")
 

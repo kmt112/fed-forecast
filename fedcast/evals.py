@@ -105,6 +105,12 @@ def _scaled_newest(content: dict, factor: float = 1.0, add: float = 0.0) -> dict
     return out
 
 
+def _analyses(snap: Snapshot) -> dict:
+    from fedcast.llm import analyst
+
+    return {name: analyst.latest(snap.hash, name) for name in analyst.SPECIALISTS}
+
+
 def _view(direction: str, strength: int, rationale: str, as_of: date):
     from fedcast.human.views import View
 
@@ -118,7 +124,8 @@ def shock_tests(snap: Snapshot) -> list[dict]:
     not applicable and left out of the share."""
     from fedcast import forecast
 
-    base = forecast.compute(snap, [])
+    an = _analyses(snap)
+    base = forecast.compute(snap, [], an)
     e0 = _expected_bp(base["machine_only"])
     fut = next((i for i in base["models"].get("market_implied", {}).get("evidence", []) if i.startswith("futures.")), None)
     pm = next((i for i in snap.items if i.startswith("human.pm.") and snap.get(i).get("status") == "active"
@@ -142,12 +149,12 @@ def shock_tests(snap: Snapshot) -> list[dict]:
         if make is None:
             details.append({"shock": name, "delta_bp": None, "ok": None, "note": "input not in this snapshot"})
             continue
-        got = forecast.compute(make(), [])
+        got = forecast.compute(make(), [], an)
         delta = _expected_bp(got["machine_only"]) - e0
         details.append({"shock": name, "delta_bp": round(delta, 2), "ok": (delta > 1e-9) if sign > 0 else (delta < -1e-9)})
     # human views: a hawkish view must move the adjusted track hawkish by exactly its budget, a dovish one the reverse
     for direction, strength, sign in (("hawkish", 3, +1), ("dovish", 1, -1)):
-        got = forecast.compute(snap, [_view(direction, strength, "Evaluation shock: a standing view of known direction.", snap.as_of)])
+        got = forecast.compute(snap, [_view(direction, strength, "Evaluation shock: a standing view of known direction.", snap.as_of)], an)
         delta = _expected_bp(got["human_adjusted"]) - _expected_bp(got["machine_only"])
         tv = _tv(got["human_adjusted"], got["machine_only"])
         budget = abs(got["human"]["net_budget"])
@@ -170,7 +177,8 @@ def noise_tests(snap: Snapshot) -> list[dict]:
     """S5. Changes that carry no information about the decision; the machine forecast must not move at all."""
     from fedcast import forecast
 
-    base = forecast.compute(snap, [])["machine_only"]
+    an = _analyses(snap)
+    base = forecast.compute(snap, [], an)["machine_only"]
     stamp = "2000-01-01T00:00:00+00:00"
     fut = next((i for i in snap.items if i.startswith("futures.")), None)
     stmt = max((i for i in snap.items if i.startswith("fed.statement.")), default=None)
@@ -187,7 +195,7 @@ def noise_tests(snap: Snapshot) -> list[dict]:
         if make is None:
             details.append({"perturbation": name, "shift_pp": None, "ok": None, "note": "input not in this snapshot"})
             continue
-        got = forecast.compute(make(), [])["machine_only"]
+        got = forecast.compute(make(), [], an)["machine_only"]
         shift = max(abs(got[o] - base[o]) for o in OUTCOMES_BP) * 100
         details.append({"perturbation": name, "shift_pp": round(shift, 4), "ok": shift <= 1e-9})
     return details
@@ -219,8 +227,9 @@ def paraphrase_test(snap: Snapshot) -> list[dict]:
     The LLM arms' paraphrase test (reworded prompts) is not built yet and is reported separately when it is."""
     from fedcast import forecast
 
-    a = forecast.compute(snap, [_view("hawkish", 2, "Statement language shifted toward inflation risk.", snap.as_of)])
-    b = forecast.compute(snap, [_view("hawkish", 2, "The wording of the statement now leans towards the risk that inflation stays high.", snap.as_of)])
+    an = _analyses(snap)
+    a = forecast.compute(snap, [_view("hawkish", 2, "Statement language shifted toward inflation risk.", snap.as_of)], an)
+    b = forecast.compute(snap, [_view("hawkish", 2, "The wording of the statement now leans towards the risk that inflation stays high.", snap.as_of)], an)
     shift = max(abs(a["human_adjusted"][o] - b["human_adjusted"][o]) for o in OUTCOMES_BP) * 100
     return [{"perturbation": "view rationale reworded (same direction and strength)", "shift_pp": round(shift, 4), "ok": shift <= 1e-9}]
 

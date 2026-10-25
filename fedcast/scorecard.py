@@ -67,7 +67,15 @@ TILT_BY_STRENGTH = {1: 0.03, 2: 0.06, 3: 0.10}
 # dissents at a fifth of the weight. Models absent from a run are dropped and the rest renormalised.
 # Amendment #2 (2026-10-02): hand-entered prediction-market odds join at a tenth of the weight, taken from the
 # futures anchor: an independent crowd on the same question, but thin and fee-distorted.
-POOL_WEIGHTS: dict[str, float] = {"market_implied": 0.7, "taylor_rule": 0.2, "prediction_market": 0.1}
+# Amendment #6 (2026-10-25): historical base rates join at a tenth of the weight, taken from the futures anchor: the only
+# model with no parameters, and the one that beat the fitted probit on the expanding-window evaluation.
+POOL_WEIGHTS: dict[str, float] = {"market_implied": 0.6, "taylor_rule": 0.2, "prediction_market": 0.1, "historical_base_rates": 0.1}
+# Amendment #6 (2026-10-25): the specialists' judgement enters the machine track as a bounded tilt, never as a weight.
+# The mean of the five specialists' tilts (latest record of each on the snapshot, basis points) is mapped one basis
+# point to one percentage point, capped like a human view, and applied by the same exponential tilt after the floor.
+# No specialist record on the snapshot means a tilt of 0, recorded as such.
+ANALYST_TILT: dict = {"source": "mean tilt_bp over the latest record of each arm-D specialist on the snapshot",
+                      "pp_per_bp": 0.01, "cap": TILT_CAP, "applied": "after the surprise floor, before human views"}
 # No outcome is ever below this after pooling: the Fed occasionally does what nobody priced, and a
 # 0% bucket cannot be moved by a view or scored sensibly. Interim value until the base-rate table exists.
 SURPRISE_FLOOR = 0.015
@@ -99,6 +107,7 @@ def spec_hash() -> str:
         "tilt_by_strength": TILT_BY_STRENGTH,
         "pool_weights": POOL_WEIGHTS,
         "surprise_floor": SURPRISE_FLOOR,
+        "analyst_tilt": ANALYST_TILT,
         "model_rules": model_rules(),
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]

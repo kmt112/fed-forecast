@@ -101,8 +101,23 @@ def build(entry: dict, snap: Snapshot) -> list[dict]:
                     + "; ".join(f"{k} ({v})" for k, v in fc.get("models_skipped", {}).items())
                     if fc.get("models_skipped") else "")),
         "rows": [[name, f"weight {w:g}" + ("" if name in live else " (not run)")] for name, w in weights.items()]
-                + [["machine_only", _dist(fc["machine_only"])]],
+                + [["pooled", _dist(fc.get("pooled", fc["machine_only"]))]],
     })
+
+    an = fc.get("analysts")
+    if an is not None:
+        if an["tilts_bp"]:
+            body = (f"The latest recorded run of each specialist on this snapshot gives a lean in basis points; their mean, "
+                    f"{an['mean_bp']:+.1f} bp, becomes {an['applied_pp']:+.1f} pp of probability moved toward the "
+                    f"{'hawkish' if an['mean_bp'] >= 0 else 'dovish'} side (one basis point per point, capped at 10), by the same "
+                    "mechanism as your views. The analysts can lean the number; they never write it.")
+            rows = [[name, f"{bp:+.1f} bp over {an['records'][name]['runs']} run(s), recorded {an['records'][name]['created_at'][:16].replace('T', ' ')}"]
+                    for name, bp in an["tilts_bp"].items()]
+        else:
+            body = "No specialist run is recorded on this snapshot, so the tilt is 0 and the machine track equals the pool."
+            rows = []
+        steps.append({"title": "Apply the specialists' tilt", "body": body,
+                      "rows": rows + [["Mean tilt", f"{an['mean_bp']:+.1f} bp -> {an['applied_pp']:+.1f} pp"], ["machine_only", _dist(fc["machine_only"])]]})
 
     views = fc["human"]["views_applied"]
     budget = fc["human"]["net_budget"]
