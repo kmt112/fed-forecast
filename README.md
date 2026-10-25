@@ -26,10 +26,19 @@ Then:
 .venv\Scripts\fedcast ui          # local front end at http://localhost:8765
 .venv\Scripts\fedcast snapshot    # fetch live evidence into a frozen, hashed bundle
 .venv\Scripts\fedcast forecast    # run the models + your views, append to the ledger
-.venv\Scripts\fedcast replay      # verify the ledger chain and recompute every entry
-.venv\Scripts\fedcast analyse     # run the LLM specialists (and --arm naive for the control)
+.venv\Scripts\fedcast replay      # verify the ledger chain; entries under the current spec must recompute exactly
+.venv\Scripts\fedcast analyse     # run the LLM arms: --arm A|B|C|D or an analyst name, --runs 5, --replay to reuse recorded calls
 .venv\Scripts\python -m pytest -q
 ```
+
+## What the app shows
+
+Forecast (both tracks), Evidence graph (click a model to see only what it uses), Your input (views, watch-outs,
+documents, prediction-market odds), Methodology, Ledger, Scorecard (the yardstick and the measurements against it:
+S1-S3 and S10 per arm from the analyst runs; S4, S5, S6, S7 and S9 from shock, noise, paraphrase, coherence and
+replay checks run by code on the latest snapshot and the ledger), Analysts (every claim with its quote and its
+verification), Audit (every recorded run over time) and Agents (the exact question, evidence items, pre-reads,
+schema and full prompt each agent receives, built live from the latest snapshot).
 
 ## LLM runtime
 
