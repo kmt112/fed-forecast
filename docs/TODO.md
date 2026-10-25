@@ -17,7 +17,7 @@ and, where it is a fitted model, a pre-registered spec and the expanding-window 
 - [ ] Score every outside-the-pool model (probit v2, base rates, LLM analysts) on the 28 Oct 2026 decision and the
       following meetings from the ledger; decide pool weights only on that record.
 - [ ] Automate post-decision scoring: `fedcast score` appends Brier / log score per model and per track to the ledger
-      once the decision is in the target-rate series.
+      once the decision is in the target-rate series. First use: the 28 Oct 2026 decision.
 
 ## Ordered probit
 - [ ] v3 candidates (pre-register before fitting; judge on live decisions): months since last move; SEP median path
@@ -47,7 +47,8 @@ and, where it is a fitted model, a pre-registered spec and the expanding-window 
 - [ ] Detect EFFR technical adjustments inside the range (spread-to-bottom jumps without a decision).
 
 ## Prediction market
-- [ ] Odds age shown and flagged; decide a hard cut-off once there is a record of how stale entries behave.
+- [x] Odds age shown and flagged (amendment #4). Decide a hard cut-off once there is a record of how stale entries behave.
+- [ ] The entry H6-001 (2 Oct 2026) must be refreshed or withdrawn by hand before the 28 Oct decision.
 - [ ] Automated fetch if the venue's API terms allow it; otherwise keep manual entry.
 
 ## Signals
@@ -59,10 +60,17 @@ and, where it is a fitted model, a pre-registered spec and the expanding-window 
       since 2020; press-conference Q&A split from prepared remarks.
 
 ## LLM analysts
-- [ ] N=5 runs per specialist on each snapshot for S1 (repeatability); UI runs selector.
+- [x] N=5 runs per specialist on each snapshot for S1 (repeatability); UI runs selector (done 2026-10-16/24).
 - [ ] Hawk-versus-dove debate and a synthesiser (arm F); verifier extended to numbers in summaries.
-- [ ] Arms B and C of the ablation ladder (snapshot + naive prompt; quant models without the LLM).
-- [ ] `fedcast eval`: compute S1-S10 from the analyses and the ledger; merge gate on prompt changes.
+- [x] Arms B and C of the ablation ladder (evidence shown free-form; one generalist with schema and verifier) (done 2026-10-19).
+- [x] S1-S3, S10 per arm from the analyses; S4, S5, S6 (typed inputs), S7, S9 from the code chain (evals.deterministic, 2026-10-25).
+- [ ] S6 for the LLM arms: the same evidence under reworded prompts (three paraphrases of each specialist's question),
+      scored as the max shift in tilt; pre-register the paraphrases.
+- [ ] S8: a rubric grader for the traces (base rate first, both sides, uncertainties, pre-mortem), run by a second model
+      family, graded against hand-marked examples before it counts.
+- [ ] S9 for entries under earlier specs: replay each under its own recorded code version in a git worktree, so the
+      whole ledger is checked, not only entries under the current spec.
+- [ ] Make `pytest` fail when a scorecard measurement on the latest snapshot regresses (merge gate on prompt changes).
 
 ## App
 - [ ] Post-meeting review screen: score expired views, ask what the snapshot missed, turn answers into watch-outs.
