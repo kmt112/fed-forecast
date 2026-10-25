@@ -301,20 +301,51 @@
     </section>
 
     <section class="view" data-view="methodology">
+      <p class="sub">How a forecast is made and how the tool is judged. Six parts: three rules that bind everything, then evidence, models, analysts, your input, and the yardstick.</p>
+
       <div class="card">
-        <h3>The fixed rules every forecast follows</h3>
+        <h3>1. Three rules that bind everything</h3>
         <ol class="rules" style="margin-top:8px">
-          <li><strong>Judge the process, never tune on outcomes.</strong> Accuracy against the market is recorded after each decision and never used to adjust anything. With eight decisions a year, tuning on results would be fitting noise.</li>
-          <li><strong>Pre-register, then amend in the open.</strong> The scorecard, pool weights, surprise floor, every model rule that can move the number and every fitted model's specification are written down before use. Any change is a numbered entry in the amendment log, with its reason; a hash of the spec is pinned in the tests so a silent change fails the build, and ledger entries recorded under an earlier spec are labelled as such rather than quietly failing to replay.</li>
-          <li><strong>Freeze the evidence.</strong> Each pull is one fingerprinted snapshot, dated in US time. Nothing outside it may be read: no internet, no memory. Historical fits use data as first published, never revised data.</li>
-          <li><strong>Compute in code.</strong> Signals and models are plain code; each lists the snapshot items it used, and anything a model could compute is computed and handed to it rather than asked of it.</li>
-          <li><strong>Pool with fixed, recorded weights.</strong> No language model writes the final number. A model earns a weight only by amendment, after it has beaten the base rate on the expanding-window evaluation or passed the scorecard, and ideally on live decisions.</li>
-          <li><strong>Language models read; code checks.</strong> Analysts see only their slice of the snapshot with every tool disabled, answer in a fixed schema with a quote per claim and a bounded tilt, and code verifies every quote, number and watch-out. Their output is scored (S1 to S3, S10) and is not in the number until an amendment says so.</li>
-          <li><strong>Typed human input only.</strong> Views tilt the number by a capped amount and expire. Watch-outs, documents and prediction-market odds are evidence, frozen into the next snapshot, never a direct nudge. Everything you enter is visible in every forecast it touches.</li>
-          <li><strong>Measure techniques on a ladder.</strong> The same snapshot and scorecard are applied to arms A to F, each adding one technique, so the value of each technique is the difference between neighbouring arms.</li>
-          <li><strong>Record and verify.</strong> Every forecast goes into an append-only, hash-chained ledger and must recompute exactly from its snapshot; every analyst run is stored with its prompt hash and scores; everything is committed to git.</li>
+          <li><strong>Judge the process, never tune on outcomes.</strong> Accuracy is recorded after each decision and never used to adjust anything. With eight decisions a year, tuning on results would be fitting noise.</li>
+          <li><strong>Pre-register, then amend in the open.</strong> The scorecard, the pool weights, the surprise floor, every model rule that can move the number and every fitted model's specification are written down before use. Any change is a numbered amendment with its reason; a hash of the spec is pinned in the tests, so a silent change fails the build and entries recorded under an earlier spec are labelled.</li>
+          <li><strong>Record and verify.</strong> Every forecast goes into an append-only, hash-chained ledger and must give back its published numbers when recomputed from its snapshot; every analyst run is stored with its prompt hash and scores; everything is committed to git.</li>
         </ol>
       </div>
+
+      <div class="card">
+        <h3>2. Evidence: one frozen snapshot</h3>
+        <p class="sub" style="margin:0">Each pull is one fingerprinted bundle, dated in US time: the meeting calendar, the overnight rate, fed-funds futures, eight FRED series as first published on that day, the last two statements, the minutes, the press-conference transcript, the projections table, speeches since the last decision, 32 years of decisions, and your documents and odds. Nothing outside it may be read: no internet, no memory. Historical fits use data as first published, never revised data. The Evidence graph shows every item and what reads it.</p>
+      </div>
+
+      <div class="card">
+        <h3>3. Models: code computes the number</h3>
+        <ol class="rules" style="margin-top:8px">
+          <li><strong>Signals are computed, not asked.</strong> Inflation gap, labour slack, financial conditions, communication tone, base rates and the committee's projections are plain code over the snapshot. Each lists the items it used and shows its working.</li>
+          <li><strong>Five models, each with a stated rule.</strong> Market-implied (futures price to probabilities), the Fed's four Taylor rules over an r*/u* grid, your prediction-market odds, historical base rates, and an ordered probit fitted on first-published data. Every rule is in the spec hash.</li>
+          <li><strong>A fixed, recorded pool.</strong> Market 0.7, Taylor 0.2, odds 0.1, then a 1.5% floor on every outcome. No language model writes the final number. A model earns a weight only by amendment, after it has beaten the base rate on the expanding-window evaluation and ideally on live decisions; base rates and the probit are computed today with weight 0.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>4. Analysts: language models read, code checks</h3>
+        <ol class="rules" style="margin-top:8px">
+          <li><strong>Eight analysts, one model.</strong> Analysts 1 to 3 are controls (naive; evidence shown, nothing verified; one generalist with the full harness). Analysts 4 to 8 are specialists, each an expert on one slice of the evidence: communications, the minutes, inflation, the labour market, financial conditions. The Analysts and Agents views show what each is asked and given.</li>
+          <li><strong>The harness.</strong> Each analyst sees only its slice of the snapshot plus the numbers code has already computed, with every tool disabled. It answers in a fixed schema: claims, each with a verbatim quote and the item it came from; a report on every watch-out by id; a tilt bounded to ±10 bp. Code verifies every quote, every number and every watch-out, and the run is recorded.</li>
+          <li><strong>Measured on a ladder.</strong> The same snapshot and scorecard are applied to arms A to D (E and F planned), each adding one technique, so the value of each technique is the difference between neighbouring arms. Five repeats of each analyst measure repeatability.</li>
+          <li><strong>Not yet in the number.</strong> The specialists' tilt is scored and shown; whether and how it enters the pool is an open amendment.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>5. Your input: typed channels only</h3>
+        <p class="sub" style="margin:0">Views tilt the number by a capped amount (3, 6 or 10 pp by strength, 10 pp in total) and expire; the machine-only track is always kept beside the adjusted one. Watch-outs must be answered by id in every analyst run. Documents and prediction-market odds are evidence, frozen into the next snapshot, never a direct nudge. Everything you enter is visible in every forecast it touches.</p>
+      </div>
+
+      <div class="card">
+        <h3>6. The yardstick: a pre-registered process scorecard</h3>
+        <p class="sub" style="margin:0">Ten dimensions fixed before any forecasting code existed: repeatability, groundedness, leakage, directional sanity, noise invariance, paraphrase stability, coherence, reasoning quality, auditability, human-input discipline. Eight are measured on every new snapshot, by code; the Scorecard view shows the measurements and what was checked. Outcome accuracy is logged separately and never feeds back.</p>
+      </div>
+
       <div class="card">
         <h3>Step by step for the current entry</h3>
         <p class="sub">Rebuilt from the ledger entry and its frozen snapshot, with the actual values.</p>
