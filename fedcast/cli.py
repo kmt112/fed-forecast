@@ -99,7 +99,10 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
                 latest_file = sorted(folder.glob(f"*_{name}.json"))[-1]
                 latest_file.write_text(json.dumps(rec, indent=1, ensure_ascii=False), encoding="utf-8")
                 s = rec["summary"]
-                print(f"  {name:15s} tilt {s['tilt_mean_bp']:+.1f} bp, grounded {s['groundedness_pct_mean']}%, leaked {s['leakage_total']}, watch-outs missing {s['watchouts_missing_total']}")
+                if "tilt_mean_bp" in s:
+                    print(f"  {name:15s} tilt {s['tilt_mean_bp']:+.1f} bp, grounded {s['groundedness_pct_mean']}%, leaked {s['leakage_total']}, watch-outs missing {s['watchouts_missing_total']}")
+                else:
+                    print(f"  {name:15s} max std {s['max_std_pp']} pp, leaked {s['leakage_total']}")
         return
     live = make_backend(args.model)
     backend = ReplayBackend(config.ROOT / "analyses" / "replay", live) if args.replay else live

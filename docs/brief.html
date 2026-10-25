@@ -10,97 +10,160 @@
   :root[data-theme="dark"] { --bg: #15171a; --surface: #1e2125; --ink: #e9e7e1; --muted: #9aa0aa; --line: #30343a; --accent: #7db8de; --accent-soft: #23394a; --ok: #7cc49a; --warn: #e39a62; --bad: #e88580; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 80px; }
+  main { max-width: 880px; margin: 0 auto; padding: 32px 16px 80px; }
   h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
   h2 { font-size: 18px; margin: 34px 0 10px; padding-top: 14px; border-top: 1px solid var(--line); }
   h3 { font-size: 15px; margin: 18px 0 6px; }
-  p { margin: 0 0 10px; max-width: 72ch; }
+  p { margin: 0 0 10px; max-width: 74ch; }
   .lede { color: var(--muted); font-size: 15px; margin-bottom: 8px; }
   .meta { color: var(--muted); font-size: 13px; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin: 12px 0; }
   .thesis { border-left: 4px solid var(--accent); }
-  ol, ul { margin: 0 0 10px; padding-left: 22px; max-width: 72ch; }
+  .decision { border-left: 4px solid var(--warn); }
+  ol, ul { margin: 0 0 10px; padding-left: 22px; max-width: 74ch; }
   li { margin: 4px 0; }
   table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 14px; }
   th, td { text-align: left; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { color: var(--muted); font-weight: 500; font-size: 12.5px; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
   .ok { color: var(--ok); font-weight: 600; } .bad { color: var(--bad); font-weight: 600; } .warn { color: var(--warn); font-weight: 600; }
   .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); margin-right: 4px; }
   .tag.done { color: var(--ok); border-color: var(--ok); } .tag.todo { color: var(--warn); border-color: var(--warn); }
   code { font: 13px ui-monospace, Consolas, monospace; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  .chain { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; margin: 8px 0 14px; }
+  .chain > div { flex: 1 1 150px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; }
+  .chain > div b { display: block; margin-bottom: 3px; }
+  .chain > div.code { border-top: 3px solid var(--accent); } .chain > div.llm { border-top: 3px solid var(--warn); } .chain > div.human { border-top: 3px solid var(--ok); }
+  .small { font-size: 13px; color: var(--muted); }
 </style>
 </head>
 <body>
 <main>
   <h1>FedCast: the brief</h1>
   <p class="lede">A forecaster for the next Federal Reserve rate decision, built to be judged by its process rather than its luck.</p>
-  <p class="meta">Status as of 19 October 2026 · next decision 28 October 2026 · repository kmt112/fed-forecast</p>
+  <p class="meta">Status as of 25 October 2026 · next decision 28 October 2026 · repository kmt112/fed-forecast · ledger entry #13</p>
 
   <div class="card thesis">
     <h3 style="margin-top:0">The thesis</h3>
-    <p>A large language model inside an engineered harness produces forecasts that are measurably more repeatable and more faithful to evidence than the same model asked naively. The way to prove that is not to wait for the forecasts to come true (eight decisions a year is far too few, and the market is already very good at this) but to measure the <em>process</em>: does the same question get the same answer, can every claim be traced to evidence, does any number come from memory, does human input flow only through channels that can be audited.</p>
+    <p>A large language model inside an engineered harness produces forecasts that are measurably more repeatable and more faithful to evidence than the same model asked naively. The way to prove that is not to wait for the forecasts to come true (eight decisions a year is far too few, and the market is already very good at this) but to measure the <em>process</em>: does the same question get the same answer, can every claim be traced to evidence, does any number come from memory, does a shock to one input move the answer the right way, does an irrelevant change leave it alone, does human input flow only through channels that can be audited.</p>
   </div>
 
   <h2>1. The thought process</h2>
   <p>Five principles were fixed at the start and everything since has been built to honour them.</p>
   <ol>
     <li><strong>Process over outcome.</strong> Accuracy is logged after each decision and never used to tune anything. A system that is right for the wrong reasons would have been found out eventually; one that is disciplined can be trusted before the record exists.</li>
-    <li><strong>Pre-register, then amend in the open.</strong> The ten-dimension scorecard, the pool weights, the surprise floor and every fitted model's specification were written down before use. Changes are numbered amendments with reasons, and a hash of the spec is pinned in the test suite so a silent change breaks the build. Five amendments so far.</li>
+    <li><strong>Pre-register, then amend in the open.</strong> The ten-dimension scorecard, the pool weights, the surprise floor, every model rule that can move the number and every fitted model's specification were written down before use. Changes are numbered amendments with reasons, and a hash of the spec is pinned in the test suite so a silent change breaks the build. Six amendments so far (#0 to #5).</li>
     <li><strong>Frozen evidence.</strong> Every forecast runs on one fingerprinted snapshot of evidence, dated in US time. Models and analysts may read nothing else: no internet, no memory. Historical fits use data exactly as it was first published, never today's revised figures.</li>
     <li><strong>Code computes, models read, code checks.</strong> Anything that can be arithmetic is arithmetic. Language models are used only for what arithmetic cannot do, reading text and weighing arguments, and everything they produce is verified by code before it counts.</li>
     <li><strong>Human judgement through typed channels only.</strong> You can lean the forecast, add standing instructions, add your own documents and enter prediction-market odds, but each is a typed, bounded, recorded input. Nothing moves the number silently.</li>
   </ol>
 
-  <h2>2. What has been built</h2>
-  <div class="grid">
-    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>Evidence layer</h3>
-      <p>Pull evidence freezes 21 items: the FOMC calendar, the overnight rate, fed-funds futures, eight FRED series as published on the day, both latest statements, the minutes, the press-conference transcript, the projections table, every speech since the last decision, 32 years of decision history, and your own inputs. Every item links to its original and to the frozen text the models saw. An update check says what the sources have that the snapshot does not.</p></div>
-    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>Signals (computed, shown)</h3>
-      <p>Inflation gap and momentum with a nowcast; labour slack; financial conditions; communication tone (vote, statement word-diff, lexicon); base rates from 256 decisions since 1994; committee projections. Each box on the evidence graph explains what it is, why it matters and how it is computed, with today's numbers.</p></div>
-    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>Models and pool</h3>
-      <p>In the pool: market-implied (0.7), the Fed's own four Taylor rules (0.2), hand-entered prediction-market odds (0.1), a 1.5% surprise floor. Computed but outside the pool pending evidence: historical base rates, and an ordered probit fitted on first-published data with an expanding-window evaluation. The pool is a fixed weighted average done in code.</p></div>
-    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>LLM analysts</h3>
-      <p>Five specialists plus controls, each seeing only its slice of the snapshot with every tool disabled, answering in a fixed schema with a verbatim quote per claim and a tilt bounded to ±10 bp. Code verifies every quote, number and watch-out; every run is recorded and replayable. Ablation arms A to D exist; E and F are planned.</p></div>
-    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>Governance and audit</h3>
-      <p>An append-only, hash-chained ledger of forecasts that must recompute exactly from their snapshots; an amendment log; a measured scorecard per snapshot; an audit view of every analyst run with its scores; everything committed to git.</p></div>
-    <div class="card"><h3 style="margin-top:0"><span class="tag done">done</span>The app</h3>
-      <p>A local web app: Forecast, Evidence graph (click a model to see only what it uses), Your input, Methodology, Ledger, Scorecard, Analysts and Audit views. Runs on this machine or any clone; a cloud session can run everything but the page.</p></div>
+  <h2>2. The model as it stands</h2>
+  <p>One chain, left to right. Blue boxes are code and deterministic; the orange box is the language model, whose output is measured but not yet in the number; the green box is you.</p>
+  <div class="chain">
+    <div class="code"><b>Evidence</b>21 frozen items: calendar, overnight rate, two futures contracts, eight FRED series as first published, two statements, minutes, press-conference transcript, projections table, speeches since the last decision, 32 years of decisions, your odds entry.</div>
+    <div class="code"><b>Signals</b>Inflation gap and momentum with a nowcast; labour slack; financial conditions; communication tone; base rates; committee projections. Shown on the graph with today's numbers.</div>
+    <div class="code"><b>Models</b>Market-implied; the Fed's four Taylor rules over an r*/u* grid; your prediction-market odds; historical base rates; ordered probit v2 (fitted on first-published data).</div>
+    <div class="code"><b>Pool</b>Fixed weighted average: market 0.7, Taylor 0.2, odds 0.1, then a 1.5% floor on every outcome. Base rates and the probit are computed with weight 0.</div>
+    <div class="llm"><b>Analysts</b>Five specialists plus three controls, each handed only its slice of the snapshot, tools off, fixed answer schema, every claim quoted and verified by code. Output: a tilt in basis points, bounded to ±10.</div>
+    <div class="human"><b>You</b>Views tilt the human track by at most 10 pp; watch-outs must be answered by id; documents and odds enter the snapshot as evidence. Two tracks are kept: machine only, and with your views.</div>
+    <div class="code"><b>Ledger</b>Append-only, hash-chained. Every entry carries its snapshot hash, spec hash and code version and must give back its published numbers when recomputed.</div>
   </div>
 
-  <h2>3. What the measurements say so far</h2>
-  <p>On the 15 October snapshot, five runs each, same model, same question:</p>
+  <h3>Today's readings (snapshot of 24 October, entry #13)</h3>
   <table>
-    <tr><th>Dimension (pre-registered mark)</th><th>Arm A: naive prompt</th><th>Arm D: harnessed specialists</th></tr>
-    <tr><td>S1 Repeatability (≤ 2 pp)</td><td class="bad">3.38 pp, fail</td><td class="ok">0.49 bp of tilt, pass</td></tr>
-    <tr><td>S2 Groundedness (≥ 95%)</td><td class="bad">0%, fail</td><td class="ok">100%, pass</td></tr>
-    <tr><td>S3 Leakage (exactly 0)</td><td class="bad">36 numbers from memory, fail</td><td class="ok">0, pass</td></tr>
-    <tr><td>S10 Watch-out discipline (100%)</td><td>n/a</td><td class="ok">100%, pass</td></tr>
+    <tr><th>Model</th><th>What it reads</th><th class="n">−25</th><th class="n">no change</th><th class="n">+25</th><th class="n">+50</th><th class="n">weight</th></tr>
+    <tr><td>Market-implied</td><td>November fed-funds future against the overnight rate: +2.5 bp expected</td><td class="n">0</td><td class="n">90</td><td class="n">10</td><td class="n">0</td><td class="n">0.7</td></tr>
+    <tr><td>Taylor family</td><td>12-month core PCE 3.0%, unemployment 4.2%, four rules × nine r*/u* pairs: +11 bp mean</td><td class="n">9</td><td class="n">44</td><td class="n">40</td><td class="n">7</td><td class="n">0.2</td></tr>
+    <tr><td>Prediction market</td><td>Your Polymarket entry of 2 October: 25 / 75 <span class="warn">(23 days old, flagged stale)</span></td><td class="n">0</td><td class="n">25</td><td class="n">75</td><td class="n">0</td><td class="n">0.1</td></tr>
+    <tr><td>Historical base rates</td><td>What followed a hike at the 49 scheduled meetings since 1994 that came after one</td><td class="n">0</td><td class="n">35</td><td class="n">52</td><td class="n">13</td><td class="n">0</td></tr>
+    <tr><td>Ordered probit v2</td><td>Nine features on first-published data, 50% shrinkage toward base rates</td><td class="n">0</td><td class="n">25</td><td class="n">63</td><td class="n">12</td><td class="n">0</td></tr>
+    <tr><td><strong>Pool</strong></td><td>Weighted average, then the floor</td><td class="n">1.7</td><td class="n"><strong>73.1</strong></td><td class="n"><strong>22.1</strong></td><td class="n">1.5</td><td class="n"></td></tr>
   </table>
-  <p>The naive prompt still believes the Fed is cutting (its memory is stale) and moves by three points between runs. The specialists converge on a mild hawkish lean (+4.4 bp average) that quotes the September hike, the unanimous vote, the minutes' tightening bias and the committee's own projections. Same model; the difference is the harness.</p>
-  <p>The quant side has had its own test. The first ordered probit, with its spec frozen in advance, <em>failed</em> its out-of-sample gate (log score −1.14 against −0.71 for a simple base rate) and was reported as such rather than tuned. A pre-registered v2 beats the base rate on an expanding-window evaluation (−0.47 against −0.58) but carries a declared contamination caveat, so it stays outside the pool until live decisions judge it.</p>
-  <p>Current forecast for 28 October (ledger entry #11): <strong>no change 62%, +25 bps 33%</strong>, with the market as the anchor.</p>
+  <p class="small">The tails (−50 and +50) sit at the 1.5% floor. No views are active, so both tracks are identical. Percentages, rounded.</p>
 
-  <h2>4. What is left</h2>
+  <h3>The eight agents</h3>
+  <p>The same model (Claude, through the Claude Code runtime with every tool disabled) is run as eight differently equipped agents on the same snapshot. The Agents view in the app shows each one's exact question, the evidence items in its prompt, the pre-computed numbers it is handed, the enforced answer schema and the full prompt text, built live by the same code that builds the real prompts. Five repeats of each agent share one prompt hash.</p>
+  <table>
+    <tr><th>Agent</th><th>Arm</th><th>Gets</th><th>Must return</th><th>Checked by code</th></tr>
+    <tr><td>Naive</td><td>A</td><td>The question and the date. Nothing else.</td><td>Probabilities and free text</td><td>Repeatability; numbers in the text (all count as leaked: there is no evidence)</td></tr>
+    <tr><td>Evidence only</td><td>B</td><td>Every document and every pre-read, 128,000 characters</td><td>Probabilities and free text</td><td>Repeatability; numbers not found in the evidence. Quotes are not required, so groundedness cannot be measured</td></tr>
+    <tr><td>Generalist</td><td>C</td><td>Everything, as arm B</td><td>Claims each with a verbatim quote and item id, watch-out report, tilt ±10 bp</td><td>Every quote string-matched to its item; every number matched to the snapshot; every watch-out answered by id; tilt clipped</td></tr>
+    <tr><td>Communications</td><td>D</td><td>Both statements, the transcript, the speeches, the tone pre-read (125,000 characters)</td><td rowspan="5">As arm C</td><td rowspan="5">As arm C</td></tr>
+    <tr><td>Minutes digest</td><td>D</td><td>The minutes only (37,000 characters)</td></tr>
+    <tr><td>Inflation</td><td>D</td><td>Projections table, both statements, the inflation and projections pre-reads (5,000 characters)</td></tr>
+    <tr><td>Labour</td><td>D</td><td>Projections table, both statements, the labour and projections pre-reads (5,000 characters)</td></tr>
+    <tr><td>Financial</td><td>D</td><td>Both statements, the financial-conditions and base-rate pre-reads (4,000 characters)</td></tr>
+  </table>
+
+  <h2>3. What the measurements say</h2>
+  <h3>The language-model arms, two snapshots, five runs each</h3>
+  <table>
+    <tr><th>Dimension (pass mark)</th><th>A naive</th><th>B evidence, free-form</th><th>C generalist, schema + verifier</th><th>D five specialists</th></tr>
+    <tr><td>S1 Repeatability (≤ 2 pp)</td><td class="bad">3.4 pp / 4.5 pp, fail</td><td class="bad">3.3 pp / 2.3 pp, fail</td><td class="ok">0.6 / 0.5 bp of tilt, pass</td><td class="ok">0.5 / 0.8 bp of tilt (worst specialist), pass</td></tr>
+    <tr><td>S2 Groundedness (≥ 95%)</td><td class="bad">0%, fail</td><td>not measurable (no quotes)</td><td class="ok">100% / 100%, pass</td><td class="ok">100% / 100%, pass</td></tr>
+    <tr><td>S3 Leakage (exactly 0)</td><td class="bad">36 / 36 numbers from memory, fail</td><td class="ok">0 / 0, pass</td><td class="ok">0 / 0, pass</td><td class="ok">0 / 0, pass</td></tr>
+    <tr><td>S10 Watch-out discipline (100%)</td><td>n/a</td><td>n/a</td><td class="ok">100%, pass</td><td class="ok">100%, pass</td></tr>
+    <tr><td>What it concluded</td><td>Cut 25 bps at 57%: its memory of the Fed is stale</td><td>+25 bps at 57% / 55%: reads the evidence but overshoots the market</td><td>Tilt +7.0 / +6.6 bp hawkish</td><td>Mean tilt +4.4 bp (15 Oct) / <span data-fill="d24-mean">+… bp</span> (24 Oct); labour the lone dove</td></tr>
+  </table>
+  <p>Read the ladder left to right. Showing the model the evidence (B) removes the stale memory and the leaked numbers, but the answer still wobbles by 2 to 3 points between identical runs and nothing in it can be checked. Forcing a schema with a quote per claim and checking every quote by code (C) is what makes the output stable and verifiable. Splitting the reading across specialists (D) keeps those properties, makes each judgement attributable to its slice of evidence, and lets one dissent (labour) survive instead of being averaged away inside one head. Same model, same day; the difference is the harness.</p>
+  <p class="small">Per specialist on 15 October: communications +6.2, minutes +6.4, inflation +5.8, labour −1.2, financial +4.8 bp. On 24 October: communications +6.2, minutes +6.2, <span data-fill="d24-rest">inflation …, labour …, financial …</span>. S1 for arms C and D is reported in basis points of tilt because they output a tilt, not a distribution; it becomes a pp figure once the tilt is mapped into the pool by amendment.</p>
+
+  <h3>The code part of the chain, measured on the 24 October snapshot and the ledger</h3>
+  <table>
+    <tr><th>Dimension (pass mark)</th><th>What was done</th><th>Result</th></tr>
+    <tr><td>S4 Directional sanity (100%)</td><td>Seven shocks, one input each: futures 10 bp either way, core PCE 0.5% higher, unemployment 0.5 pp higher, odds 20 points more hawkish, a strong hawkish view, a mild dovish view. The pool's expected change must move the same way.</td><td class="ok">7 of 7, pass (e.g. futures +10 bp of tightening moves the pool +6.9 bp; unemployment +0.5 pp moves it −1.9 bp; the strong view moves exactly 10.00 pp of probability)</td></tr>
+    <tr><td>S5 Noise invariance (≤ 1 pp)</td><td>Five changes that carry no information: an unrelated document added, every fetch time re-stamped, items loaded in reverse order, futures volume changed, statement text with doubled spaces.</td><td class="ok">0.0 pp, pass</td></tr>
+    <tr><td>S6 Paraphrase stability (≤ 2 pp)</td><td>A view's rationale reworded, same direction and strength. Measured for the typed inputs only; the reworded-prompt test for the language-model arms is not built yet.</td><td class="ok">0.0 pp, pass (typed inputs)</td></tr>
+    <tr><td>S7 Coherence (100%)</td><td>All 14 ledger entries: both tracks sum to 1, and the human track is exactly the machine track tilted by the recorded views' budget.</td><td class="ok">14 of 14, pass</td></tr>
+    <tr><td>S8 Reasoning quality (≥ 4/5)</td><td>Rubric grading of the traces.</td><td>Not built</td></tr>
+    <tr><td>S9 Auditability (100%)</td><td>Entries recorded under the current spec must give back their published probabilities when recomputed from their snapshot.</td><td class="ok">1 of 1, pass; 13 earlier entries labelled as recorded under earlier specs (see below)</td></tr>
+  </table>
+  <p>Eight of the ten dimensions are now measured, by code, on every new snapshot. The two that are not (S8, and S6 for the model arms) are listed as not built rather than left blank.</p>
+
+  <h3>What the replay check found, and what was done about it</h3>
+  <p>Recomputing every ledger entry showed three groups. Entries #0 to #3 were recorded under earlier pool weights and no longer match, as the amendment log says they should not. Entries #4 to #6, #11 and #12 give back their numbers exactly. Entries #7 to #10 did not, although they carried the current spec hash: amendment #4 had changed how stale prediction-market odds are treated, a model rule that was not part of the hashed spec. That is a governance gap. Amendment #5 (25 October) closes it: every model rule that can move the number is now inside the spec hash, so a rule change forces a new hash and a logged entry, and entries recorded under an earlier spec are labelled rather than quietly failing. No weight, floor or rule changed. Entry #13 is the first under the new hash and replays exactly.</p>
+
+  <h3>The quant side's own test</h3>
+  <p>The first ordered probit, with its spec frozen in advance, <em>failed</em> its out-of-sample gate (log score −1.14 against −0.71 for a simple base rate) and was reported as such rather than tuned. A pre-registered v2 beats the base rate on an expanding-window evaluation (−0.47 against −0.58) but carries a declared contamination caveat, so it stays outside the pool until live decisions judge it. The historical base rates, which need no fitting, beat the probit v1 and are the natural yardstick.</p>
+
+  <h2>4. The one decision still open</h2>
+  <div class="card decision">
+    <p style="margin-top:0"><strong>Whether the specialists' judgement and the base rates enter the number, and how.</strong> Today the pool is market 0.7, Taylor 0.2, odds 0.1 and the five specialists are measured but weightless. The candidates, computed on the 24 October snapshot with the project's own pool and tilt code:</p>
+    <table>
+      <tr><th>Pool</th><th class="n">no change</th><th class="n">+25 bps</th><th class="n">+50 bps</th></tr>
+      <tr><td><strong>A</strong> current: market 0.7, Taylor 0.2, odds 0.1</td><td class="n">73.1</td><td class="n">22.1</td><td class="n">1.5</td></tr>
+      <tr><td><strong>B</strong> A with base rates at 0.1, taken from the market</td><td class="n">67.8</td><td class="n">26.3</td><td class="n">2.6</td></tr>
+      <tr><td><strong>C</strong> B with probit v2 at 0.1, taken from the market</td><td class="n">61.4</td><td class="n">31.6</td><td class="n">3.8</td></tr>
+      <tr><td><strong>D</strong> A + specialists' mean tilt, applied like a view (bounded, after the floor)</td><td class="n" data-fill="poolD0">…</td><td class="n" data-fill="poolD25">…</td><td class="n" data-fill="poolD50">…</td></tr>
+      <tr><td><strong>E</strong> B + specialists' tilt</td><td class="n" data-fill="poolE0">…</td><td class="n" data-fill="poolE25">…</td><td class="n" data-fill="poolE50">…</td></tr>
+      <tr><td><strong>F</strong> C + specialists' tilt</td><td class="n" data-fill="poolF0">…</td><td class="n" data-fill="poolF25">…</td><td class="n" data-fill="poolF50">…</td></tr>
+    </table>
+    <p><strong>Recommendation: E</strong>, as amendment #6. Base rates in at 0.1 because they need no fitting and beat the probit; the specialists' mean tilt mapped one basis point to one percentage point and applied through the same bounded mechanism as your views (cap 10 pp), so the analysts can lean the number but never write it; the probit kept out until it has a live record. The market stays the anchor. Whatever is chosen, it is logged before 28 October and scored after, never the other way round.</p>
+    <p class="small">Also before the decision: the Polymarket entry is 23 days old. Refresh it from the site or withdraw it; the model will use whatever is entered and flag its age.</p>
+  </div>
+
+  <h2>5. What is left</h2>
   <table>
     <tr><th>Item</th><th>Why it matters</th><th>Size</th></tr>
-    <tr><td><span class="tag todo">next</span>Score live decisions automatically</td><td>Until a few decisions are in, nothing can be said about calibration; the pool-weight decisions for the probit and the analysts wait on this record.</td><td>small</td></tr>
-    <tr><td><span class="tag todo">next</span>Settle the pool by amendment</td><td>Whether base rates enter, and how a tilt in bp becomes a probability shift. A decision, not a build.</td><td>decision</td></tr>
+    <tr><td><span class="tag todo">next</span>Score live decisions automatically</td><td>Until a few decisions are in, nothing can be said about calibration; the pool-weight decisions for the probit and the analysts wait on this record. First use: 28 October.</td><td>small</td></tr>
     <tr><td><span class="tag todo">next</span>Exercise your inputs live</td><td>No watch-out or document has yet been in a run; S10 passes trivially until one is.</td><td>minutes</td></tr>
-    <tr><td>Arms E and F</td><td>E pools the five runs already recorded; F adds a hawk, a dove and a synthesiser.</td><td>medium, large</td></tr>
-    <tr><td>Scorecard S4 to S9</td><td>Directional sanity, noise invariance, paraphrase stability, coherence, reasoning quality, auditability automation. S4 to S6 are prompt perturbations plus the existing verifier.</td><td>medium</td></tr>
+    <tr><td>S6 for the model arms, S8</td><td>Reworded prompts for each specialist (pre-registered paraphrases); a rubric grader run by a second model family and checked against hand-marked examples.</td><td>medium</td></tr>
+    <tr><td>Arms E and F</td><td>E pools the five specialists' runs; F adds a hawk, a dove and a synthesiser.</td><td>medium, large</td></tr>
     <tr><td>Evidence gaps</td><td>A pending-releases calendar; regional Fed presidents' speeches; a second futures price source; automated odds if the venue allows.</td><td>medium</td></tr>
-    <tr><td>Model backlog</td><td>Taylor inputs from the SEP; a calibrated market model (needs historical futures); probit v3 pre-registered; the model-by-model deep dive.</td><td>ongoing</td></tr>
-    <tr><td>Operations</td><td>Scheduled daily pulls; a second model family for any judge; the post-meeting review screen that turns expired views into watch-outs.</td><td>medium</td></tr>
+    <tr><td>Model backlog</td><td>Taylor inputs from the SEP; a calibrated market model (needs historical futures); probit v3 pre-registered; the model-by-model deep dive; replaying old ledger entries under their own code version.</td><td>ongoing</td></tr>
+    <tr><td>Operations</td><td>Scheduled daily pulls; the post-meeting review screen that turns expired views into watch-outs.</td><td>medium</td></tr>
   </table>
 
-  <h2>5. How to read the app in two minutes</h2>
+  <h2>6. How to read the app in two minutes</h2>
   <ol>
     <li>Top bar: when the evidence was last pulled, and what is new at the sources since.</li>
     <li>Forecast: the machine number and the number after your views, side by side.</li>
     <li>Evidence graph: click any box. Blue is in the number; grey is computed but not in it; dotted is planned. Click a model to see only what it uses.</li>
-    <li>Analysts: what each specialist concluded on this snapshot, every claim with its quote and a verified or not-found mark.</li>
-    <li>Scorecard and Audit: the yardstick, the measurements against it, and every recorded run over time.</li>
+    <li>Agents: what each of the eight agents is asked and shown, down to the full prompt. If it is not on that page, the agent does not get it.</li>
+    <li>Analysts: what each agent concluded on this snapshot, every claim with its quote and a verified or not-found mark.</li>
+    <li>Scorecard and Audit: the yardstick, the measurements against it (open "what was checked" under any row), and every recorded run over time.</li>
   </ol>
   <p class="meta">Documents: PLAN.md (design), docs/FACTORS.md (factor spec), docs/ANALYSTS.md (how the analysts work), docs/TODO.md (backlog), governance/AMENDMENTS.md (every change to the spec).</p>
 </main>

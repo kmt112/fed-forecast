@@ -221,13 +221,14 @@ def build_prompt(snap: Snapshot, watchlist: list[dict], spec: Spec | None = None
 
 
 def _number_forms(n: str) -> set[str]:
-    """A number as written, plus its percent and fraction forms (65.3 <-> 0.653, 3.75 <-> 375)."""
+    """A number as written, plus the same value with or without trailing decimals (77 <-> 77.0) and its percent
+    and fraction forms (65.3 <-> 0.653, 3.75 <-> 375)."""
     forms = {n}
     try:
         v = float(n)
     except ValueError:
         return forms
-    for alt in (v / 100, v * 100):
+    for alt in (v, v / 100, v * 100):
         for fmt in ("{:g}", "{:.1f}", "{:.2f}", "{:.3f}", "{:.4f}"):
             forms.add(fmt.format(alt))
     return {f for f in forms if f and f != "0"}

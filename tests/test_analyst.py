@@ -59,6 +59,7 @@ def test_numbers_in_percent_or_fraction_form_and_elsewhere_in_the_snapshot_are_n
     assert analyst._number_in_evidence("3.75", {"3.75", "4.00"})
     assert not analyst._number_in_evidence("7.25", {"3.75", "4.00"})
     assert not analyst._number_in_evidence("6", {"2026", "16"})
+    assert analyst._number_in_evidence("77", {"77.0"}) and analyst._number_in_evidence("77.0", {"77"})
     out = json.loads(json.dumps(GOOD))
     out["claims"][0]["text"] = "The committee raised rates to 3-3/4 to 4 percent."  # numbers in the other statement item
     v = analyst.verify(out, comms_snapshot(), WATCH)
