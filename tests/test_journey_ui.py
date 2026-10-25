@@ -102,3 +102,18 @@ def test_dag_handles_projections_and_speeches_items():
     g = dag.build(entry_for(snap, []), snap)
     ids = {n["id"] for n in g["nodes"]}
     assert "fed.comms" in ids and "fed.sep.2026-09-16" in ids and "fed.speeches" not in ids
+
+
+def test_dag_shows_every_arm_without_treating_controls_as_specialists():
+    from fedcast import dag
+
+    snap = full_snapshot()
+    spec = {"runs": 5, "tilt_mean_bp": 5.0, "tilt_std_bp": 0.4, "groundedness_pct_mean": 100.0, "leakage_total": 0, "watchouts_missing_total": 0}
+    probs = {"runs": 5, "mean_probabilities": {"-50": 0.0, "-25": 0.1, "0": 0.6, "25": 0.3, "50": 0.0}, "max_std_pp": 3.0, "leakage_total": 12, "groundedness_pct_mean": 0.0}
+    analyses = {"communications": {"summary": spec}, "inflation": {"summary": {**spec, "tilt_mean_bp": 7.0}},
+                "generalist": {"summary": {**spec, "tilt_mean_bp": 6.0}}, "evidence_only": {"summary": probs}, "naive": {"summary": probs}}
+    g = dag.build(entry_for(snap, []), snap, [], analyses)
+    llm = next(n for n in g["nodes"] if n["id"] == "model.llm")
+    text = str(llm)
+    assert "Mean tilt across specialists" in text and "+6.0 bp (not in the number)" in text   # (5 + 7) / 2, generalist excluded
+    assert "Generalist (arm C)" in text and "Evidence shown, free-form answer (arm B)" in text and "Naive control (arm A)" in text

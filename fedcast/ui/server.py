@@ -28,7 +28,7 @@ from fedcast.human.extract import SUPPORTED, extract_text
 from fedcast.human.store import load_views
 from fedcast.human.views import View
 from fedcast.llm import analyst as analyst_mod
-from fedcast.scorecard import SCORECARD, TILT_BY_STRENGTH, TILT_CAP
+from fedcast.scorecard import SCORECARD, TILT_BY_STRENGTH, TILT_CAP, spec_hash
 
 LEDGER = config.ROOT / "ledger" / "forecasts.jsonl"
 VIEWS = config.ROOT / "human" / "views.yaml"
@@ -51,9 +51,16 @@ _WATCHLIST_HEADER = """# H1 standing directives. Every active item must be addre
 """
 # Which scorecard dimensions the current build can already enforce or measure.
 _SCORECARD_STATUS = {
-    "S7": "Enforced in code and tests",
-    "S9": "Measured by Verify ledger",
-    "S10": "Enforced: views and directives are the only human inputs",
+    "S1": "Measured per snapshot from the recorded analyst runs (table below)",
+    "S2": "Measured per snapshot by the code verifier (table below)",
+    "S3": "Measured per snapshot by the code verifier (table below)",
+    "S4": "Measured on the latest snapshot: shock tests on the models and the pool (table below)",
+    "S5": "Measured on the latest snapshot: irrelevant changes to the snapshot (table below)",
+    "S6": "Measured for the typed human inputs; the LLM arms' reworded-prompt test is not built yet",
+    "S7": "Measured over every ledger entry (table below)",
+    "S8": "Not measured yet: needs a rubric grader for the traces",
+    "S9": "Measured: entries recorded under the current code recompute bit-for-bit (table below)",
+    "S10": "Measured per snapshot: every active watch-out addressed by id (table below)",
 }
 
 
@@ -117,6 +124,11 @@ def state() -> dict:
                          "dag": dag.build(last, snap, out["watchlist"], analyses) if snap else None,
                          "analyses": {k: _trim_analysis(v) for k, v in analyses.items()},
                          "measurements": evals.measure(analyses)}
+        if snap is not None:
+            try:
+                out["latest"]["measurements"] += evals.deterministic(snap, entries, _snapshot_by_hash, spec_hash())
+            except Exception as exc:  # a failed measurement is shown, never hidden
+                out["latest"]["measurement_error"] = f"{type(exc).__name__}: {exc}"
         if out["snapshot"]:
             out["latest"]["stale"] = not out["snapshot"]["name"].endswith(last["forecast"]["snapshot_hash"][:12])
     out["job"] = JOB

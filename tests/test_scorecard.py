@@ -2,7 +2,7 @@ from fedcast.scorecard import SCORECARD, spec_hash
 
 # Pinned pre-registration. If this fails you changed the yardstick: add an entry to
 # governance/AMENDMENTS.md and update the pin in the same commit.
-PINNED_SPEC_HASH = "c897c8e7a54bc3d1"
+PINNED_SPEC_HASH = "cc82440de5c26b5b"
 
 
 def test_scorecard_is_unchanged_since_last_amendment():
@@ -12,6 +12,14 @@ def test_scorecard_is_unchanged_since_last_amendment():
 def test_ten_dimensions_with_unique_ids():
     ids = [d.id for d in SCORECARD]
     assert ids == [f"S{i}" for i in range(1, 11)]
+
+
+def test_spec_hash_covers_model_rules(monkeypatch):
+    from fedcast.models import taylor
+
+    before = spec_hash()
+    monkeypatch.setattr(taylor, "RHO", 0.5)
+    assert spec_hash() != before
 
 
 def test_pass_direction():

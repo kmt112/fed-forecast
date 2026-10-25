@@ -671,7 +671,9 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                "a bounded tilt in basis points, never the final number.")
     comm = (analyses or {}).get("communications")
     naive = (analyses or {}).get("naive")
-    specialists = {k: v for k, v in (analyses or {}).items() if v and k not in ("naive",)}
+    specialists = {k: v for k, v in (analyses or {}).items() if v and k not in ("naive", "evidence_only", "generalist")}
+    generalist = (analyses or {}).get("generalist")
+    evidence_only = (analyses or {}).get("evidence_only")
     llm_srcs = ["sig.tone", "sig.inflation", "sig.labour", "sig.sep", "watchouts", "documents"]
     if "fed.comms" in {n["id"] for n in nodes}:
         link("fed.comms", "model.llm", "planned" if not specialists else "computed")
@@ -687,6 +689,17 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         rows.append(["Mean tilt across specialists", f"{sum(tilts) / len(tilts):+.1f} bp (not in the number)"])
         sm = {"tilt_mean_bp": sum(tilts) / len(tilts),
               "groundedness_pct_mean": sum(r["summary"]["groundedness_pct_mean"] for r in specialists.values()) / len(specialists)}
+        if generalist:
+            gs = generalist["summary"]
+            rows.append(["Generalist (arm C): one agent, all the evidence, same schema and verifier",
+                         f"tilt {gs['tilt_mean_bp']:+.1f} bp" + (f" (std {gs['tilt_std_bp']:.1f})" if gs["tilt_std_bp"] is not None else "")
+                         + f", {gs['groundedness_pct_mean']:.0f}% grounded, {gs['leakage_total']} leaked, {gs['runs']} run(s)"])
+        if evidence_only:
+            es = evidence_only["summary"]
+            rows.append(["Evidence shown, free-form answer (arm B)",
+                         f"{es['runs']} run(s): " + ", ".join(f"{_label(int(k))} {v * 100:.0f}%" for k, v in es["mean_probabilities"].items() if v >= 0.005)
+                         + (f"; max std {es['max_std_pp']:.1f} pp" if es["max_std_pp"] is not None else "")
+                         + f"; {es['leakage_total']} numbers not in the evidence; quotes not required, so groundedness is not measurable"])
         if naive:
             ns = naive["summary"]
             rows.append(["Naive control (arm A), same snapshot date",

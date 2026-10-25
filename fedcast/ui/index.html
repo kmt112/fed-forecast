@@ -485,12 +485,27 @@ function render(s) {
       <td>${m.value === null ? "—" : esc(String(m.value)) + " " + esc(m.unit)}</td>
       <td style="white-space:nowrap">${m.threshold === 0 ? "exactly 0" : (m.direction === "max" ? "at most " : "at least ") + m.threshold}</td>
       <td>${m.pass === null ? `<span class="flag">not measurable</span>` : m.pass ? `<span class="flag ok">pass</span>` : `<span class="flag bad">fail</span>`}</td>
-      <td class="sub" style="margin:0">${esc(m.note)}${m.runs ? " · " + m.runs + " run(s)" : ""}</td></tr>`).join("")
+      <td class="sub" style="margin:0">${esc(m.note)}${m.runs ? " · " + m.runs + " run(s)" : ""}${detailList(m)}</td></tr>`).join("")
     : `<tr><td class="empty">No analyses on this snapshot yet. Click "Run analysts" (×5 for repeatability).</td></tr>`;
+  if (latest && latest.measurement_error) $("measured").innerHTML += `<tr><td colspan="7"><span class="flag bad">deterministic checks failed: ${esc(latest.measurement_error)}</span></td></tr>`;
   const unit = d => ({pp: " pp", pct: "%", count: "", score: " / 5"}[d.unit]);
   const mark = d => d.threshold === 0 ? "exactly 0" : (d.unit === "pct" && d.threshold === 100) ? "100%" : `${d.direction === "max" ? "at most" : "at least"} ${d.threshold}${unit(d)}`;
   $("scorecard").innerHTML = `<tr><th></th><th>Dimension</th><th>How it is measured</th><th>Pass mark</th><th>Status today</th></tr>` +
     s.scorecard.map(d => `<tr><td>${esc(d.id)}</td><td><strong>${esc(d.name)}</strong></td><td>${esc(d.metric)}</td><td style="white-space:nowrap">${mark(d)}</td><td>${esc(d.status)}</td></tr>`).join("");
+}
+
+function detailList(m) {
+  if (!m.details || !m.details.length) return "";
+  const mark = ok => ok === null || ok === undefined ? "n/a" : ok ? "✓" : "✗";
+  const line = d => {
+    if ("shock" in d) return `${mark(d.ok)} ${esc(d.shock)}: ${d.delta_bp === null ? "n/a" : (d.delta_bp >= 0 ? "+" : "") + d.delta_bp + " bp"}${d.note ? " (" + esc(d.note) + ")" : ""}`;
+    if ("perturbation" in d) return `${mark(d.ok)} ${esc(d.perturbation)}: ${d.shift_pp === null ? "n/a" : d.shift_pp + " pp"}${d.note ? " (" + esc(d.note) + ")" : ""}`;
+    if ("spec" in d) return `${mark(d.ok)} entry #${d.entry} (spec ${esc(d.spec)})${d.note ? ": " + esc(d.note) : ""}`;
+    return `${mark(d.ok)} entry #${d.entry}`;
+  };
+  const shown = m.details.length > 8 ? m.details.filter(d => d.ok !== true || m.details.indexOf(d) >= m.details.length - 3) : m.details;
+  const hidden = m.details.length - shown.length;
+  return `<details style="margin-top:4px"><summary style="cursor:pointer">what was checked</summary><div class="mono" style="font-size:12px;white-space:pre-wrap;margin-top:4px">${shown.map(line).join("\n")}${hidden ? "\n… and " + hidden + " more that passed" : ""}</div></details>`;
 }
 
 // --- update check: what is new at the sources since the last pull ---------------------------------

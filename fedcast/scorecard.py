@@ -73,6 +73,25 @@ POOL_WEIGHTS: dict[str, float] = {"market_implied": 0.7, "taylor_rule": 0.2, "pr
 SURPRISE_FLOOR = 0.015
 
 
+def model_rules() -> dict:
+    """Every constant in a model or signal that can move the number. Amendment #5 (2026-10-25): these are part of
+    the spec hash, so a rule change forces a new hash and an amendment entry, and ledger entries recorded under the
+    earlier rule are labelled as such instead of silently failing to replay (as #7-#10 did after amendment #4)."""
+    from fedcast.models import prediction_market, taylor
+    from fedcast.signals import inflation, labour
+
+    return {
+        "market_implied": {"method": "next-month contract when the month after the meeting has no meeting, else the "
+                                     "meeting-month contract by day count; expected change split linearly between the "
+                                     "two adjacent 25 bp outcomes"},
+        "taylor_rule": {"inflation_measure": "12-month core PCE", "rho": taylor.RHO, "r_star_grid": list(taylor.R_STAR_GRID),
+                        "u_star_grid": list(taylor.U_STAR_GRID), "sigma_floor_bp": taylor.SIGMA_FLOOR_BP,
+                        "first_diff_meeting_scale": taylor.FIRST_DIFF_MEETING_SCALE, "goal": taylor.GOAL},
+        "prediction_market": {"stale_after_days": prediction_market.STALE_AFTER_DAYS, "stale_odds": "used and flagged, never skipped"},
+        "signals": {"inflation_goal": inflation.GOAL, "u_star": labour.U_STAR, "breakeven_payrolls_k": labour.BREAKEVEN_PAYROLLS_K},
+    }
+
+
 def spec_hash() -> str:
     payload = {
         "scorecard": [asdict(d) for d in SCORECARD],
@@ -80,5 +99,6 @@ def spec_hash() -> str:
         "tilt_by_strength": TILT_BY_STRENGTH,
         "pool_weights": POOL_WEIGHTS,
         "surprise_floor": SURPRISE_FLOOR,
+        "model_rules": model_rules(),
     }
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]

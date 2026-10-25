@@ -26,3 +26,59 @@ def test_single_run_specialists_have_no_s1_value():
     rows = {(r["id"], r["arm"]): r for r in evals.measure(analyses)}
     assert rows[("S1", "D specialists")]["value"] is None and rows[("S1", "D specialists")]["pass"] is None
     assert rows[("S2", "D specialists")]["pass"] is False  # 91% < 95%
+
+
+# --- the deterministic chain -------------------------------------------------------------------------------------
+
+from datetime import datetime
+
+from fedcast import forecast
+from fedcast.human import prediction_markets as pm
+from fedcast.scorecard import spec_hash
+from fedcast.snapshot import Item
+from tests.test_taylor_labour import macro_snapshot
+
+
+def full_snapshot():
+    snap = macro_snapshot()
+    odds = pm.MarketOdds(id="H6-001", venue="polymarket", meeting="2026-10-28", observed_at=datetime(2026, 10, 1, 9, 0),
+                         author="t", prices={"0": 60.0, "25": 40.0})
+    snap.add(Item.make("human.pm.H6-001", "prediction_market", "t", odds.model_dump(mode="json")))
+    snap.add(Item.make("fed.statement.2026-09-16", "document", "t", {"url": "u", "text": "Inflation remains elevated. The Committee raised."}))
+    return snap
+
+
+def test_shocks_move_the_pool_the_right_way_and_noise_does_not():
+    snap = full_snapshot()
+    shocks = evals.shock_tests(snap)
+    assert len(shocks) == 7 and all(d["ok"] for d in shocks)
+    assert shocks[0]["delta_bp"] > 0 > shocks[1]["delta_bp"]
+    assert "10.00 pp" in shocks[5]["note"] and "3.00 pp" in shocks[6]["note"]
+    noise = evals.noise_tests(snap)
+    assert len(noise) == 5 and all(d["ok"] for d in noise) and max(d["shift_pp"] for d in noise) == 0.0
+    assert evals.paraphrase_test(snap)[0]["shift_pp"] == 0.0
+
+
+def test_shocks_report_absent_inputs_as_not_applicable():
+    from tests.test_snapshot import make_snapshot
+
+    shocks = evals.shock_tests(make_snapshot())   # calendar, effr, futures only
+    assert [d["ok"] for d in shocks[:5]] == [True, True, None, None, None]
+
+
+def test_coherence_and_replay_over_a_ledger():
+    snap = full_snapshot()
+    good = forecast.run(snap, [])
+    rows = {r["id"]: r for r in evals.deterministic(snap, [{"seq": 0, "entry_hash": "x", **good}], lambda h: snap, spec_hash())}
+    assert rows["S4"]["value"] == 100.0 and rows["S5"]["value"] == 0.0 and rows["S6"]["value"] == 0.0
+    assert rows["S7"]["value"] == 100.0 and rows["S9"]["value"] == 100.0
+    # an entry whose published numbers no longer recompute fails S9; one under an earlier spec is labelled, not scored
+    bad = json.loads(json.dumps(good)); bad["forecast"]["machine_only"]["0"] += 0.01; bad["forecast"]["machine_only"]["25"] -= 0.01
+    old = json.loads(json.dumps(good)); old["spec_hash"] = "0000000000000000"
+    det = evals.replay([{"seq": 0, **good}, {"seq": 1, **bad}, {"seq": 2, **old}], lambda h: snap, spec_hash())
+    assert [d["ok"] for d in det] == [True, False, None]
+    co = evals.coherence([{"seq": 1, **bad}])
+    assert co[0]["ok"] is False and co[0]["sums_to_one"] is True and co[0]["adjusted_is_tilted_machine"] is False
+
+
+import json  # noqa: E402

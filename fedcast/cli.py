@@ -61,24 +61,23 @@ def _cmd_forecast(args: argparse.Namespace) -> None:
 
 
 def _cmd_replay(args: argparse.Namespace) -> None:
+    from fedcast import evals
+    from fedcast.scorecard import spec_hash
+
     n = ledger.verify(LEDGER)
-    current = forecast._code_version()
-    failures = 0
-    for e in ledger.read(LEDGER):
-        want = e["forecast"]
-        dirs = list(config.SNAPSHOT_DIR.glob(f"*_{want['snapshot_hash'][:12]}"))
-        if not dirs:
-            print(f"  #{e['seq']} FAIL snapshot {want['snapshot_hash'][:12]} not found")
-            failures += 1
-            continue
-        views = [View(**v) for v in want["human"]["views_applied"]]
-        got = json.loads(json.dumps(forecast.compute(snapshot.load(dirs[0]), views)))
-        ok = got == want
-        failures += not ok
-        note = "" if ok or e["code_version"] == current else f"  (recorded under code {e['code_version']}, now {current})"
-        print(f"  #{e['seq']} {'ok  ' if ok else 'FAIL'} {want['meeting']} snapshot {want['snapshot_hash'][:12]}{note}")
-    print(f"hash chain intact over {n} entries; {n - failures}/{n} replay bit-for-bit")
-    if failures:
+    entries = ledger.read(LEDGER)
+    by_seq = {e["seq"]: e for e in entries}
+    find = lambda h: next((snapshot.load(d) for d in config.SNAPSHOT_DIR.glob(f"*_{h[:12]}")), None)  # noqa: E731
+    details = evals.replay(entries, find, spec_hash())
+    scored = [d for d in details if d["ok"] is not None]
+    for d in details:
+        e = by_seq[d["entry"]]
+        mark = "ok  " if d["ok"] else "FAIL" if d["ok"] is False else "    "
+        print(f"  #{d['entry']} {mark} {e['forecast']['meeting']} snapshot {e['forecast']['snapshot_hash'][:12]}"
+              f"  spec {d['spec']}  {d['note']}")
+    print(f"hash chain intact over {n} entries; {sum(d['ok'] for d in scored)}/{len(scored)} entries under the current spec "
+          f"{spec_hash()} give back their published probabilities; {n - len(scored)} recorded under earlier specs")
+    if any(d["ok"] is False for d in scored):
         raise SystemExit(1)
 
 
