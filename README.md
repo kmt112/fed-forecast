@@ -36,9 +36,9 @@ Then:
 Forecast (both tracks), Evidence graph (click a model to see only what it uses), Your input (views, watch-outs,
 documents, prediction-market odds), Methodology, Ledger, Scorecard (the yardstick and the measurements against it:
 S1-S3 and S10 per arm from the analyst runs; S4, S5, S6, S7 and S9 from shock, noise, paraphrase, coherence and
-replay checks run by code on the latest snapshot and the ledger), Analysts (every claim with its quote and its
-verification), Audit (every recorded run over time) and Agents (the exact question, evidence items, pre-reads,
-schema and full prompt each agent receives, built live from the latest snapshot).
+replay checks run by code, on any measured snapshot, with every recorded run and an over-time drift table),
+Analyst results (every claim with its quote and its verification) and Analyst prompts (the exact question,
+evidence items, pre-reads, schema and full prompt each analyst receives, built live from the latest snapshot).
 
 ## LLM runtime
 
