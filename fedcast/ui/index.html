@@ -185,8 +185,7 @@
     <button data-view="ledger">Ledger <span class="k">5</span></button>
     <button data-view="scorecard">Scorecard <span class="k">6</span></button>
     <button data-view="analysts">Analyst results <span class="k">7</span></button>
-    <button data-view="audit">Audit <span class="k">8</span></button>
-    <button data-view="agents">Analyst prompts <span class="k">9</span></button>
+    <button data-view="agents">Analyst prompts <span class="k">8</span></button>
   </nav>
   <div class="side-status" id="side-status"></div>
 </aside>
@@ -366,10 +365,6 @@
       <div id="analysts"></div>
     </section>
 
-    <section class="view" data-view="audit">
-      <p class="sub">Every recorded analyst run, by snapshot, newest first: what each analyst produced, how code scored it, and the scorecard measured on that snapshot. Each record is a file in <code>analyses/</code>, committed to git; nothing here can be edited without showing.</p>
-      <div id="audit"><div class="card"><div class="empty">Loading…</div></div></div>
-    </section>
 
     <section class="view" data-view="agents">
       <p class="sub">What each agent is, built live from the latest snapshot by the same code that builds the real prompts: the question, the evidence items it receives, the pre-computed numbers it is handed, the answer shape, and the full prompt text. If it is not on this page, the agent does not get it.</p>
@@ -378,15 +373,24 @@
 
     <section class="view" data-view="scorecard">
       <div class="card">
-        <h3>Process scorecard</h3>
-        <p class="sub">The yardstick the tool is judged by. Fixed before any forecasting code was written; changes need a logged amendment.</p>
+        <h3>The yardstick</h3>
+        <p class="sub">Ten dimensions, fixed before any forecasting code was written; changes need a logged amendment. Every new snapshot is measured against the same marks, so a change in the model, the prompts or the evidence shows up here as a change in the row, not as a quiet drift.</p>
         <div class="scroll"><table id="scorecard"></table></div>
       </div>
+      <div class="card" id="scorecard-measured">
+        <div class="an-head" style="justify-content:space-between"><h3 style="margin:0">Measured on one snapshot</h3>
+          <label class="sub" style="margin:0">Snapshot <select id="snap-select" style="margin-left:6px"></select></label></div>
+        <p class="sub">One column per part of the system, one row per dimension. Analyst 1 (naive) and analyst 2 (evidence shown, nothing verified) are the controls and are <em>expected</em> to fail; analyst 3, analysts 4 to 8 and the code columns are what the tool is judged on. A cell reads "Not applicable" where a dimension has nothing to measure on that part. Hover a cell for what was counted.</p>
+        <div class="scroll" id="measured-grid"><div class="empty">Loading…</div></div>
+        <details><summary class="sub" style="cursor:pointer;margin:0 0 6px">Detail: every measurement on this snapshot, with what was counted</summary><div class="scroll"><table id="measured"></table></div></details>
+        <h3 style="margin-top:14px">Recorded analyst runs on this snapshot</h3>
+        <p class="sub">Every run is a file in <code>analyses/</code>, committed to git; "record" opens the stored file, "runs" lists each repeat.</p>
+        <div id="runs"></div>
+      </div>
       <div class="card">
-        <h3>Measured on the latest forecast's snapshot</h3>
-        <p class="sub">Each row is one dimension measured on one part of the system. The rows marked <em>(code)</em> test the deterministic chain (models, pool, views, ledger) by perturbing the snapshot and recomputing. The other rows come from the recorded analyst runs: arm A (analyst 1, naive) and arm B (analyst 2, evidence shown, nothing verified) are the controls and are <em>expected</em> to fail; arm C (analyst 3, one generalist with the schema and the verifier) and arm D (analysts 4 to 8, the specialists) are the harnessed versions the tool is judged on. A fail on a control row is the point of the experiment; a fail on a C, D or code row is a defect.</p>
-        <div class="scroll" id="measured-grid"></div>
-        <details><summary class="sub" style="cursor:pointer;margin:0 0 6px">Detail: every measurement with what was counted</summary><div class="scroll"><table id="measured"></table></div></details>
+        <h3>Over time</h3>
+        <p class="sub">The judged columns on every snapshot that has been measured, oldest first. This is the drift check: the marks never move, so any row that turns from pass to fail is a change in the system that needs explaining.</p>
+        <div class="scroll" id="drift"></div>
       </div>
     </section>
 
@@ -402,9 +406,9 @@ const pct = p => (p * 100).toFixed(1) + "%";
 const topOf = p => { const o = OUTCOMES.reduce((a, b) => (p[a] || 0) >= (p[b] || 0) ? a : b); return [label(o), p[o] || 0]; };
 
 // --- navigation ------------------------------------------------------------------------
-const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard", analysts: "Analyst results: what each concluded", audit: "Audit trail", agents: "Analyst prompts: exactly what each receives"};
+const TITLES = {forecast: "Forecast", evidence: "What feeds the number", input: "Your input", methodology: "Methodology", ledger: "Ledger", scorecard: "Process scorecard", analysts: "Analyst results: what each concluded", agents: "Analyst prompts: exactly what each receives"};
 function showView(v) {
-  if (v === "audit") renderAudit();
+  if (v === "scorecard") renderScorecard();
   if (v === "agents") renderAgents();
   document.querySelectorAll(".view").forEach(s => s.classList.toggle("active", s.dataset.view === v));
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.view === v));
@@ -511,22 +515,14 @@ function render(s) {
       <td>${esc(e.meeting)}</td><td>${t(e.machine_only)}</td><td>${t(e.human_adjusted)}</td><td>${e.n_views}</td>
       <td><code>${esc(e.snapshot)}</code></td><td><code>${esc(e.code)}</code></td></tr>`).join("") : `<tr><td colspan="8" class="empty">Empty.</td></tr>`);
 
-  const ms = latest && latest.measurements || [];
-  $("measured-grid").innerHTML = measureGrid(ms, "At a glance: one column per part of the system, one row per dimension. The table below has the detail.");
-  $("measured").innerHTML = ms.length ? `<tr><th></th><th>Dimension</th><th>Arm</th><th>Measured</th><th>Pass mark</th><th>Result</th><th>What was measured</th></tr>` +
-    ms.map(m => `<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${esc(m.arm)}</td>
-      <td>${m.value === null ? "—" : esc(String(m.value)) + " " + esc(m.unit)}</td>
-      <td style="white-space:nowrap">${m.threshold === 0 ? "exactly 0" : (m.direction === "max" ? "at most " : "at least ") + m.threshold}</td>
-      <td>${m.pass === null ? `<span class="flag">not measurable</span>` : m.pass ? `<span class="flag ok">pass</span>` : `<span class="flag bad">fail</span>`}</td>
-      <td class="sub" style="margin:0">${esc(m.note)}${m.runs ? " · " + m.runs + " run(s)" : ""}${detailList(m)}</td></tr>`).join("")
-    : `<tr><td class="empty">No analyses on this snapshot yet. Click "Run analysts" (×5 for repeatability).</td></tr>`;
-  if (latest && latest.measurement_error) $("measured").innerHTML += `<tr><td colspan="7"><span class="flag bad">deterministic checks failed: ${esc(latest.measurement_error)}</span></td></tr>`;
+  if (document.querySelector('.view[data-view="scorecard"]').classList.contains("active")) renderScorecard();
   const unit = d => ({pp: " pp", pct: "%", count: "", score: " / 5"}[d.unit]);
   const mark = d => d.threshold === 0 ? "exactly 0" : (d.unit === "pct" && d.threshold === 100) ? "100%" : `${d.direction === "max" ? "at most" : "at least"} ${d.threshold}${unit(d)}`;
   $("scorecard").innerHTML = `<tr><th></th><th>Dimension</th><th>How it is measured</th><th>Pass mark</th><th>Status today</th></tr>` +
     s.scorecard.map(d => `<tr><td>${esc(d.id)}</td><td><strong>${esc(d.name)}</strong></td><td>${esc(d.metric)}</td><td style="white-space:nowrap">${mark(d)}</td><td>${esc(d.status)}</td></tr>`).join("");
 }
 
+const NA = `<span class="sub" style="margin:0">Not applicable</span>`;
 const ARM_HEAD = {"A naive": "Analyst 1<br><span class=\"sub\" style=\"margin:0\">naive (arm A)</span>",
   "B evidence": "Analyst 2<br><span class=\"sub\" style=\"margin:0\">evidence shown (arm B)</span>",
   "C structure": "Analyst 3<br><span class=\"sub\" style=\"margin:0\">generalist (arm C)</span>",
@@ -542,7 +538,7 @@ function measureGrid(ms, caption) {
   if (!ms || !ms.length) return "";
   const arms = [], dims = [];
   ms.forEach(m => { if (!arms.includes(m.arm)) arms.push(m.arm); if (!dims.some(d => d.id === m.id)) dims.push(m); });
-  const cell = m => !m ? `<td class="sub" style="margin:0">—</td>`
+  const cell = m => !m ? `<td>${NA}</td>`
     : `<td title="${esc(m.note)}"><span class="flag ${m.pass === null ? "" : m.pass ? "ok" : "bad"}" style="margin:0">${m.pass === null ? "n/a" : m.pass ? "pass" : "fail"}</span><div style="margin-top:3px">${esc(fmtValue(m))}</div></td>`;
   return `<table style="margin:6px 0 10px">${caption ? `<caption class="sub" style="text-align:left;margin:0 0 4px">${caption}</caption>` : ""}
     <tr><th>Dimension (pass mark)</th>${arms.map(a => `<th>${ARM_HEAD[a] || esc(a)}</th>`).join("")}</tr>`
@@ -610,31 +606,54 @@ $("agents").onclick = async e => { const n = e.target.dataset.prompt; if (!n) re
   const body = $("reader-body"); body.className = "reader-body mono"; body.textContent = d.text; $("reader").classList.add("open"); };
 
 // --- audit trail --------------------------------------------------------------------------------
-async function renderAudit() {
-  const el = $("audit");
-  let d;
-  try { d = await (await fetch("/api/audit")).json(); } catch (e) { el.innerHTML = `<div class="card"><div class="empty">Could not load the audit trail.</div></div>`; return; }
-  if (!d.snapshots.length) { el.innerHTML = `<div class="card"><div class="empty">No analyst runs recorded yet.</div></div>`; return; }
+let AUDIT = null;
+async function renderScorecard() {
+  try { AUDIT = await (await fetch("/api/audit")).json(); } catch (e) { $("measured-grid").innerHTML = `<div class="empty">Could not load the measurements.</div>`; return; }
+  const sel = $("snap-select");
+  const groups = AUDIT.snapshots;
+  if (!groups.length) { $("measured-grid").innerHTML = `<div class="empty">No analyst runs recorded yet. Click "Run analysts".</div>`; $("runs").innerHTML = ""; $("drift").innerHTML = ""; return; }
+  const current = sel.value && groups.some(g => g.snapshot === sel.value) ? sel.value : (AUDIT.latest_forecast_snapshot && groups.some(g => g.snapshot === AUDIT.latest_forecast_snapshot) ? AUDIT.latest_forecast_snapshot : groups[0].snapshot);
+  sel.innerHTML = groups.map(g => `<option value="${esc(g.snapshot)}" ${g.snapshot === current ? "selected" : ""}>${esc(g.as_of || "?")} · ${esc(g.snapshot)}${g.ledger_entries.length ? " · ledger #" + g.ledger_entries.join(", #") : " · no forecast"}${g.snapshot === AUDIT.latest_forecast_snapshot ? " · latest forecast" : ""}</option>`).join("");
+  sel.onchange = () => renderSnapshotPanel(groups.find(g => g.snapshot === sel.value));
+  renderSnapshotPanel(groups.find(g => g.snapshot === current));
+  renderDrift(groups);
+}
+function renderSnapshotPanel(g) {
   const fmt = t => t ? t.replace("T", " ").slice(0, 16) : "";
-  el.innerHTML = d.snapshots.map(g => `<div class="card">
-    <div class="audit-head"><h3>Snapshot <code>${esc(g.snapshot)}</code>${g.as_of ? " · evidence of " + esc(g.as_of) : ""}</h3>
-      <span class="sub" style="margin:0">${g.analyses.length} record(s), ${fmt(g.first)} to ${fmt(g.last)}${g.ledger_entries.length ? " · ledger entries #" + g.ledger_entries.join(", #") : " · no forecast on this snapshot"}</span></div>
-    ${measureGrid(g.measurements, "Scorecard on this snapshot, from the latest record of each analyst. Analysts 1 and 2 are controls and are expected to fail; hover a cell for what was counted.")}
-    <div class="scroll"><table><tr><th>Recorded (UTC)</th><th>Analyst</th><th>Arm</th><th title="How many times the identical prompt was sent. Repeats measure repeatability (S1).">Runs</th><th>Result</th><th title="Share of the analyst's claims whose quote code found, character for character, in the snapshot item the analyst named." style="cursor:help">Grounded ⓘ</th><th title="Numbers in the analyst's claims that appear nowhere in the frozen snapshot, so they can only have come from the model's memory. Summed over all runs. For the naive control every number counts: it was given no evidence." style="cursor:help">Leaked ⓘ</th><th title="Your active watch-outs (H1) that a run failed to address by id, summed over runs. 0 means every watch-out was answered in every run." style="cursor:help">Watch-outs missing ⓘ</th><th>Model · runtime</th><th></th></tr>
-    ${g.analyses.slice().reverse().map((a, idx) => { const s = a.summary; const id = g.snapshot + "/" + a.file;
+  const ms = g.measurements || [];
+  $("measured-grid").innerHTML = measureGrid(ms, `Snapshot <code>${esc(g.snapshot)}</code>, evidence of ${esc(g.as_of || "?")}: ${g.analyses.length} record(s) from ${fmt(g.first)} to ${fmt(g.last)}${g.ledger_entries.length ? "; used by ledger entries #" + g.ledger_entries.join(", #") : "; no forecast recorded on it"}.`);
+  $("measured").innerHTML = `<tr><th></th><th>Dimension</th><th>Part</th><th>Measured</th><th>Pass mark</th><th>Result</th><th>What was measured</th></tr>` +
+    ms.map(m => `<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${ARM_HEAD[m.arm] || esc(m.arm)}</td>
+      <td>${m.value === null ? "not measurable" : esc(fmtValue(m))}</td>
+      <td style="white-space:nowrap">${passMark(m)}</td>
+      <td>${m.pass === null ? `<span class="flag">not measurable</span>` : m.pass ? `<span class="flag ok">pass</span>` : `<span class="flag bad">fail</span>`}</td>
+      <td class="sub" style="margin:0">${esc(m.note)}${m.runs ? " · " + m.runs + " run(s)" : ""}${detailList(m)}</td></tr>`).join("");
+  $("runs").innerHTML = `<div class="scroll"><table><tr><th>Recorded (UTC)</th><th>Analyst</th><th>Arm</th><th title="How many times the identical prompt was sent. Repeats measure repeatability (S1).">Runs</th><th>Result</th><th title="Share of the analyst's claims whose quote code found, character for character, in the snapshot item the analyst named." style="cursor:help">Grounded ⓘ</th><th title="Numbers in the analyst's claims that appear nowhere in the frozen snapshot, so they can only have come from the model's memory. Summed over all runs. For the naive control every number counts: it was given no evidence." style="cursor:help">Leaked ⓘ</th><th title="Your active watch-outs (H1) that a run failed to address by id, summed over runs. 0 means every watch-out was answered in every run." style="cursor:help">Watch-outs missing ⓘ</th><th>Model · runtime</th><th></th></tr>
+    ${g.analyses.slice().reverse().map((a, idx) => { const s = a.summary; const id = g.snapshot + "/" + a.file; const d = AN_BY_KEY[a.analyst];
       const result = a.runs[0] && a.runs[0].probabilities ? OUTCOMES.filter(o => s.mean_probabilities[o] >= 0.005).map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ") + (s.max_std_pp !== null ? ` (max std ${s.max_std_pp} pp)` : "")
         : `tilt ${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp${s.tilt_std_bp !== null ? " ± " + s.tilt_std_bp : ""}`;
       return `<tr><td>${fmt(a.created_at)}${a.reverified_at ? `<div class="sub" style="margin:0">re-scored ${fmt(a.reverified_at)}</div>` : ""}</td>
-        <td>${esc(a.analyst.replace("_", " "))}</td><td>${esc(a.arm)}</td><td>${s.runs}</td><td>${result}</td>
+        <td>${d ? `Analyst ${d.n}: ${esc(d.name)}` : esc(a.analyst.replace("_", " "))}</td><td>${esc(a.arm)}</td><td>${s.runs}</td><td>${result}</td>
         <td>${a.analyst === "naive" ? "0% (by construction)" : s.groundedness_pct_mean === null || s.groundedness_pct_mean === undefined ? "not measurable" : s.groundedness_pct_mean.toFixed(0) + "%"}</td><td>${s.leakage_total}</td>
-        <td>${s.watchouts_missing_total === undefined ? "—" : s.watchouts_missing_total}</td><td class="sub" style="margin:0">${esc(a.runs[0] && a.runs[0].model || "")} · ${esc(a.backend)} · ${esc(a.prompt_version || "")}</td>
+        <td>${s.watchouts_missing_total === undefined ? NA : s.watchouts_missing_total}</td><td class="sub" style="margin:0">${esc(a.runs[0] && a.runs[0].model || "")} · ${esc(a.backend)} · ${esc(a.prompt_version || "")}</td>
         <td style="white-space:nowrap"><button class="link" data-toggle="r-${esc(g.snapshot)}-${idx}">runs</button> · <button class="link" data-open-analysis="${esc(id)}">record</button></td></tr>
         <tr id="r-${esc(g.snapshot)}-${idx}" style="display:none"><td colspan="10"><table class="runs-table">${a.runs.map(r => r.probabilities
           ? `<tr><td>run ${r.i}</td><td>${OUTCOMES.filter(o => r.probabilities[o] >= 0.005).map(o => label(o) + " " + (r.probabilities[o] * 100).toFixed(0) + "%").join(" · ")}</td><td>${r.numbers_from_memory} numbers from memory</td><td>${r.duration_s || ""}s</td></tr>`
           : `<tr><td>run ${r.i}</td><td>tilt ${r.tilt_bp >= 0 ? "+" : ""}${r.tilt_bp} bp</td><td>${r.n_verified}/${r.n_claims} claims verified</td><td>${r.leakage} leaked</td><td>${r.watchouts_missing} watch-outs missing</td><td>${esc(r.confidence || "")}</td><td>${r.duration_s || ""}s</td><td class="sub" style="margin:0">${esc(r.summary)}</td></tr>`).join("")}</table></td></tr>`; }).join("")}
-    </table></div></div>`).join("");
+    </table></div>`;
 }
-$("audit").onclick = async e => {
+// the judged columns over every measured snapshot, oldest first
+const DRIFT_COLS = [["S1", "C structure"], ["S2", "C structure"], ["S3", "C structure"], ["S1", "D specialists"], ["S2", "D specialists"], ["S3", "D specialists"], ["S10", "D specialists"],
+                    ["S4", "models + pool (code)"], ["S5", "models + pool (code)"], ["S6", "human views (code)"], ["S7", "ledger (code)"], ["S9", "ledger (code)"]];
+const DRIFT_HEAD = {"C structure": "analyst 3", "D specialists": "analysts 4-8", "models + pool (code)": "code", "human views (code)": "code", "ledger (code)": "code"};
+function renderDrift(groups) {
+  const rows = groups.slice().sort((a, b) => (a.as_of || "").localeCompare(b.as_of || "") || a.first.localeCompare(b.first));
+  const cols = DRIFT_COLS.filter(([id, arm]) => rows.some(g => g.measurements.some(m => m.id === id && m.arm === arm)));
+  const cell = m => !m ? `<td>${NA}</td>` : `<td title="${esc(m.note)}"><span class="flag ${m.pass === null ? "" : m.pass ? "ok" : "bad"}" style="margin:0">${m.pass === null ? "n/a" : m.pass ? "pass" : "fail"}</span><div class="sub" style="margin:2px 0 0">${esc(fmtValue(m))}</div></td>`;
+  $("drift").innerHTML = `<table><tr><th>Snapshot</th>${cols.map(([id, arm]) => `<th>${id}<br><span class="sub" style="margin:0">${DRIFT_HEAD[arm]}</span></th>`).join("")}</tr>` +
+    rows.map(g => `<tr><td>${esc(g.as_of || "?")}<div class="sub" style="margin:0"><code>${esc(g.snapshot)}</code>${g.ledger_entries.length ? " · #" + g.ledger_entries.join(", #") : ""}</div></td>${cols.map(([id, arm]) => cell(g.measurements.find(m => m.id === id && m.arm === arm))).join("")}</tr>`).join("") + `</table>`;
+}
+$("scorecard-measured").onclick = async e => {
   const t = e.target.dataset.toggle; if (t) { const row = document.getElementById(t); row.style.display = row.style.display === "none" ? "" : "none"; }
   const id = e.target.dataset.openAnalysis;
   if (id) { const r = await fetch("/api/analysis/" + id.split("/").map(encodeURIComponent).join("/")); const d = await r.json();

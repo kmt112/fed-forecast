@@ -235,10 +235,21 @@ def _audit() -> dict:
         for sdir in config.SNAPSHOT_DIR.glob(f"*_{folder.name}"):
             as_of = json.loads((sdir / "manifest.json").read_text(encoding="utf-8"))["as_of"]
         used_by = [e["seq"] for e in ledger.read(LEDGER) if e["forecast"]["snapshot_hash"].startswith(folder.name)]
+        measurements = evals.measure(full_latest)
+        snap_obj = _snapshot_by_hash(folder.name)
+        if snap_obj is not None:
+            try:
+                measurements += evals.deterministic(snap_obj, ledger.read(LEDGER), _snapshot_by_hash, spec_hash())
+            except Exception as exc:  # shown, never hidden
+                measurements.append({"id": "S4", "name": "Directional sanity", "arm": "models + pool (code)", "value": None, "unit": "pct",
+                                     "threshold": 100.0, "direction": "min", "pass": None, "runs": None, "details": [],
+                                     "note": f"could not run the code checks on this snapshot: {type(exc).__name__}: {exc}"})
         groups[folder.name] = {"snapshot": folder.name, "as_of": as_of, "ledger_entries": used_by, "analyses": recs,
-                               "measurements": evals.measure(full_latest),
+                               "measurements": measurements,
                                "first": min(r["created_at"] for r in recs), "last": max(r["created_at"] for r in recs)}
-    return {"snapshots": sorted(groups.values(), key=lambda g: g["last"], reverse=True)}
+    entries = ledger.read(LEDGER)
+    latest_hash = entries[-1]["forecast"]["snapshot_hash"][:12] if entries else None
+    return {"snapshots": sorted(groups.values(), key=lambda g: g["last"], reverse=True), "latest_forecast_snapshot": latest_hash}
 
 
 # --- actions ------------------------------------------------------------------------------------

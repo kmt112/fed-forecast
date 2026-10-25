@@ -309,6 +309,5 @@ def deterministic(snap: Snapshot, entries: list[dict], find_snapshot: Callable[[
                       if cur else "no entry recorded under the current spec yet: run a forecast")
                      + (f"; {older} earlier entries were recorded under an earlier spec (amendment log) and are labelled, not scored" if older else ""),
                      runs=len(cur) or None, details=rp))
-    _CACHE.clear()
     _CACHE[key] = rows
     return rows
