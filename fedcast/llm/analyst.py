@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Callable
 
 from fedcast import OUTCOMES_BP, config
-from fedcast.llm.backend import Completion, LLMBackend
+from fedcast.llm.backend import Completion, LLMBackend, prompt_hash
 from fedcast.signals import base_rates, comms, financial, inflation, labour, sep
 from fedcast.snapshot import Snapshot
 

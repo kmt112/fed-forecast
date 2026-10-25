@@ -115,3 +115,13 @@ def test_json_text_parsing_tolerates_fences():
 def test_quote_matching_ignores_typography():
     assert analyst._norm("I’m not\ngoing to  prejudge – any") == "i'm not going to prejudge - any"
     assert analyst._norm("I�m") == "i'm"
+
+
+def test_describe_agents_lists_every_agent_with_its_inputs():
+    agents = analyst.describe_agents(comms_snapshot(), WATCH)
+    names = [a["name"] for a in agents]
+    assert set(names) >= {"naive", "evidence_only", "generalist", "communications", "minutes_digest", "inflation", "labour", "financial"}
+    comm = next(a for a in agents if a["name"] == "communications")
+    assert "fed.statement.2026-09-16" in comm["items"] and comm["prompt_chars"] == len(comm["prompt"]) and len(comm["prompt_hash"]) == 16
+    naive = next(a for a in agents if a["name"] == "naive")
+    assert naive["items"] == [] and naive["pre_reads"] == []
