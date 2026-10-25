@@ -331,7 +331,7 @@
     </section>
 
     <section class="view" data-view="analysts">
-      <p class="sub">What each LLM specialist concluded on the latest forecast's snapshot, with every claim's quote and whether code could verify it. Scored, not yet in the number.</p>
+      <p class="sub">What each of the eight analysts concluded on the latest forecast's snapshot. Analysts 1 to 3 are the controls (the same model with less and less of the harness removed); analysts 4 to 8 are the specialists, each given one slice of the evidence. Every claim is shown with its quote and whether code could verify it. Scored, not yet in the number. The Agents view shows the exact prompt each one receives.</p>
       <div id="analysts"></div>
     </section>
 
@@ -353,7 +353,7 @@
       </div>
       <div class="card">
         <h3>Measured on the latest forecast's snapshot</h3>
-        <p class="sub">From the analyses run on that snapshot: arm A is the naive prompt, arm D the harnessed specialists. A dimension passes only if every arm it applies to meets the pre-registered mark.</p>
+        <p class="sub">Each row is one dimension measured on one part of the system. The rows marked <em>(code)</em> test the deterministic chain (models, pool, views, ledger) by perturbing the snapshot and recomputing. The other rows come from the recorded analyst runs: arm A (analyst 1, naive) and arm B (analyst 2, evidence shown, nothing verified) are the controls and are <em>expected</em> to fail; arm C (analyst 3, one generalist with the schema and the verifier) and arm D (analysts 4 to 8, the specialists) are the harnessed versions the tool is judged on. A fail on a control row is the point of the experiment; a fail on a C, D or code row is a defect.</p>
         <div class="scroll"><table id="measured"></table></div>
       </div>
     </section>
@@ -537,8 +537,9 @@ async function renderAgents() {
   const order = ["naive", "evidence_only", "generalist", "communications", "minutes_digest", "inflation", "labour", "financial"];
   const byName = Object.fromEntries(d.agents.map(a => [a.name, a]));
   el.innerHTML = `<div class="card"><div class="sub" style="margin:0">Built from snapshot <code>${esc(d.snapshot)}</code> (evidence of ${esc(d.as_of)}). The prompt hash is what the five repeats share; a different hash would mean a different agent.</div></div>`
-    + order.filter(n => byName[n]).map(n => { const a = byName[n]; return `<div class="card">
-    <div class="an-head"><h3>${esc(n.replace("_", " "))}</h3><span class="flag info">arm ${esc(a.arm)}</span><span class="sub" style="margin:0">${a.prompt_chars.toLocaleString()} characters · hash <code>${esc(a.prompt_hash)}</code></span></div>
+    + order.filter(n => byName[n]).map(n => { const a = byName[n], d = AN_BY_KEY[n]; return `<div class="card">
+    <div class="an-head"><h3>${d ? anTitle(d) : esc(n.replace("_", " ")) + ` <span class="flag info">arm ${esc(a.arm)}</span>`}</h3><span class="sub" style="margin:0">${a.prompt_chars.toLocaleString()} characters · hash <code>${esc(a.prompt_hash)}</code></span></div>
+    ${d ? `<div class="sub" style="margin:2px 0 4px"><strong>Given:</strong> ${esc(d.given)}</div>` : ""}
     <table class="kv" style="margin-top:8px">
       <tr><td>Question</td><td>${esc(a.question)}</td></tr>
       <tr><td>Evidence items in the prompt</td><td>${a.items.length ? a.items.map(i => `<code>${esc(i)}</code>`).join(" ") : "none"}</td></tr>
@@ -588,20 +589,36 @@ $("audit").onclick = async e => {
 };
 
 // --- analysts -------------------------------------------------------------------------------
-const AN_LABELS = {communications: "Communications (arm D)", minutes_digest: "Minutes digest (arm D)", inflation: "Inflation (arm D)", labour: "Labour market (arm D)", financial: "Financial conditions (arm D)", generalist: "Generalist with verifier (arm C)", evidence_only: "Evidence shown, nothing verified (arm B)", naive: "Naive control (arm A)"};
+// The eight analysts, numbered the way they appear everywhere in the app. "Asked" is the question in its prompt,
+// shortened; "Given" is what the prompt contains. The Agents view shows the exact text.
+const ANALYSTS = [
+  {key: "naive", n: 1, name: "Naive control", arm: "A", asked: "What will the FOMC decide at the next meeting? Give probabilities and a short reasoning.", given: "the question and the date only: no evidence, no rules. The 'just ask the model' baseline."},
+  {key: "evidence_only", n: 2, name: "Evidence shown, nothing verified", arm: "B", asked: "Using only the evidence below, give probabilities and a short reasoning.", given: "every document in the snapshot and every pre-computed number; a free-form answer, so nothing can be checked."},
+  {key: "generalist", n: 3, name: "Generalist with verifier", arm: "C", asked: "From all of the evidence, which way does the next decision lean, and why?", given: "the same evidence as analyst 2, but a fixed answer shape: claims each with a verbatim quote, a watch-out report, a tilt of at most ±10 bp. Code checks every quote and number."},
+  {key: "communications", n: 4, name: "Communications", arm: "D", asked: "From the committee's own communications, which way does the next decision lean, and why?", given: "both statements, the minutes, the press-conference transcript, the speeches since the last decision, the computed tone pre-read."},
+  {key: "minutes_digest", n: 5, name: "Minutes digest", arm: "D", asked: "What did 'most', 'many', 'several', 'some' or 'a few' participants think about inflation, the labour market, the path of policy and the risks, and what would change their minds? Then the net lean.", given: "the minutes only."},
+  {key: "inflation", n: 6, name: "Inflation", arm: "D", asked: "Is inflation arguing for a hike, a hold or a cut at the next meeting, and how strongly?", given: "the computed inflation-gap pre-read, the committee's projections table and pre-read, both statements."},
+  {key: "labour", n: 7, name: "Labour market", arm: "D", asked: "Is the labour market arguing for a hike, a hold or a cut at the next meeting, and how strongly?", given: "the computed labour-slack pre-read, the committee's projections table and pre-read, both statements."},
+  {key: "financial", n: 8, name: "Financial conditions", arm: "D", asked: "What is the bond market expecting, and does it corroborate or contradict the other evidence?", given: "the computed financial-conditions pre-read (2-year gap, breakevens, NFCI), the base-rates pre-read, both statements."},
+];
+const AN_BY_KEY = Object.fromEntries(ANALYSTS.map(a => [a.key, a]));
+const anTitle = a => `Analyst ${a.n}: ${a.name} <span class="flag info">arm ${a.arm}</span>`;
+const anBlurb = a => `<div class="sub" style="margin:2px 0 8px"><strong>Asked:</strong> ${esc(a.asked)} <strong>Given:</strong> ${esc(a.given)}</div>`;
+const AN_LABELS = Object.fromEntries(ANALYSTS.map(a => [a.key, `${a.name} (arm ${a.arm})`]));
 function renderAnalysts(an) {
   const el = $("analysts");
   if (!an || !Object.values(an).some(Boolean)) { el.innerHTML = `<div class="card"><div class="empty">No analyses on this snapshot yet. Click "Run analysts".</div></div>`; return; }
-  el.innerHTML = Object.entries(AN_LABELS).map(([k, title]) => {
+  el.innerHTML = ANALYSTS.map(d => {
+    const k = d.key, title = anTitle(d) , blurb = anBlurb(d);
     const a = an[k];
-    if (!a) return `<div class="card"><h3>${title}</h3><div class="empty">Not run on this snapshot.</div></div>`;
+    if (!a) return `<div class="card"><h3>${title}</h3>${blurb}<div class="empty">Not run on this snapshot.</div></div>`;
     const s = a.summary;
-    if (a.last.probabilities) return `<div class="card"><h3>${title}</h3>
+    if (a.last.probabilities) return `<div class="card"><h3>${title}</h3>${blurb}
       <div class="an-head"><span class="tilt">${OUTCOMES.map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ")}</span>
         <span class="sub" style="margin:0">${s.runs} run(s)${s.max_std_pp !== null ? ", max std " + s.max_std_pp + " pp" : ""} · ${k === "naive" ? "groundedness 0% by construction" : "groundedness not measurable (no quotes)"} · ${s.leakage_total} number(s) ${k === "naive" ? "from memory" : "not in the evidence"}${a.last.leaked_numbers && a.last.leaked_numbers.length ? ": " + esc(a.last.leaked_numbers.join(", ")) : ""}</span></div>
       <p class="sub" style="margin:0">${esc(a.last.reasoning)}</p></div>`;
     const v = a.last.verification;
-    return `<div class="card"><h3>${title}</h3>
+    return `<div class="card"><h3>${title}</h3>${blurb}
       <div class="an-head"><span class="tilt">${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp</span>
         <span class="flag ${s.groundedness_pct_mean >= 95 ? "ok" : "bad"}">${s.groundedness_pct_mean.toFixed(0)}% grounded</span>
         <span class="flag ${s.leakage_total === 0 ? "ok" : "bad"}">${s.leakage_total} leaked</span>
