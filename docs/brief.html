@@ -102,13 +102,13 @@
   <table>
     <tr><th>Dimension (pass mark)</th><th>A naive</th><th>B evidence, free-form</th><th>C generalist, schema + verifier</th><th>D five specialists</th></tr>
     <tr><td>S1 Repeatability (≤ 2 pp)</td><td class="bad">3.4 pp / 4.5 pp, fail</td><td class="bad">3.3 pp / 2.3 pp, fail</td><td class="ok">0.6 / 0.5 bp of tilt, pass</td><td class="ok">0.5 / 0.8 bp of tilt (worst specialist), pass</td></tr>
-    <tr><td>S2 Groundedness (≥ 95%)</td><td class="bad">0%, fail</td><td>not measurable (no quotes)</td><td class="ok">100% / 100%, pass</td><td class="ok">100% / 100%, pass</td></tr>
+    <tr><td>S2 Groundedness (≥ 95%)</td><td class="bad">0%, fail</td><td>not measurable (no quotes)</td><td class="ok">100% / 100%, pass</td><td class="ok">100% / 96.7%, pass</td></tr>
     <tr><td>S3 Leakage (exactly 0)</td><td class="bad">36 / 36 numbers from memory, fail</td><td class="ok">0 / 0, pass</td><td class="ok">0 / 0, pass</td><td class="ok">0 / 0, pass</td></tr>
     <tr><td>S10 Watch-out discipline (100%)</td><td>n/a</td><td>n/a</td><td class="ok">100%, pass</td><td class="ok">100%, pass</td></tr>
-    <tr><td>What it concluded</td><td>Cut 25 bps at 57%: its memory of the Fed is stale</td><td>+25 bps at 57% / 55%: reads the evidence but overshoots the market</td><td>Tilt +7.0 / +6.6 bp hawkish</td><td>Mean tilt +4.4 bp (15 Oct) / <span data-fill="d24-mean">+… bp</span> (24 Oct); labour the lone dove</td></tr>
+    <tr><td>What it concluded</td><td>Cut 25 bps at 57%: its memory of the Fed is stale</td><td>+25 bps at 57% / 55%: reads the evidence but overshoots the market</td><td>Tilt +7.0 / +6.6 bp hawkish</td><td>Mean tilt +4.4 bp (15 Oct) / +4.1 bp (24 Oct); labour the lone dove</td></tr>
   </table>
   <p>Read the ladder left to right. Showing the model the evidence (B) removes the stale memory and the leaked numbers, but the answer still wobbles by 2 to 3 points between identical runs and nothing in it can be checked. Forcing a schema with a quote per claim and checking every quote by code (C) is what makes the output stable and verifiable. Splitting the reading across specialists (D) keeps those properties, makes each judgement attributable to its slice of evidence, and lets one dissent (labour) survive instead of being averaged away inside one head. Same model, same day; the difference is the harness.</p>
-  <p class="small">Per specialist on 15 October: communications +6.2, minutes +6.4, inflation +5.8, labour −1.2, financial +4.8 bp. On 24 October: communications +6.2, minutes +6.2, <span data-fill="d24-rest">inflation …, labour …, financial …</span>. S1 for arms C and D is reported in basis points of tilt because they output a tilt, not a distribution; it becomes a pp figure once the tilt is mapped into the pool by amendment.</p>
+  <p class="small">Per specialist on 15 October: communications +6.2, minutes +6.4, inflation +5.8, labour −1.2, financial +4.8 bp. On 24 October: communications +6.2, minutes +6.2, inflation +5.8, labour −1.2, financial +3.4 bp. The one unverified claim (inflation, 24 October, one run of five) stitched two non-adjacent lines of a pre-read into one quote; the contiguity rule rejected it, which is the rule working. One financial run was first flagged for the number 77, which the pre-read holds as 77.0; the verifier now treats those as the same number and the recorded runs were re-scored without calling the model. S1 for arms C and D is reported in basis points of tilt because they output a tilt, not a distribution; it becomes a pp figure once the tilt is mapped into the pool by amendment.</p>
 
   <h3>The code part of the chain, measured on the 24 October snapshot and the ledger</h3>
   <table>
@@ -136,9 +136,9 @@
       <tr><td><strong>A</strong> current: market 0.7, Taylor 0.2, odds 0.1</td><td class="n">73.1</td><td class="n">22.1</td><td class="n">1.5</td></tr>
       <tr><td><strong>B</strong> A with base rates at 0.1, taken from the market</td><td class="n">67.8</td><td class="n">26.3</td><td class="n">2.6</td></tr>
       <tr><td><strong>C</strong> B with probit v2 at 0.1, taken from the market</td><td class="n">61.4</td><td class="n">31.6</td><td class="n">3.8</td></tr>
-      <tr><td><strong>D</strong> A + specialists' mean tilt, applied like a view (bounded, after the floor)</td><td class="n" data-fill="poolD0">…</td><td class="n" data-fill="poolD25">…</td><td class="n" data-fill="poolD50">…</td></tr>
-      <tr><td><strong>E</strong> B + specialists' tilt</td><td class="n" data-fill="poolE0">…</td><td class="n" data-fill="poolE25">…</td><td class="n" data-fill="poolE50">…</td></tr>
-      <tr><td><strong>F</strong> C + specialists' tilt</td><td class="n" data-fill="poolF0">…</td><td class="n" data-fill="poolF25">…</td><td class="n" data-fill="poolF50">…</td></tr>
+      <tr><td><strong>D</strong> A + specialists' mean tilt, applied like a view (bounded, after the floor)</td><td class="n">69.9</td><td class="n">25.6</td><td class="n">2.1</td></tr>
+      <tr><td><strong>E</strong> B + specialists' tilt</td><td class="n">64.6</td><td class="n">29.6</td><td class="n">3.4</td></tr>
+      <tr><td><strong>F</strong> C + specialists' tilt</td><td class="n">58.1</td><td class="n">34.6</td><td class="n">4.8</td></tr>
     </table>
     <p><strong>Recommendation: E</strong>, as amendment #6. Base rates in at 0.1 because they need no fitting and beat the probit; the specialists' mean tilt mapped one basis point to one percentage point and applied through the same bounded mechanism as your views (cap 10 pp), so the analysts can lean the number but never write it; the probit kept out until it has a live record. The market stays the anchor. Whatever is chosen, it is logged before 28 October and scored after, never the other way round.</p>
     <p class="small">Also before the decision: the Polymarket entry is 23 days old. Refresh it from the site or withdraw it; the model will use whatever is entered and flag its age.</p>
