@@ -108,6 +108,29 @@ def _try(fn, snap: Snapshot):
         return None
 
 
+def _market_rows(m: dict, contract: dict) -> list[list[str]]:
+    """The arithmetic from one futures price to the outcome probabilities, step by step."""
+    e = m["expected_change_bp"]
+    steps = e / 25
+    lower = int(steps // 1) * 25
+    upper = lower + 25
+    frac = steps - lower / 25
+    probs = m["probabilities"]
+    pr = lambda o: probs.get(o, probs.get(str(o), 0.0))  # noqa: E731
+    rows = [["Contract", f"{contract.get('symbol', '')} ({contract.get('contract_month', '')}), price {contract['price']}"
+             + (f", about {contract['volume']:,} contracts traded" if contract.get("volume") else "")],
+            ["Quote age", f"{m['quote_age_hours_at_snapshot_end']:.0f} hours at the end of the snapshot day"
+             if m.get("quote_age_hours_at_snapshot_end") is not None else "unknown"],
+            ["Rate the market expects after the meeting", f"100 − {contract['price']} = {100 - contract['price']:.3f}%"],
+            ["Rate now (overnight rate)", f"{m['rate_before']:.2f}%"],
+            ["Expected change", f"{100 - contract['price']:.3f}% − {m['rate_before']:.2f}% = {e:+.1f} bp"],
+            ["As a share of one 25 bp step", f"{e:+.1f} / 25 = {steps:+.2f} steps: between {_label(lower)} and {_label(upper)}"],
+            ["Split", f"{_label(lower)} {1 - frac:.0%} + {_label(upper)} {frac:.0%}: the mix whose average is {e:+.1f} bp "
+                      f"({1 - frac:.2f} × {lower} + {frac:.2f} × {upper} = {(1 - frac) * lower + frac * upper:+.1f})"],
+            ["Distribution", _dist(probs)], ["Method", m["method"]]]
+    return rows
+
+
 def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
           analyses: dict | None = None) -> dict:
     fc = entry["forecast"]
@@ -550,7 +573,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
             f"({m['expected_change_bp'] / 25:+.2f} of a step) is shared between the two nearest outcomes. This is "
             "an interpolation, not a calibrated probability; the pool's surprise floor keeps the other outcomes "
             "above 0%.",
-        rows=[["Distribution", _dist(m["probabilities"])], ["Method", m["method"]]], evidence=m["evidence"]))
+        rows=_market_rows(m, contract), evidence=m["evidence"]))
     link("sig.change", "model.market")
 
     if tr:
