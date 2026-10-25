@@ -117,7 +117,7 @@ def build(entry: dict, snap: Snapshot) -> list[dict]:
             body = "No specialist run is recorded on this snapshot, so the tilt is 0 and the machine track equals the pool."
             rows = []
         steps.append({"title": "Apply the specialists' tilt", "body": body,
-                      "rows": rows + [["Mean tilt", f"{an['mean_bp']:+.1f} bp -> {an['applied_pp']:+.1f} pp"], ["machine_only", _dist(fc["machine_only"])]]})
+                      "rows": rows + [["Mean tilt", f"{an['mean_bp']:+.1f} bp, {'hawkish (toward a hike)' if an['mean_bp'] > 0 else 'dovish (toward a cut)' if an['mean_bp'] < 0 else 'neutral'}: {abs(an['applied_pp']):.1f} pp of probability moved {'toward the hike outcomes' if an['mean_bp'] > 0 else 'toward the cut outcomes' if an['mean_bp'] < 0 else 'nowhere'}"], ["machine_only", _dist(fc["machine_only"])]]})
 
     views = fc["human"]["views_applied"]
     budget = fc["human"]["net_budget"]

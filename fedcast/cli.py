@@ -54,7 +54,8 @@ def _cmd_forecast(args: argparse.Namespace) -> None:
     print(f"Ledger entry #{entry['seq']} [{entry['entry_hash']}]  meeting {fc['meeting']}  "
           f"snapshot {fc['snapshot_hash'][:12]}  code {entry['code_version']}")
     an = fc.get("analysts") or {}
-    print(f"machine_only (specialists' tilt {an.get('mean_bp', 0):+.1f} bp -> {an.get('applied_pp', 0):+.1f} pp"
+    m = an.get('mean_bp', 0)
+    print(f"machine_only (specialists' tilt {m:+.1f} bp {'hawkish' if m > 0 else 'dovish' if m < 0 else 'neutral'}: {abs(an.get('applied_pp', 0)):.1f} pp moved {'toward a hike' if m > 0 else 'toward a cut' if m < 0 else 'nowhere'}"
           + (f"; {an['note']}" if an.get("note") else "") + "):")
     _bars(fc["machine_only"])
     n = len(fc["human"]["views_applied"])

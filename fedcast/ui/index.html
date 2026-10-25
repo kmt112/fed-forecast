@@ -461,7 +461,7 @@ function render(s) {
   let meta = "";
   if (fc) meta += `<span>Ledger entry #${latest.entry.seq} · snapshot <code>${esc(fc.snapshot_hash.slice(0, 12))}</code> · code <code>${esc(latest.entry.code_version)}</code></span>`;
   if (fc && fc.analysts) meta += fc.analysts.tilts_bp && Object.keys(fc.analysts.tilts_bp).length
-    ? `<span>specialists' tilt ${fc.analysts.mean_bp >= 0 ? "+" : ""}${fc.analysts.mean_bp.toFixed(1)} bp from ${Object.keys(fc.analysts.tilts_bp).length} specialists, applied as ${fc.analysts.applied_pp >= 0 ? "+" : ""}${fc.analysts.applied_pp.toFixed(1)} pp</span>`
+    ? `<span>specialists' tilt ${fc.analysts.mean_bp >= 0 ? "+" : ""}${fc.analysts.mean_bp.toFixed(1)} bp ${lean(fc.analysts.mean_bp)}, mean of ${Object.keys(fc.analysts.tilts_bp).length}: ${Math.abs(fc.analysts.applied_pp).toFixed(1)} pp of probability moved ${fc.analysts.mean_bp > 0 ? "toward the hike outcomes" : fc.analysts.mean_bp < 0 ? "toward the cut outcomes" : "nowhere"}</span>`
     : `<span class="flag warn">no specialist run on this snapshot: tilt 0 (run analysts, then run a forecast)</span>`;
   if (latest && latest.stale) meta += `<span class="flag warn">a newer snapshot exists: run a forecast to use it</span>`;
   if (snap && !snap.complete) meta += `<span class="flag bad">latest snapshot is missing ${Object.keys(snap.missing).length} sources</span>`;
@@ -634,7 +634,7 @@ function renderSnapshotPanel(g) {
   $("runs").innerHTML = `<div class="scroll"><table><tr><th>Recorded (UTC)</th><th>Analyst</th><th>Arm</th><th title="How many times the identical prompt was sent. Repeats measure repeatability (S1).">Runs</th><th>Result</th><th title="Share of the analyst's claims whose quote code found, character for character, in the snapshot item the analyst named." style="cursor:help">Grounded ⓘ</th><th title="Numbers in the analyst's claims that appear nowhere in the frozen snapshot, so they can only have come from the model's memory. Summed over all runs. For the naive control every number counts: it was given no evidence." style="cursor:help">Leaked ⓘ</th><th title="Your active watch-outs (H1) that a run failed to address by id, summed over runs. 0 means every watch-out was answered in every run." style="cursor:help">Watch-outs missing ⓘ</th><th>Model · runtime</th><th></th></tr>
     ${g.analyses.slice().reverse().map((a, idx) => { const s = a.summary; const id = g.snapshot + "/" + a.file; const d = AN_BY_KEY[a.analyst];
       const result = a.runs[0] && a.runs[0].probabilities ? OUTCOMES.filter(o => s.mean_probabilities[o] >= 0.005).map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ") + (s.max_std_pp !== null ? ` (max std ${s.max_std_pp} pp)` : "")
-        : `tilt ${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp${s.tilt_std_bp !== null ? " ± " + s.tilt_std_bp : ""}`;
+        : `tilt ${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp ${lean(s.tilt_mean_bp)}${s.tilt_std_bp !== null ? " ± " + s.tilt_std_bp : ""}`;
       return `<tr><td>${fmt(a.created_at)}${a.reverified_at ? `<div class="sub" style="margin:0">re-scored ${fmt(a.reverified_at)}</div>` : ""}</td>
         <td>${d ? `Analyst ${d.n}: ${esc(d.name)}` : esc(a.analyst.replace("_", " "))}</td><td>${esc(a.arm)}</td><td>${s.runs}</td><td>${result}</td>
         <td>${a.analyst === "naive" ? "0% (by construction)" : s.groundedness_pct_mean === null || s.groundedness_pct_mean === undefined ? "not measurable" : s.groundedness_pct_mean.toFixed(0) + "%"}</td><td>${s.leakage_total}</td>
@@ -642,7 +642,7 @@ function renderSnapshotPanel(g) {
         <td style="white-space:nowrap"><button class="link" data-toggle="r-${esc(g.snapshot)}-${idx}">runs</button> · <button class="link" data-open-analysis="${esc(id)}">record</button></td></tr>
         <tr id="r-${esc(g.snapshot)}-${idx}" style="display:none"><td colspan="10"><table class="runs-table">${a.runs.map(r => r.probabilities
           ? `<tr><td>run ${r.i}</td><td>${OUTCOMES.filter(o => r.probabilities[o] >= 0.005).map(o => label(o) + " " + (r.probabilities[o] * 100).toFixed(0) + "%").join(" · ")}</td><td>${r.numbers_from_memory} numbers from memory</td><td>${r.duration_s || ""}s</td></tr>`
-          : `<tr><td>run ${r.i}</td><td>tilt ${r.tilt_bp >= 0 ? "+" : ""}${r.tilt_bp} bp</td><td>${r.n_verified}/${r.n_claims} claims verified</td><td>${r.leakage} leaked</td><td>${r.watchouts_missing} watch-outs missing</td><td>${esc(r.confidence || "")}</td><td>${r.duration_s || ""}s</td><td class="sub" style="margin:0">${esc(r.summary)}</td></tr>`).join("")}</table></td></tr>`; }).join("")}
+          : `<tr><td>run ${r.i}</td><td>tilt ${r.tilt_bp >= 0 ? "+" : ""}${r.tilt_bp} bp ${lean(r.tilt_bp)}</td><td>${r.n_verified}/${r.n_claims} claims verified</td><td>${r.leakage} leaked</td><td>${r.watchouts_missing} watch-outs missing</td><td>${esc(r.confidence || "")}</td><td>${r.duration_s || ""}s</td><td class="sub" style="margin:0">${esc(r.summary)}</td></tr>`).join("")}</table></td></tr>`; }).join("")}
     </table></div>`;
 }
 // the judged columns over every measured snapshot, oldest first
@@ -679,6 +679,7 @@ const ANALYSTS = [
   {key: "financial", n: 8, name: "Financial conditions", arm: "D", asked: "What is the bond market expecting, and does it corroborate or contradict the other evidence?", given: "the computed financial-conditions pre-read (2-year gap, breakevens, NFCI), the base-rates pre-read, both statements."},
 ];
 const AN_BY_KEY = Object.fromEntries(ANALYSTS.map(a => [a.key, a]));
+const lean = bp => bp > 0 ? "hawkish (toward a hike)" : bp < 0 ? "dovish (toward a cut)" : "neutral";
 const anTitle = a => `Analyst ${a.n}: ${a.name} <span class="flag info">arm ${a.arm}</span>`;
 const anBlurb = a => `<div class="sub" style="margin:2px 0 8px"><strong>Asked:</strong> ${esc(a.asked)} <strong>Given:</strong> ${esc(a.given)}</div>`;
 const AN_LABELS = Object.fromEntries(ANALYSTS.map(a => [a.key, `${a.name} (arm ${a.arm})`]));
@@ -696,7 +697,7 @@ function renderAnalysts(an) {
       <p class="sub" style="margin:0">${esc(a.last.reasoning)}</p></div>`;
     const v = a.last.verification;
     return `<div class="card"><h3>${title}</h3>${blurb}
-      <div class="an-head"><span class="tilt">${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp</span>
+      <div class="an-head"><span class="tilt">${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp <small style="font-size:13px;font-weight:500">${lean(s.tilt_mean_bp)}</small></span>
         <span class="flag ${s.groundedness_pct_mean >= 95 ? "ok" : "bad"}" title="Share of the analyst's claims whose quote code found, character for character, in the snapshot item the analyst named.">${s.groundedness_pct_mean.toFixed(0)}% grounded</span>
         <span class="flag ${s.leakage_total === 0 ? "ok" : "bad"}" title="Numbers in the analyst's claims that appear nowhere in the frozen snapshot, so they can only have come from the model's memory. Summed over all runs. For the naive control every number counts: it was given no evidence.">${s.leakage_total} leaked</span>
         <span class="flag ${s.watchouts_missing_total === 0 ? "ok" : "bad"}" title="Your active watch-outs (H1) that a run failed to address by id, summed over runs. 0 means every watch-out was answered in every run.">${s.watchouts_missing_total} watch-outs missing</span>

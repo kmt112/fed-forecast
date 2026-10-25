@@ -108,6 +108,10 @@ def _try(fn, snap: Snapshot):
         return None
 
 
+def _lean(bp: float) -> str:
+    return "hawkish (toward a hike)" if bp > 0 else "dovish (toward a cut)" if bp < 0 else "neutral"
+
+
 def _market_rows(m: dict, contract: dict) -> list[list[str]]:
     """The arithmetic from one futures price to the outcome probabilities, step by step."""
     e = m["expected_change_bp"]
@@ -704,7 +708,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         rows = []
         for name, rec in specialists.items():
             sm = rec["summary"]
-            rows.append([name.replace("_", " "), f"tilt {sm['tilt_mean_bp']:+.1f} bp"
+            rows.append([name.replace("_", " "), f"tilt {sm['tilt_mean_bp']:+.1f} bp {_lean(sm['tilt_mean_bp'])}"
                          + (f" (std {sm['tilt_std_bp']:.1f})" if sm["tilt_std_bp"] is not None else "")
                          + f", {sm['groundedness_pct_mean']:.0f}% grounded, {sm['leakage_total']} leaked, "
                          + f"{sm['watchouts_missing_total']} watch-outs missing, {sm['runs']} run(s)"])
@@ -717,7 +721,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         if generalist:
             gs = generalist["summary"]
             rows.append(["Generalist (arm C): one agent, all the evidence, same schema and verifier",
-                         f"tilt {gs['tilt_mean_bp']:+.1f} bp" + (f" (std {gs['tilt_std_bp']:.1f})" if gs["tilt_std_bp"] is not None else "")
+                         f"tilt {gs['tilt_mean_bp']:+.1f} bp {_lean(gs['tilt_mean_bp'])}" + (f" (std {gs['tilt_std_bp']:.1f})" if gs["tilt_std_bp"] is not None else "")
                          + f", {gs['groundedness_pct_mean']:.0f}% grounded, {gs['leakage_total']} leaked, {gs['runs']} run(s)"])
         if evidence_only:
             es = evidence_only["summary"]
@@ -733,7 +737,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
                          + f"; {ns['leakage_total']} numbers from memory, 0% groundedness"])
         applied = (fc.get("analysts") or {}).get("applied_pp")
         in_number = applied is not None and fc["analysts"]["tilts_bp"]
-        nodes.append(_node("model.llm", 2, "LLM analysts", f"{len(specialists)} run, tilt {sm['tilt_mean_bp']:+.0f} bp, {sm['groundedness_pct_mean']:.0f}% grounded",
+        nodes.append(_node("model.llm", 2, "LLM analysts", f"{len(specialists)} run, tilt {sm['tilt_mean_bp']:+.0f} bp {_lean(sm['tilt_mean_bp']).split(' ')[0]}, {sm['groundedness_pct_mean']:.0f}% grounded",
                            "model", "live" if in_number else "computed", what=llm_what, why=llm_why,
                            how="Each specialist reads its slice of the evidence plus the deterministic pre-reads and your "
                                "documents and watch-outs, and returns claims with verbatim quotes, a watch-out report and a "
@@ -767,7 +771,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
             "and the remaining weights rescaled.",
         rows=[[name, f"weight {w:g}" + ("" if name in live_models else " (not run)")] for name, w in weights.items()]
              + [["Surprise floor", f"{floor * 100:.1f}% per outcome"], ["Pooled", _dist(fc.get("pooled", fc["machine_only"]))]]
-             + ([["Specialists' tilt", f"{fc['analysts']['mean_bp']:+.1f} bp mean of {len(fc['analysts']['tilts_bp'])} specialists -> {fc['analysts']['applied_pp']:+.1f} pp"
+             + ([["Specialists' tilt", f"{fc['analysts']['mean_bp']:+.1f} bp {_lean(fc['analysts']['mean_bp'])}, mean of {len(fc['analysts']['tilts_bp'])} specialists: {abs(fc['analysts']['applied_pp']):.1f} pp of probability moved {'from the cut and no-change outcomes to the hike outcomes' if fc['analysts']['mean_bp'] > 0 else 'from the hike and no-change outcomes to the cut outcomes' if fc['analysts']['mean_bp'] < 0 else 'nowhere'}"
                   if fc["analysts"]["tilts_bp"] else "0 pp: " + fc["analysts"]["note"]]] if fc.get("analysts") else [])
              + [["machine_only", _dist(fc["machine_only"])]]))
     link("model.market", "pool")
