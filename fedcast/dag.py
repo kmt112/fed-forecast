@@ -112,6 +112,11 @@ def _lean(bp: float) -> str:
     return "hawkish (toward a hike)" if bp > 0 else "dovish (toward a cut)" if bp < 0 else "neutral"
 
 
+# pool-weight keys as the detail card should print them (the keys themselves cannot wrap and overflow the card)
+_MODEL_LABEL = {"market_implied": "Market-implied", "taylor_rule": "Taylor-rule family",
+                "prediction_market": "Prediction market", "historical_base_rates": "Historical base rates"}
+
+
 def _market_rows(m: dict, contract: dict) -> list[list[str]]:
     """The arithmetic from one futures price to the outcome probabilities, step by step."""
     e = m["expected_change_bp"]
@@ -775,11 +780,12 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         how=f"Weighted average of the live models with fixed, recorded weights, then no outcome is allowed below the "
             f"{floor * 100:.1f}% surprise floor and the result is renormalised. Models that could not run are dropped "
             "and the remaining weights rescaled.",
-        rows=[[name, f"weight {w:g}" + ("" if name in live_models else " (not run)")] for name, w in weights.items()]
+        rows=[[_MODEL_LABEL.get(name, name), f"weight {w:g}" + ("" if name in live_models else " (not run)")]
+              for name, w in sorted(weights.items(), key=lambda kv: -kv[1])]
              + [["Surprise floor", f"{floor * 100:.1f}% per outcome"], ["Pooled", _dist(fc.get("pooled", fc["machine_only"]))]]
              + ([["Specialists' tilt", f"{fc['analysts']['mean_bp']:+.1f} bp {_lean(fc['analysts']['mean_bp'])}, mean of {len(fc['analysts']['tilts_bp'])} specialists: {abs(fc['analysts']['applied_pp']):.1f} pp of probability moved {'from the cut and no-change outcomes to the hike outcomes' if fc['analysts']['mean_bp'] > 0 else 'from the hike and no-change outcomes to the cut outcomes' if fc['analysts']['mean_bp'] < 0 else 'nowhere'}"
                   if fc["analysts"]["tilts_bp"] else "0 pp: " + fc["analysts"]["note"]]] if fc.get("analysts") else [])
-             + [["machine_only", _dist(fc["machine_only"])]]))
+             + [["Machine track", _dist(fc["machine_only"])]]))
     link("model.market", "pool")
     link("model.taylor", "pool", "live" if tr else "planned")
     link("model.pm", "pool", "live" if pmm else "planned")
@@ -806,7 +812,7 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
         what=f"The recorded forecast for the {fc['meeting']} decision, ledger entry #{entry['seq']}.",
         why="Both tracks are published so the value of human input can be seen, never hidden.",
         how="Appended to the hash-chained ledger with the snapshot, code and scorecard versions it was made under.",
-        rows=[["machine_only", _dist(fc["machine_only"])], ["human_adjusted", _dist(fc["human_adjusted"])],
+        rows=[["Machine track", _dist(fc["machine_only"])], ["With your views", _dist(fc["human_adjusted"])],
               ["Snapshot", fc["snapshot_hash"][:12]], ["Code version", entry["code_version"]],
               ["Entry fingerprint", entry["entry_hash"]]]))
     link("views", "out")
