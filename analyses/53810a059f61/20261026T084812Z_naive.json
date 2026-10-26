@@ -1,0 +1,328 @@
+{
+ "analyst": "naive",
+ "arm": "A",
+ "prompt_version": "naive-v1",
+ "created_at": "2026-10-26T08:48:12+00:00",
+ "snapshot_hash": "53810a059f61796c57d7c2afb305595f001cb63251fdd846aaefb81ccc1be98d",
+ "backend": "replay",
+ "runs": [
+  {
+   "completion": {
+    "output": {
+     "reasoning": "No live Oct 2026 data available to me, so this is a base-rate judgment. FOMC moves are overwhelmingly in 25bp increments or holds; 50bp moves are rare and reserved for stress/emergencies. Given the easing bias that had characterized the 2024-2025 cycle and a likely gradual glide toward neutral by late 2026, the realistic choice is between a 25bp cut and a hold, with a small tail for a larger cut and negligible odds of a hike or a 50bp cut absent a shock.",
+     "probabilities": {
+      "0": 0.4,
+      "25": 0.04,
+      "50": 0.01,
+      "-50": 0.05,
+      "-25": 0.5
+     }
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 16.4,
+    "prompt_hash": "fbfae584d2f8b40c",
+    "meta": {
+     "session_id": "7e5da662-e994-48ae-a999-85b7c97129e7",
+     "cost_usd": 0.765725,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 1016,
+      "cache_creation_input_tokens": 74092,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 789,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 74092,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 305,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 74092,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 74092
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "probabilities": {
+    "-50": 0.05,
+    "-25": 0.5,
+    "0": 0.4,
+    "25": 0.04,
+    "50": 0.01
+   },
+   "numbers_from_memory": 8
+  },
+  {
+   "completion": {
+    "output": {
+     "reasoning": "Meeting is Oct 27-28, 2026. Absent live market pricing in this environment, I reason from base rates and the 2026 easing-cycle context: the Fed moves in 25bp increments the overwhelming majority of the time, and 50bp moves (either direction) are reserved for emergencies or very clear data signals. A hike (+25/+50) is highly unlikely given the disinflationary/easing backdrop that characterized 2026. The decision concentrates on a 25bp cut vs. a hold, with a modest tilt toward a cut if labor-market softening continued, but a meaningful chance of a hold/skip to assess incoming data. Tail probabilities assigned to a 50bp cut and any hike.",
+     "probabilities": {
+      "0": 0.37,
+      "25": 0.02,
+      "50": 0.01,
+      "-50": 0.05,
+      "-25": 0.55
+     }
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 17.7,
+    "prompt_hash": "000dfc87e7c4ad60",
+    "meta": {
+     "session_id": "40530d96-b4e1-43eb-8a95-fc58ca8ee912",
+     "cost_usd": 0.075215,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 1016,
+      "cache_creation_input_tokens": 1072,
+      "cache_read_input_tokens": 73080,
+      "output_tokens": 915,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 1072,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 371,
+        "cache_read_input_tokens": 73080,
+        "cache_creation_input_tokens": 1072,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 1072
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "probabilities": {
+    "-50": 0.05,
+    "-25": 0.55,
+    "0": 0.37,
+    "25": 0.02,
+    "50": 0.01
+   },
+   "numbers_from_memory": 11
+  },
+  {
+   "completion": {
+    "output": {
+     "reasoning": "Two-day meeting concluding 2026-10-28. Absent live market data in my context, I reason from regime: the Fed has been in a gradual easing posture, and quarter-point moves dominate FOMC behavior—50bp moves are reserved for acute stress or clear recession signals, and hikes would require a sharp inflation reacceleration. The decision is realistically a coin-ish lean between a 25bp cut (continuation of calibrated easing) and a hold (pause to assess data). Larger cuts (-50) carry small probability only if labor-market deterioration accelerated; a hike (+25/+50) is very unlikely given the easing trajectory. I weight -25 as the modal outcome, with a substantial hold probability, small tails.",
+     "probabilities": {
+      "0": 0.37,
+      "25": 0.02,
+      "50": 0.01,
+      "-50": 0.05,
+      "-25": 0.55
+     }
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 13.5,
+    "prompt_hash": "38f58e5842eaf7c0",
+    "meta": {
+     "session_id": "e88fe1e0-8dc0-406d-8214-9564cd0310ad",
+     "cost_usd": 0.066385,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 1016,
+      "cache_creation_input_tokens": 1054,
+      "cache_read_input_tokens": 73080,
+      "output_tokens": 569,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 1054,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 43,
+        "cache_read_input_tokens": 73080,
+        "cache_creation_input_tokens": 1054,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 1054
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "probabilities": {
+    "-50": 0.05,
+    "-25": 0.55,
+    "0": 0.37,
+    "25": 0.02,
+    "50": 0.01
+   },
+   "numbers_from_memory": 9
+  },
+  {
+   "completion": {
+    "output": {
+     "reasoning": "Base case for the Oct 28, 2026 FOMC meeting is a 25bp cut, consistent with the Fed's gradual easing path through 2026 as inflation drifts toward target and labor-market softening keeps policy on an accommodative glide. A hold is the main alternative if recent data ran hot or the Fed signals a pause. A 50bp cut is unlikely absent a sharp growth/labor shock, and rate hikes are effectively off the table in an easing regime. Probabilities reflect market-implied odds favoring a quarter-point cut without a live FOMC data feed.",
+     "probabilities": {
+      "0": 0.3,
+      "25": 0.02,
+      "50": 0,
+      "-50": 0.05,
+      "-25": 0.63
+     }
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 13.0,
+    "prompt_hash": "7ae2a850e02e00ce",
+    "meta": {
+     "session_id": "6d7f8c7e-9adb-473a-b572-4fcef0072fc1",
+     "cost_usd": 0.06513000000000001,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 1016,
+      "cache_creation_input_tokens": 996,
+      "cache_read_input_tokens": 73080,
+      "output_tokens": 542,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 996,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 72,
+        "cache_read_input_tokens": 73080,
+        "cache_creation_input_tokens": 996,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 996
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "probabilities": {
+    "-50": 0.05,
+    "-25": 0.63,
+    "0": 0.3,
+    "25": 0.02,
+    "50": 0.0
+   },
+   "numbers_from_memory": 5
+  },
+  {
+   "completion": {
+    "output": {
+     "reasoning": "Without live market data (fed funds futures, latest CPI/jobs prints) I reason from the policy context: through 2025–2026 the Fed has been in a gradual easing cycle, and a 25bp move is the modal action at meetings where the Committee is normalizing policy. Jumbo moves (±50) are reserved for sharp growth/labor deterioration or inflation re-acceleration, neither of which is the base case into an October meeting. A hold is plausible if recent data firmed. I therefore place the bulk of probability on a 25bp cut, with a meaningful hold tail, a small chance of a 50bp cut, and very low odds on any hike. This should be updated once CME FedWatch pricing and the latest data are available.",
+     "probabilities": {
+      "0": 0.27,
+      "25": 0.02,
+      "50": 0.01,
+      "-50": 0.08,
+      "-25": 0.62
+     }
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 17.2,
+    "prompt_hash": "b16bc7c2966891c5",
+    "meta": {
+     "session_id": "1530ee53-e751-430a-8259-3671eea015d5",
+     "cost_usd": 0.071655,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 1016,
+      "cache_creation_input_tokens": 1081,
+      "cache_read_input_tokens": 73080,
+      "output_tokens": 769,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 1081,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 216,
+        "cache_read_input_tokens": 73080,
+        "cache_creation_input_tokens": 1081,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 1081
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "probabilities": {
+    "-50": 0.08,
+    "-25": 0.62,
+    "0": 0.27,
+    "25": 0.02,
+    "50": 0.01
+   },
+   "numbers_from_memory": 6
+  }
+ ],
+ "summary": {
+  "runs": 5,
+  "mean_probabilities": {
+   "-50": 0.056,
+   "-25": 0.57,
+   "0": 0.342,
+   "25": 0.024,
+   "50": 0.008
+  },
+  "max_std_pp": 4.87,
+  "groundedness_pct_mean": 0.0,
+  "leakage_total": 39
+ }
+}

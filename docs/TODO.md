@@ -25,6 +25,11 @@ and, where it is a fitted model, a pre-registered spec and the expanding-window 
 - [ ] Report reliability (calibration) alongside log score in the expanding-window table.
 - [ ] Try a lower shrinkage (0.25) only as a pre-registered v3 variant, never by looking at results first.
 
+## Pool weights (not tuned; judgement logged as amendments #1, #2, #6)
+- [ ] Pre-register three or four candidate weight sets (and candidate tilt caps) now; score each on every live decision
+      from 28 Oct 2026; change the live set only by amendment and only on that record, never on the backtest alone.
+- [ ] Decide whether the 1.5% floor should be derived from the base-rate tail once the record exists.
+
 ## Historical base rates
 - [ ] Decide whether base rates take a pool weight (proposed 0.1 from the market's 0.7) and whether the 1.5% surprise
       floor is then derived from the base-rate tail instead of fixed.
