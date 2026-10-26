@@ -1,0 +1,25 @@
+{
+ "id": "human.pm.H6-002",
+ "kind": "prediction_market",
+ "source": "human/prediction_markets.yaml",
+ "fetched_at": "2026-10-26T08:25:30+00:00",
+ "content": {
+  "id": "H6-002",
+  "venue": "kalshi",
+  "meeting": "2026-10-28",
+  "observed_at": "2026-10-26T16:25:05",
+  "author": "tankahming123",
+  "url": "https://kalshi.com/markets/kxfeddecision/fed-decision",
+  "prices": {
+   "-50": 1.0,
+   "-25": 1.0,
+   "0": 93.0,
+   "25": 6.0,
+   "50": 1.0
+  },
+  "volume_usd": 16025000.0,
+  "note": "Cross-check. Last prices 26 Oct 08:23 UTC, KXFEDDECISION-26OCT: hike 25 at 6c, no change 93c, cut 25 1c, hike >25 1c, cut >25 1c; bid/ask 5-6c and 93-94c on the two live buckets. Volume is the sum over the five buckets in contracts.",
+  "status": "active"
+ },
+ "sha256": "d48d31a3594a97edf7f4ad765260073afdd2af40fdcaabf3edbabcb9024c4a3a"
+}

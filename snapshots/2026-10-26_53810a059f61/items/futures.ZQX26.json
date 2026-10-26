@@ -1,0 +1,14 @@
+{
+ "id": "futures.ZQX26",
+ "kind": "futures",
+ "source": "finance.yahoo.com/quote/ZQX26.CBT",
+ "fetched_at": "2026-10-26T08:25:09+00:00",
+ "content": {
+  "symbol": "ZQX26.CBT",
+  "contract_month": "2026-11",
+  "price": 96.095,
+  "price_time_unix": 1793001171,
+  "volume": 9123
+ },
+ "sha256": "7ac1becc8b8710f3598393d5cd1c1df6af02c944681da6cf54bcabaebce3b611"
+}

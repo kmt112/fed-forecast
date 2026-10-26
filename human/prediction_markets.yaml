@@ -13,4 +13,37 @@ markets:
     '25': 75.0
   volume_usd: 22.0
   note: ''
+  status: withdrawn
+- id: H6-002
+  venue: kalshi
+  meeting: '2026-10-28'
+  observed_at: '2026-10-26T16:25:05'
+  author: tankahming123
+  url: https://kalshi.com/markets/kxfeddecision/fed-decision
+  prices:
+    '-50': 1.0
+    '-25': 1.0
+    '0': 93.0
+    '25': 6.0
+    '50': 1.0
+  volume_usd: 16025000.0
+  note: 'Cross-check. Last prices 26 Oct 08:23 UTC, KXFEDDECISION-26OCT: hike 25 at
+    6c, no change 93c, cut 25 1c, hike >25 1c, cut >25 1c; bid/ask 5-6c and 93-94c
+    on the two live buckets. Volume is the sum over the five buckets in contracts.'
+  status: active
+- id: H6-003
+  venue: polymarket
+  meeting: '2026-10-28'
+  observed_at: '2026-10-26T16:25:07'
+  author: tankahming123
+  url: https://polymarket.com/event/fed-decision-in-october-20260617190323537
+  prices:
+    '-50': 0.05
+    '-25': 0.15
+    '0': 94.5
+    '25': 4.5
+    '50': 0.35
+  volume_usd: 67099330.0
+  note: 'Mid prices 26 Oct 08:22 UTC: no change 94.5 (bid 94 / ask 95), +25 4.5 (4
+    / 5), -25 0.15, -50 0.05, +50 0.35. Event volume $67.1m, liquidity $9.2m.'
   status: active

@@ -1,0 +1,25 @@
+{
+ "id": "human.pm.H6-003",
+ "kind": "prediction_market",
+ "source": "human/prediction_markets.yaml",
+ "fetched_at": "2026-10-26T08:25:30+00:00",
+ "content": {
+  "id": "H6-003",
+  "venue": "polymarket",
+  "meeting": "2026-10-28",
+  "observed_at": "2026-10-26T16:25:07",
+  "author": "tankahming123",
+  "url": "https://polymarket.com/event/fed-decision-in-october-20260617190323537",
+  "prices": {
+   "-50": 0.05,
+   "-25": 0.15,
+   "0": 94.5,
+   "25": 4.5,
+   "50": 0.35
+  },
+  "volume_usd": 67099330.0,
+  "note": "Mid prices 26 Oct 08:22 UTC: no change 94.5 (bid 94 / ask 95), +25 4.5 (4 / 5), -25 0.15, -50 0.05, +50 0.35. Event volume $67.1m, liquidity $9.2m.",
+  "status": "active"
+ },
+ "sha256": "fb33361e533f818cb342a90010be2134ec810da25e5f1cb072866a4386717e09"
+}
