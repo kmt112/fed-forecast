@@ -59,6 +59,15 @@ def test_shocks_move_the_pool_the_right_way_and_noise_does_not():
     assert evals.paraphrase_test(snap)[0]["shift_pp"] == 0.0
 
 
+def test_odds_shock_perturbs_the_entry_the_model_uses():
+    snap = full_snapshot()   # H6-001 observed 2026-10-01 09:00
+    later = pm.MarketOdds(id="H6-002", venue="kalshi", meeting="2026-10-28", observed_at=datetime(2026, 10, 2, 9, 0),
+                          author="t", prices={"0": 90.0, "25": 10.0})
+    snap.add(Item.make("human.pm.H6-002", "prediction_market", "t", later.model_dump(mode="json")))
+    shocks = evals.shock_tests(snap)
+    assert shocks[4]["ok"] is True and shocks[4]["delta_bp"] > 0
+
+
 def test_shocks_report_absent_inputs_as_not_applicable():
     from tests.test_snapshot import make_snapshot
 

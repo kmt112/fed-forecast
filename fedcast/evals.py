@@ -128,8 +128,10 @@ def shock_tests(snap: Snapshot) -> list[dict]:
     base = forecast.compute(snap, [], an)
     e0 = _expected_bp(base["machine_only"])
     fut = next((i for i in base["models"].get("market_implied", {}).get("evidence", []) if i.startswith("futures.")), None)
-    pm = next((i for i in snap.items if i.startswith("human.pm.") and snap.get(i).get("status") == "active"
-               and snap.get(i).get("meeting") == base["meeting"]), None)
+    # the entry the model uses: the most recent active one for the meeting (prediction_market.py applies the same rule)
+    pm_items = [i for i in snap.items if i.startswith("human.pm.") and snap.get(i).get("status") == "active"
+                and snap.get(i).get("meeting") == base["meeting"]]
+    pm = max(pm_items, key=lambda i: snap.get(i)["observed_at"]) if pm_items else None
     shocks: list[tuple[str, int, Callable[[], Snapshot] | None]] = [
         ("futures price 0.10 lower (market prices 10 bp more tightening)", +1,
          (lambda: _with_item(snap, fut, {**snap.get(fut), "price": snap.get(fut)["price"] - 0.10})) if fut else None),
