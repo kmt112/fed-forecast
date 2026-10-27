@@ -67,46 +67,54 @@ pres.addSection({ title: "Brief" });
   });
 }
 {
-  const s = light("What FedCast is, and why we built it", "Thirty seconds on the top line, then the diagram: four families of input, pooled by code with fixed weights, into one number. Then the three panels: how repeatability is enforced, why human judgement has a typed channel even though none is active today, and that every piece of evidence is frozen so the number's path over time can be read back.");
-  text(s, "A forecast of the next FOMC decision as probabilities over five outcomes, from one frozen snapshot of evidence. Today, for 28 October 2026: no change 71%, +25 bps 23%.", { x: M, y: 1.4, w: W - 2 * M, h: 0.6, fontSize: 14, color: C.text1 });
+  const s = light("What FedCast is, and why we built it", "Left: what it is, in one line, the diagram, and four things it does. Right: the three reasons we built it. Spend the time on the right-hand side; the diagram is there so the room can see the four families and that code, not a model, combines them.");
+  text(s, "A forecast of the next FOMC decision as probabilities over five outcomes, from one frozen snapshot of evidence. Today, for 28 October 2026: no change 71%, +25 bps 23%.", { x: M, y: 1.35, w: W - 2 * M, h: 0.6, fontSize: 13.5, color: C.text1 });
   // the diagram: four families -> pool -> forecast
   const fam = [
-    ["Economic predictors", "Fed funds futures, the Fed's Taylor rules, prediction-market odds", THEME.colors.dk2, "weights 0.6 · 0.2 · 0.1"],
-    ["Empirical data", "What followed each kind of decision over 32 years of FOMC history", THEME.colors.dk2, "weight 0.1"],
-    ["Classic ML", "An ordered probit fitted on data as first published", THEME.colors.accent4, "computed, weight 0 until it has a live record"],
-    ["LLM-derived", "Five specialist analysts reading the Fed's own words, every claim quoted and verified by code", THEME.colors.accent2, "a lean of at most 10 points"],
+    ["Economic predictors", "Fed funds futures, the Fed's own Taylor rules, prediction-market odds", THEME.colors.dk2],
+    ["Empirical data", "What followed each kind of decision over 32 years of FOMC history", THEME.colors.dk2],
+    ["Classic ML", "An ordered probit fitted on data as first published; shown, not yet in the number", THEME.colors.accent4],
+    ["LLM-derived", "Five specialist analysts reading the Fed's own words; every claim quoted and verified by code", THEME.colors.accent2],
   ];
-  const bx = M, by = 2.2, bw = 2.3, bh = 1.05, gapY = 0.12;
-  fam.forEach(([h, b, col, w], i) => {
+  const bx = M, by = 2.05, bw = 2.75, bh = 0.74, gapY = 0.08;
+  fam.forEach(([h, b, col], i) => {
     const y = by + i * (bh + gapY);
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: bx, y, w: bw, h: bh, fill: { color: col }, line: { color: col }, rectRadius: 0.1 });
-    text(s, h, { x: bx + 0.15, y: y + 0.08, w: bw - 0.3, h: 0.32, fontSize: 13, bold: true, color: C.background1 });
-    text(s, b, { x: bx + 0.15, y: y + 0.4, w: bw - 0.3, h: 0.62, fontSize: 9.5, color: C.background1 });
-    text(s, w, { x: bx + bw + 0.12, y: y + 0.25, w: 1.45, h: 0.6, fontSize: 9, color: C.accent4, valign: "middle" });
-    s.addShape(pres.shapes.LINE, { x: bx + bw + 1.6, y: y + bh / 2, w: 0.45, h: 0, line: { color: THEME.colors.accent4, width: 1.5, endArrowType: "triangle" } });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: bx, y, w: bw, h: bh, fill: { color: col }, line: { color: col }, rectRadius: 0.08 });
+    text(s, h, { x: bx + 0.14, y: y + 0.06, w: bw - 0.28, h: 0.3, fontSize: 12, bold: true, color: C.background1 });
+    text(s, b, { x: bx + 0.14, y: y + 0.33, w: bw - 0.28, h: 0.4, fontSize: 8.5, color: C.background1 });
+    s.addShape(pres.shapes.LINE, { x: bx + bw + 0.08, y: y + bh / 2, w: 0.4, h: 0, line: { color: THEME.colors.accent4, width: 1.5, endArrowType: "triangle" } });
   });
   const totalH = 4 * bh + 3 * gapY;
-  const px = bx + bw + 2.1;
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: px, y: by, w: 1.3, h: totalH, fill: { color: THEME.colors.lt2 }, line: { color: THEME.colors.accent5 }, rectRadius: 0.1 });
-  text(s, "Pool", { x: px, y: by + 0.3, w: 1.3, h: 0.4, fontSize: 15, bold: true, color: C.text2, align: "center" });
-  text(s, "Fixed, recorded weights. A floor of 1.5% on every outcome. Then the analysts' lean. Code does this; no model writes the number.", { x: px + 0.1, y: by + 0.8, w: 1.1, h: 3.5, fontSize: 9, color: C.text1, align: "center" });
-  s.addShape(pres.shapes.LINE, { x: px + 1.35, y: by + totalH / 2, w: 0.4, h: 0, line: { color: THEME.colors.accent4, width: 1.5, endArrowType: "triangle" } });
-  const fx = px + 1.85;
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: fx, y: by + totalH / 2 - 0.75, w: 1.35, h: 1.5, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.1 });
-  text(s, "Forecast", { x: fx, y: by + totalH / 2 - 0.65, w: 1.35, h: 0.4, fontSize: 14, bold: true, color: C.background1, align: "center" });
-  text(s, "no change 71%\n+25 bps 23%", { x: fx, y: by + totalH / 2 - 0.2, w: 1.35, h: 0.9, fontSize: 11, color: C.background1, align: "center" });
-  // three panels on the right
-  const panels = [
-    ["Repeatability is enforced, then measured", "One frozen, fingerprinted snapshot per forecast; code pools the models; each analyst is run five times on identical inputs with every tool off and every quote checked by code. A ten-dimension scorecard, fixed before any code existed, is measured on every snapshot, so drift shows as a red cell."],
-    ["Human judgement has a typed channel", "None is active today. The channel exists because a desk's judgement belongs in the number, but only where it can be seen, bounded and scored afterwards: a view tilts the number by at most 10 points and expires; a watch-out must be answered by every analyst; a document or an odds entry becomes evidence."],
-    ["All evidence is kept, so the path can be read back", "Each pull is frozen and hash-chained to the forecast it produced. As new information arrives, the number and each model's contribution move, and the ledger shows exactly which input moved it: 62/33 on 15 October, 65/30 on 24 October, 71/23 on 26 October after the market odds were refreshed."],
+  const px = bx + bw + 0.55;
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: px, y: by, w: 1.35, h: totalH, fill: { color: THEME.colors.lt2 }, line: { color: THEME.colors.accent5 }, rectRadius: 0.1 });
+  text(s, "Pool", { x: px, y: by + 0.25, w: 1.35, h: 0.4, fontSize: 14, bold: true, color: C.text2, align: "center" });
+  text(s, "Combined by code with fixed, published weights. No model writes the number.", { x: px + 0.1, y: by + 0.75, w: 1.15, h: 2.8, fontSize: 9, color: C.text1, align: "center" });
+  s.addShape(pres.shapes.LINE, { x: px + 1.42, y: by + totalH / 2, w: 0.4, h: 0, line: { color: THEME.colors.accent4, width: 1.5, endArrowType: "triangle" } });
+  const fx = px + 1.9;
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: fx, y: by + totalH / 2 - 0.7, w: 1.4, h: 1.4, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.1 });
+  text(s, "Forecast", { x: fx, y: by + totalH / 2 - 0.6, w: 1.4, h: 0.4, fontSize: 13, bold: true, color: C.background1, align: "center" });
+  text(s, "no change 71%\n+25 bps 23%", { x: fx, y: by + totalH / 2 - 0.15, w: 1.4, h: 0.8, fontSize: 10.5, color: C.background1, align: "center" });
+  // what it does
+  text(s, "What it does", { x: M, y: 5.45, w: 7.0, h: 0.3, fontSize: 12, bold: true, color: C.text2 });
+  s.addText(bullets([
+    "Freezes one fingerprinted snapshot of evidence per forecast; nothing outside it may be read.",
+    "Enforces repeatability: five identical runs per analyst, tools off, every quote checked by code, a pre-registered scorecard on every snapshot.",
+    "Offers typed channels for human judgement (views, watch-outs, documents, odds): bounded, recorded, scored afterwards. None active today.",
+    "Keeps every snapshot and forecast in a hash-chained ledger, so the number's path can be read back as information arrived.",
+  ], { fontSize: 9.5, color: C.text1, paraSpaceAfter: 2 }), { x: M, y: 5.75, w: 7.1, h: 1.2, isTextBox: true, margin: 0, valign: "top" });
+  // why we built it
+  const rx = 8.0, rw = W - M - rx;
+  text(s, "Why we built it", { x: rx, y: 2.0, w: rw, h: 0.4, fontSize: 17, bold: true, color: C.text2 });
+  const why = [
+    ["Fed prediction tools are judged on outcomes, which cannot be repeated", "There are many of them. Eight decisions a year make a hit rate neither predictable nor repeatable as a measure of a tool. We judge ours on a pre-registered process: is the same answer produced from the same evidence, can every claim be traced, does a shock move the number the right way."],
+    ["Most lean too far one way", "Either empirical formulas and market prices alone, or everything thrown at a language model. Ours harmonises the three: empirical data, classic ML and a harnessed LLM, each with a stated role and a stated weight, combined by code."],
+    ["What that buys", "Auditability: every input visible, every forecast replayable. Evidence-based: every claim quoted and verified, nothing from memory. A harnessed LLM that cannot give random or spurious answers, and a naive LLM kept as the control that shows what the harness adds. Users can study how one piece of evidence moves the decision. The model can be scrutinised and improved, rather than hoping the LLM works."],
   ];
-  const rx = 8.65, rw = W - M - rx;
-  panels.forEach(([h, b], i) => {
-    const y = 2.2 + i * 1.6;
-    card(s, rx, y, rw, 1.48);
-    text(s, h, { x: rx + 0.22, y: y + 0.12, w: rw - 0.44, h: 0.35, fontSize: 12, bold: true, color: C.text2 });
-    text(s, b, { x: rx + 0.22, y: y + 0.47, w: rw - 0.44, h: 1.0, fontSize: 9.5, color: C.text1 });
+  why.forEach(([h, b], i) => {
+    const y = 2.5 + i * 1.5;
+    numCircle(s, rx, y + 0.02, i + 1);
+    text(s, h, { x: rx + 0.55, y: y - 0.02, w: rw - 0.55, h: 0.4, fontSize: 12, bold: true, color: C.text2, valign: "top" });
+    text(s, b, { x: rx + 0.55, y: y + 0.42, w: rw - 0.55, h: 1.05, fontSize: 9.5, color: C.text1 });
   });
 }
 
