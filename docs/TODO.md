@@ -16,8 +16,9 @@ and, where it is a fitted model, a pre-registered spec and the expanding-window 
 ## Gate decisions pending live evidence
 - [ ] Score every outside-the-pool model (probit v2, base rates, LLM analysts) on the 28 Oct 2026 decision and the
       following meetings from the ledger; decide pool weights only on that record.
-- [ ] Automate post-decision scoring: `fedcast score` appends Brier / log score per model and per track to the ledger
-      once the decision is in the target-rate series. First use: the 28 Oct 2026 decision.
+- [x] Automate post-decision scoring: `fedcast score` (and the Ledger view's button) appends log and Brier scores per track,
+      per model and for two naive baselines to ledger/scores.jsonl once the overnight-rate row is dated after the meeting
+      (built 2026-10-28). First use: the 28 Oct 2026 decision, the morning after.
 
 ## Ordered probit
 - [ ] v3 candidates (pre-register before fitting; judge on live decisions): months since last move; SEP median path

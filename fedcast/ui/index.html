@@ -358,6 +358,11 @@
         <p class="sub">Append-only; entries are chained so edits and deletions show.</p>
         <div class="scroll"><table id="ledger"></table></div>
       </div>
+      <div class="card">
+        <div class="an-head" style="justify-content:space-between"><h3 style="margin:0">Scored decisions</h3><span id="score-action"></span></div>
+        <p class="sub">Once the decision is in the evidence (the overnight-rate row dated after the meeting), every forecast of that meeting is scored: log score (0 is perfect, more negative is worse, −∞ if the outcome was given 0%) and Brier (0 is perfect, 2 is worst). Scores are recorded in an append-only file and never used to tune anything.</p>
+        <div id="scores"></div>
+      </div>
     </section>
 
     <section class="view" data-view="analysts">
@@ -518,6 +523,7 @@ function render(s) {
       <td>${esc(e.meeting)}</td><td>${t(e.machine_only)}</td><td>${t(e.human_adjusted)}</td><td>${e.n_views}</td>
       <td><code>${esc(e.snapshot)}</code></td><td><code>${esc(e.code)}</code></td></tr>`).join("") : `<tr><td colspan="8" class="empty">Empty.</td></tr>`);
 
+  renderScores(s);
   if (document.querySelector('.view[data-view="scorecard"]').classList.contains("active")) renderScorecard();
   const unit = d => ({pp: " pp", pct: "%", count: "", score: " / 5"}[d.unit]);
   const mark = d => d.threshold === 0 ? "exactly 0" : (d.unit === "pct" && d.threshold === 100) ? "100%" : `${d.direction === "max" ? "at most" : "at least"} ${d.threshold}${unit(d)}`;
@@ -547,6 +553,31 @@ function measureGrid(ms, caption) {
     <tr><th>Dimension (pass mark)</th>${arms.map(a => `<th>${ARM_HEAD[a] || esc(a)}</th>`).join("")}</tr>`
     + dims.map(d => `<tr><td><strong>${esc(d.id)}</strong> ${esc(d.name)}<div class="sub" style="margin:0">${passMark(d)}</div></td>${arms.map(a => cell(ms.find(m => m.id === d.id && m.arm === a))).join("")}</tr>`).join("") + `</table>`;
 }
+
+const MODEL_NAMES = {market_implied: "Market-implied", taylor_rule: "Taylor family", prediction_market: "Prediction market", historical_base_rates: "Historical base rates", ordered_probit: "Ordered probit (weight 0)"};
+const TRACK_NAMES = {pooled: "Pooled (before the specialists)", machine_only: "Machine forecast", human_adjusted: "With your views"};
+const fmtLog = v => v.zero_probability ? `<span class="flag bad" style="margin:0">−∞ (gave 0%)</span>` : v.log_score.toFixed(3);
+function renderScores(s) {
+  const act = $("score-action");
+  act.innerHTML = s.scorable && s.scorable.length
+    ? s.scorable.map(m => `<button class="btn" data-score="${esc(m)}">Score the ${esc(m)} decision</button>`).join(" ")
+    : `<span class="sub" style="margin:0">${s.scores.length ? "Every decided meeting is scored." : "No decision in the evidence yet: pull evidence the day after the meeting."}</span>`;
+  const el = $("scores");
+  if (!s.scores.length) { el.innerHTML = `<div class="empty">Nothing scored yet.</div>`; return; }
+  el.innerHTML = s.scores.slice().reverse().map(r => {
+    const fin = r.entries.find(e => e.seq === r.final_entry) || r.entries[r.entries.length - 1];
+    const row = (name, v) => `<tr><td>${esc(name)}</td><td style="text-align:right">${(v.p_outcome * 100).toFixed(1)}%</td><td style="text-align:right">${fmtLog(v)}</td><td style="text-align:right">${v.brier.toFixed(3)}</td></tr>`;
+    return `<div style="margin-top:10px"><strong>${esc(r.meeting)}: ${label(r.realised_bp)}</strong> <span class="sub" style="margin:0">(target upper bound ${r.decision.target_high_before.toFixed(2)}% → ${r.decision.target_high.toFixed(2)}%, read from the overnight-rate row of ${esc(r.decision.date)}; scored ${esc(r.scored_at.replace("T", " ").slice(0, 16))} UTC)</span>
+      <div class="scroll"><table style="margin-top:6px"><tr><th>Final forecast, entry #${fin.seq} (snapshot ${esc(fin.snapshot)})</th><th style="text-align:right">p(outcome)</th><th style="text-align:right">log score</th><th style="text-align:right">Brier</th></tr>
+      ${Object.entries(fin.tracks).map(([k, v]) => row(TRACK_NAMES[k] || k, v)).join("")}
+      ${Object.entries(fin.models).map(([k, v]) => row("model: " + (MODEL_NAMES[k] || k), v)).join("")}
+      ${Object.entries(r.baselines || {}).map(([k, v]) => row("baseline: " + k.replace(/_/g, " "), v)).join("")}
+      </table></div>
+      ${r.entries.length > 1 ? `<details style="margin-top:6px"><summary class="sub" style="cursor:pointer;margin:0">All ${r.entries.length} forecasts of this meeting, oldest first</summary><div class="scroll"><table style="margin-top:6px"><tr><th>#</th><th>Recorded</th><th>Snapshot</th><th style="text-align:right">machine p(outcome)</th><th style="text-align:right">log</th><th style="text-align:right">Brier</th></tr>
+        ${r.entries.map(e => { const v = e.tracks.machine_only; return `<tr><td>${e.seq}</td><td>${esc(e.created_at.replace("T", " ").slice(0, 16))}</td><td><code>${esc(e.snapshot)}</code></td><td style="text-align:right">${(v.p_outcome * 100).toFixed(1)}%</td><td style="text-align:right">${fmtLog(v)}</td><td style="text-align:right">${v.brier.toFixed(3)}</td></tr>`; }).join("")}</table></div></details>` : ""}
+    </div>`; }).join("");
+}
+$("score-action").onclick = e => { const m = e.target.dataset.score; if (m) post("/api/score", { meeting: m }, "Scoring…"); };
 
 function detailList(m) {
   if (!m.details || !m.details.length) return "";

@@ -21,7 +21,7 @@ from pathlib import Path
 
 import yaml
 
-from fedcast import config, dag, evals, forecast, journey, ledger, snapshot, updates
+from fedcast import config, dag, evals, forecast, journey, ledger, scoring, snapshot, updates
 from fedcast.human import documents as docs_store
 from fedcast.human import prediction_markets as pm_store
 from fedcast.human.extract import SUPPORTED, extract_text
@@ -31,6 +31,7 @@ from fedcast.llm import analyst as analyst_mod
 from fedcast.scorecard import SCORECARD, TILT_BY_STRENGTH, TILT_CAP, spec_hash
 
 LEDGER = config.ROOT / "ledger" / "forecasts.jsonl"
+SCORES = config.ROOT / "ledger" / "scores.jsonl"
 VIEWS = config.ROOT / "human" / "views.yaml"
 WATCHLIST = config.ROOT / "human" / "watchlist.yaml"
 DOCS = config.ROOT / "human" / "documents"
@@ -132,6 +133,15 @@ def state() -> dict:
         if out["snapshot"]:
             out["latest"]["stale"] = not out["snapshot"]["name"].endswith(last["forecast"]["snapshot_hash"][:12])
     out["job"] = JOB
+    out["scores"] = ledger.read(SCORES)
+    # which forecast meetings the latest snapshot can already decide, and are not scored yet
+    out["scorable"] = []
+    if out["snapshot"]:
+        latest_snap = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR))
+        done = {r["meeting"] for r in out["scores"]}
+        for m in sorted({e["forecast"]["meeting"] for e in entries}):
+            if m not in done and scoring.decision_from_snapshot(latest_snap, date.fromisoformat(m)):
+                out["scorable"].append(m)
 
     out["markets"] = [{**m.model_dump(mode="json"), "in_snapshot": f"human.pm.{m.id}" in (manifest["items"] if out["snapshot"] else {})}
                       for m in pm_store.load_markets(MARKETS)]
@@ -276,6 +286,14 @@ def act_forecast(_: dict) -> dict:
     return {"message": f"Forecast recorded as ledger entry #{entry['seq']}."}
 
 
+def act_score(body: dict) -> dict:
+    snap = snapshot.load(snapshot.latest(config.SNAPSHOT_DIR))
+    meeting = date.fromisoformat(body["meeting"]) if body.get("meeting") else None
+    rec = scoring.score_meeting(meeting, LEDGER, SCORES, snap, _snapshot_by_hash)
+    return {"message": f"The {rec['meeting']} decision ({rec['realised_bp']:+d} bp) is scored: {len(rec['entries'])} "
+                       f"forecast(s), scores entry #{rec['seq']}."}
+
+
 def act_replay(_: dict) -> dict:
     n = ledger.verify(LEDGER)
     current = forecast._code_version()
@@ -401,7 +419,7 @@ def act_withdraw_document(body: dict) -> dict:
     return {"message": f"Document {body['id']} withdrawn. It stays on file but will not enter new snapshots."}
 
 
-ACTIONS = {"/api/snapshot": act_snapshot, "/api/forecast": act_forecast, "/api/replay": act_replay,
+ACTIONS = {"/api/snapshot": act_snapshot, "/api/forecast": act_forecast, "/api/replay": act_replay, "/api/score": act_score,
            "/api/views": act_add_view, "/api/views/expire": act_expire_view, "/api/watchlist": act_add_directive,
            "/api/documents": act_add_document, "/api/documents/upload": act_add_document, "/api/documents/withdraw": act_withdraw_document,
            "/api/markets": act_add_market, "/api/markets/withdraw": act_withdraw_market,

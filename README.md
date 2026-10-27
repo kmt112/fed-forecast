@@ -27,6 +27,7 @@ Then:
 .venv\Scripts\fedcast snapshot    # fetch live evidence into a frozen, hashed bundle
 .venv\Scripts\fedcast forecast    # run the models + your views, append to the ledger
 .venv\Scripts\fedcast replay      # verify the ledger chain; entries under the current spec must recompute exactly
+.venv\Scripts\fedcast score       # once the decision is in the evidence: log and Brier scores for every forecast of that meeting
 .venv\Scripts\fedcast analyse     # run the LLM arms: --arm A|B|C|D or an analyst name, --runs 5, --replay to reuse recorded calls
 .venv\Scripts\python -m pytest -q
 ```

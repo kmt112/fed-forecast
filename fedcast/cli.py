@@ -11,6 +11,7 @@ from fedcast.human.views import View
 from fedcast.models.baseline import market_implied
 
 LEDGER = config.ROOT / "ledger" / "forecasts.jsonl"
+SCORES = config.ROOT / "ledger" / "scores.jsonl"
 VIEWS = config.ROOT / "human" / "views.yaml"
 
 
@@ -61,6 +62,30 @@ def _cmd_forecast(args: argparse.Namespace) -> None:
     n = len(fc["human"]["views_applied"])
     print(f"human_adjusted ({n} active view{'s' if n != 1 else ''}, net tilt {fc['human']['net_budget'] * 100:+.0f} pp):")
     _bars(fc["human_adjusted"])
+
+
+def _cmd_score(args: argparse.Namespace) -> None:
+    from datetime import date as _date
+
+    from fedcast import scoring
+
+    snap = snapshot.load(Path(args.snapshot) if args.snapshot else snapshot.latest(config.SNAPSHOT_DIR))
+    find = lambda h: next((snapshot.load(d) for d in config.SNAPSHOT_DIR.glob(f"*_{h[:12]}")), None)  # noqa: E731
+    rec = scoring.score_meeting(_date.fromisoformat(args.meeting) if args.meeting else None, LEDGER, SCORES, snap, find)
+    d = rec["decision"]
+    print(f"{rec['meeting']} decision: target upper bound {d['target_high_before']:.2f}% -> {d['target_high']:.2f}% "
+          f"({rec['realised_bp']:+d} bp), read from the overnight-rate row of {d['date']}")
+    fmt = lambda s: ("-inf" if s["zero_probability"] else f"{s['log_score']:+.3f}") + f"  brier {s['brier']:.3f}  p {s['p_outcome']:.3f}"  # noqa: E731
+    for e in rec["entries"]:
+        tag = " (final)" if e["seq"] == rec["final_entry"] else ""
+        print(f"  entry #{e['seq']}{tag}")
+        for k, s in e["tracks"].items():
+            print(f"    {k:22s} log {fmt(s)}")
+        for k, s in e["models"].items():
+            print(f"    model {k:16s} log {fmt(s)}")
+    for k, s in rec["baselines"].items():
+        print(f"  baseline {k:18s} log {fmt(s)}")
+    print(f"scores entry #{rec['seq']} [{rec['entry_hash']}] appended to {SCORES.relative_to(config.ROOT)}")
 
 
 def _cmd_replay(args: argparse.Namespace) -> None:
@@ -200,6 +225,10 @@ def main() -> None:
     f.add_argument("--allow-incomplete", action="store_true")
     f.set_defaults(fn=_cmd_forecast)
     sub.add_parser("replay", help="verify the ledger chain and recompute every entry").set_defaults(fn=_cmd_replay)
+    sc = sub.add_parser("score", help="score every forecast of a meeting once the decision is in the evidence")
+    sc.add_argument("--meeting", help="decision date YYYY-MM-DD (default: the latest meeting the snapshot can decide)")
+    sc.add_argument("--snapshot", help="snapshot directory (default: latest)")
+    sc.set_defaults(fn=_cmd_score)
     a = sub.add_parser("analyse", help="run an LLM analyst on a snapshot and verify its claims")
     a.add_argument("--arm", choices=["all", "A", "B", "C", "D", "comms", "communications", "minutes_digest", "inflation", "labour",
                                      "financial", "generalist", "evidence_only", "naive"],
