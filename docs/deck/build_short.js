@@ -67,29 +67,46 @@ pres.addSection({ title: "Brief" });
   });
 }
 {
-  const s = light("What FedCast is, and why we built it", "Left: what it is in five lines and today's number. Right: the four reasons, with the honest framing that at five weeks the market is the anchor and the claim is a checkable number, a reusable harness and a method for deciding when a language model may be trusted inside a process. Close on the last line: the first live decision is scored this week.");
-  card(s, M, 1.5, 5.6, 5.3);
-  text(s, "What it is", { x: M + 0.35, y: 1.7, w: 5, h: 0.45, fontSize: 18, bold: true, color: C.text2 });
-  s.addText(bullets([
-    "A forecast of the next FOMC decision as probabilities over five outcomes, from one frozen, fingerprinted snapshot of evidence: futures, FRED series as first published, statements, minutes, transcript, projections, speeches, 32 years of decisions, prediction-market odds.",
-    "Code computes the signals and pools four models with fixed weights: market-implied 0.6, the Fed's own Taylor rules 0.2, prediction-market odds 0.1, historical base rates 0.1.",
-    "A language model is used only to read text: five specialist analysts, tools off, every claim quoted and verified by code, whose combined lean can tilt the number by at most 10 points and never write it.",
-    "Human judgement enters only through typed, bounded, recorded channels: views, watch-outs, documents, odds.",
-    "Every forecast goes into a hash-chained ledger that recomputes exactly from its snapshot.",
-  ], { fontSize: 12, color: C.text1 }), { x: M + 0.35, y: 2.2, w: 4.95, h: 3.6, isTextBox: true, margin: 0, valign: "top" });
-  text(s, "Today, for 28 October 2026: no change 71%, +25 bps 23%", { x: M + 0.35, y: 5.95, w: 4.95, h: 0.7, fontSize: 13, bold: true, color: C.text2 });
-  text(s, "Why we built it", { x: 6.7, y: 1.55, w: 6, h: 0.45, fontSize: 18, bold: true, color: C.text2 });
-  const why = [
-    ["Accuracy is the wrong yardstick at this horizon", "Eight decisions a year, and the futures market already calls about 88% of them a month out. A good year proves nothing. So the system is judged on a ten-dimension process scorecard fixed before any code existed, measured by code on every snapshot, and outcomes are logged but never used to tune."],
-    ["A desk needs a number it can challenge", "Every input is visible, every analyst claim carries a quote code has matched, every ledger entry replays. When the number moves, you can see which input moved it and by how much."],
-    ["Language models are entering this work unchecked", "Recent papers report 90%+ accuracy from models that read Fed text, on sixteen meetings, with no frozen evidence, no verification and no control. We built the control: the same model with no harness, with evidence only, with structure and verification, with specialisation, so the value of each technique is measured, not asserted."],
-    ["The harness is the asset", "The same chain can target the December meeting, the year-end rate or another central bank. The first live decision is scored this week, and the record starts there."],
+  const s = light("What FedCast is, and why we built it", "Thirty seconds on the top line, then the diagram: four families of input, pooled by code with fixed weights, into one number. Then the three panels: how repeatability is enforced, why human judgement has a typed channel even though none is active today, and that every piece of evidence is frozen so the number's path over time can be read back.");
+  text(s, "A forecast of the next FOMC decision as probabilities over five outcomes, from one frozen snapshot of evidence. Today, for 28 October 2026: no change 71%, +25 bps 23%.", { x: M, y: 1.4, w: W - 2 * M, h: 0.6, fontSize: 14, color: C.text1 });
+  // the diagram: four families -> pool -> forecast
+  const fam = [
+    ["Economic predictors", "Fed funds futures, the Fed's Taylor rules, prediction-market odds", THEME.colors.dk2, "weights 0.6 · 0.2 · 0.1"],
+    ["Empirical data", "What followed each kind of decision over 32 years of FOMC history", THEME.colors.dk2, "weight 0.1"],
+    ["Classic ML", "An ordered probit fitted on data as first published", THEME.colors.accent4, "computed, weight 0 until it has a live record"],
+    ["LLM-derived", "Five specialist analysts reading the Fed's own words, every claim quoted and verified by code", THEME.colors.accent2, "a lean of at most 10 points"],
   ];
-  why.forEach(([h, b], i) => {
-    const y = 2.1 + i * 1.18;
-    numCircle(s, 6.7, y + 0.03, i + 1);
-    text(s, h, { x: 7.25, y, w: 5.5, h: 0.35, fontSize: 13, bold: true, color: C.text2 });
-    text(s, b, { x: 7.25, y: y + 0.35, w: 5.5, h: 0.85, fontSize: 10.5, color: C.text1 });
+  const bx = M, by = 2.2, bw = 2.3, bh = 1.05, gapY = 0.12;
+  fam.forEach(([h, b, col, w], i) => {
+    const y = by + i * (bh + gapY);
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: bx, y, w: bw, h: bh, fill: { color: col }, line: { color: col }, rectRadius: 0.1 });
+    text(s, h, { x: bx + 0.15, y: y + 0.08, w: bw - 0.3, h: 0.32, fontSize: 13, bold: true, color: C.background1 });
+    text(s, b, { x: bx + 0.15, y: y + 0.4, w: bw - 0.3, h: 0.62, fontSize: 9.5, color: C.background1 });
+    text(s, w, { x: bx + bw + 0.12, y: y + 0.25, w: 1.45, h: 0.6, fontSize: 9, color: C.accent4, valign: "middle" });
+    s.addShape(pres.shapes.LINE, { x: bx + bw + 1.6, y: y + bh / 2, w: 0.45, h: 0, line: { color: THEME.colors.accent4, width: 1.5, endArrowType: "triangle" } });
+  });
+  const totalH = 4 * bh + 3 * gapY;
+  const px = bx + bw + 2.1;
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: px, y: by, w: 1.3, h: totalH, fill: { color: THEME.colors.lt2 }, line: { color: THEME.colors.accent5 }, rectRadius: 0.1 });
+  text(s, "Pool", { x: px, y: by + 0.3, w: 1.3, h: 0.4, fontSize: 15, bold: true, color: C.text2, align: "center" });
+  text(s, "Fixed, recorded weights. A floor of 1.5% on every outcome. Then the analysts' lean. Code does this; no model writes the number.", { x: px + 0.1, y: by + 0.8, w: 1.1, h: 3.5, fontSize: 9, color: C.text1, align: "center" });
+  s.addShape(pres.shapes.LINE, { x: px + 1.35, y: by + totalH / 2, w: 0.4, h: 0, line: { color: THEME.colors.accent4, width: 1.5, endArrowType: "triangle" } });
+  const fx = px + 1.85;
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: fx, y: by + totalH / 2 - 0.75, w: 1.35, h: 1.5, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.1 });
+  text(s, "Forecast", { x: fx, y: by + totalH / 2 - 0.65, w: 1.35, h: 0.4, fontSize: 14, bold: true, color: C.background1, align: "center" });
+  text(s, "no change 71%\n+25 bps 23%", { x: fx, y: by + totalH / 2 - 0.2, w: 1.35, h: 0.9, fontSize: 11, color: C.background1, align: "center" });
+  // three panels on the right
+  const panels = [
+    ["Repeatability is enforced, then measured", "One frozen, fingerprinted snapshot per forecast; code pools the models; each analyst is run five times on identical inputs with every tool off and every quote checked by code. A ten-dimension scorecard, fixed before any code existed, is measured on every snapshot, so drift shows as a red cell."],
+    ["Human judgement has a typed channel", "None is active today. The channel exists because a desk's judgement belongs in the number, but only where it can be seen, bounded and scored afterwards: a view tilts the number by at most 10 points and expires; a watch-out must be answered by every analyst; a document or an odds entry becomes evidence."],
+    ["All evidence is kept, so the path can be read back", "Each pull is frozen and hash-chained to the forecast it produced. As new information arrives, the number and each model's contribution move, and the ledger shows exactly which input moved it: 62/33 on 15 October, 65/30 on 24 October, 71/23 on 26 October after the market odds were refreshed."],
+  ];
+  const rx = 8.65, rw = W - M - rx;
+  panels.forEach(([h, b], i) => {
+    const y = 2.2 + i * 1.6;
+    card(s, rx, y, rw, 1.48);
+    text(s, h, { x: rx + 0.22, y: y + 0.12, w: rw - 0.44, h: 0.35, fontSize: 12, bold: true, color: C.text2 });
+    text(s, b, { x: rx + 0.22, y: y + 0.47, w: rw - 0.44, h: 1.0, fontSize: 9.5, color: C.text1 });
   });
 }
 
