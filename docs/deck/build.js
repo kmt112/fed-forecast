@@ -32,6 +32,27 @@ pres.defineSlideMaster({
   slideNumber: { x: W - M - 0.6, y: H - 0.5, w: 0.6, h: 0.3, fontSize: 10, color: THEME.colors.accent4, align: "right" },
 });
 
+pres.defineSlideMaster({
+  title: "DEMO", background: { color: THEME.colors.dk1 },
+  objects: [{ placeholder: { options: { name: "title", type: "title", x: M, y: 0.6, w: W - 2 * M, h: 0.9, fontSize: 30, bold: true, color: C.background1, align: "left", valign: "middle", margin: 0 } } },
+            { text: { text: "LIVE DEMO", options: { x: M, y: H - 0.55, w: 4, h: 0.3, fontSize: 10, color: THEME.colors.accent6, bold: true, margin: 0, isTextBox: true } } }],
+});
+function demo(section, n, view, minutes, open, point, say, notes) {
+  const s = pres.addSlide({ masterName: "DEMO", sectionTitle: section });
+  s.addText(`Live demo ${n}: ${view}`, { placeholder: "title" });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: W - M - 1.6, y: 0.75, w: 1.6, h: 0.6, fill: { color: THEME.colors.accent6 }, line: { color: THEME.colors.accent6 }, rectRadius: 0.1 });
+  s.addText(`${minutes} min`, { x: W - M - 1.6, y: 0.75, w: 1.6, h: 0.6, fontSize: 16, bold: true, color: THEME.colors.dk1, align: "center", valign: "middle", isTextBox: true, margin: 0 });
+  const cols = [["Open", open], ["Point at", point], ["Say", say]];
+  cols.forEach(([h, items], i) => {
+    const x = M + i * 4.1;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 1.9, w: 3.85, h: 3.5, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.12 });
+    s.addText(h, { x: x + 0.3, y: 2.1, w: 3.2, h: 0.5, fontSize: 18, bold: true, color: THEME.colors.accent6, isTextBox: true, margin: 0 });
+    s.addText(items.map((t, k) => ({ text: t, options: { bullet: true, breakLine: k < items.length - 1, paraSpaceAfter: 8 } })), { x: x + 0.3, y: 2.7, w: 3.25, h: 2.6, fontSize: 13, color: THEME.colors.lt1, isTextBox: true, margin: 0, valign: "top" });
+  });
+  s.addNotes(notes);
+  return s;
+}
+
 const light = (section, title, notes) => { const s = pres.addSlide({ masterName: "LIGHT", sectionTitle: section }); s.addText(title, { placeholder: "title" }); if (notes) s.addNotes(notes); return s; };
 const text = (s, t, o) => s.addText(t, { isTextBox: true, margin: 0, fontSize: 14, color: C.text1, valign: "top", ...o });
 const card = (s, x, y, w, h, fill) => s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, fill: { color: fill || THEME.colors.lt2 }, line: { color: fill || THEME.colors.lt2 }, rectRadius: 0.12, shadow: { type: "outer", blur: 4, offset: 1, angle: 90, color: "000000", opacity: 0.08 } });
@@ -48,17 +69,31 @@ pres.addSection({ title: "Opening" });
   const s = pres.addSlide({ masterName: "DARK", sectionTitle: "Opening" });
   s.addText("FedCast", { placeholder: "title" });
   s.addText("A forecaster for the next Federal Reserve rate decision, built to be judged by its process rather than its luck", { placeholder: "body" });
-  text(s, "[Your name] · Fullerton · October 2026", { x: M, y: 6.4, w: 8, h: 0.4, fontSize: 14, color: THEME.colors.accent5 });
-  s.addNotes("Open with the one-line thesis: a language model inside an engineered harness gives forecasts that are measurably more repeatable and more faithful to evidence than the same model asked naively, and the way to prove it is to measure the process, not to wait for eight decisions a year to come true.");
+  text(s, "Tan Kah Ming · Fullerton · October 2026", { x: M, y: 6.4, w: 8, h: 0.4, fontSize: 14, color: THEME.colors.accent5 });
+  s.addNotes("Before the session: start the app (fedcast ui), press Pull evidence then Run forecast so the top bar reads 'under an hour ago', open the Forecast view, and have the Evidence graph, Analyst prompts, Analyst results and Scorecard tabs one click away. Open with the one-line thesis: a language model inside an engineered harness gives forecasts that are measurably more repeatable and more faithful to evidence than the same model asked naively, and the way to prove it is to measure the process, not to wait for eight decisions a year to come true.");
 }
 {
-  const s = light("Opening", "About me", "Fill in before the session: role, background, and why this project. Keep to three points; this slide should take under a minute.");
-  card(s, M, 1.6, 5.6, 4.6);
-  text(s, "[Your name]", { x: M + 0.4, y: 1.9, w: 4.8, h: 0.6, fontSize: 24, bold: true, color: C.text2, fontFace: THEME.headFontFace });
-  text(s, "[Role at Fullerton]", { x: M + 0.4, y: 2.5, w: 4.8, h: 0.5, fontSize: 14, color: C.accent4 });
-  s.addText(bullets(["[Background: markets, data, engineering]", "[What you do day to day]", "[Why you built this: the question you wanted answered]"], { fontSize: 15, color: C.text1 }), { x: M + 0.4, y: 3.2, w: 4.8, h: 2.6, isTextBox: true, margin: 0, valign: "top" });
-  text(s, "What this session is", { x: 7.0, y: 1.7, w: 5.7, h: 0.5, fontSize: 18, bold: true, color: C.text2 });
-  s.addText(bullets(["A tool that forecasts the next FOMC decision from frozen evidence", "A method for deciding whether a language model can be trusted inside a forecasting process", "A live record: a forecast for 28 October 2026 is on file now", "Twenty minutes, then questions"], { fontSize: 15, color: C.text1 }), { x: 7.0, y: 2.3, w: 5.7, h: 3.5, isTextBox: true, margin: 0, valign: "top" });
+  const s = light("Opening", "About me", "One minute. The thread to pull: every system on the right had to put a model's output in front of people making live decisions, and the hard part was never the model, it was earning trust in what it said. FedCast is that problem made explicit and measurable.");
+  card(s, M, 1.55, 4.9, 5.1);
+  text(s, "Tan Kah Ming", { x: M + 0.35, y: 1.8, w: 4.2, h: 0.55, fontSize: 24, bold: true, color: C.text2, fontFace: THEME.headFontFace });
+  text(s, "Senior AI, Data and Technology Consultant, seconded to Temasek Holdings, Digital Innovation (2023 to now)", { x: M + 0.35, y: 2.4, w: 4.2, h: 0.8, fontSize: 12.5, color: C.text1 });
+  text(s, "Before that", { x: M + 0.35, y: 3.3, w: 4.2, h: 0.35, fontSize: 12, bold: true, color: C.text2 });
+  s.addText(bullets(["Data scientist, RSAF Data Office: authored the Air Force's AI strategy, set up its first digital unit", "Air engineering and weapons logistics officer, where the data-driven habit started (Weibull analysis, predictive maintenance)"], { fontSize: 11.5, color: C.text1 }), { x: M + 0.35, y: 3.65, w: 4.2, h: 1.4, isTextBox: true, margin: 0, valign: "top" });
+  text(s, "Training", { x: M + 0.35, y: 5.1, w: 4.2, h: 0.35, fontSize: 12, bold: true, color: C.text2 });
+  text(s, "M.Eng Aeronautical Engineering, Imperial College London · Graduate Certificate in Predictive Analytics, NUS · CFA Level 3 candidate (February 2027)", { x: M + 0.35, y: 5.45, w: 4.2, h: 1.1, fontSize: 11.5, color: C.text1 });
+  text(s, "Things I have built that models had to earn trust in", { x: 5.9, y: 1.6, w: 6.85, h: 0.45, fontSize: 16, bold: true, color: C.text2 });
+  const built = [
+    ["Investment analytics at Temasek", "An AI-assisted analyst performance and attribution platform for 50+ investment professionals, with an LLM signal tracker for high-conviction ideas; signal cadence moved from monthly to daily, every recommendation logged in real time."],
+    ["Valuation and execution", "A machine-learning mark-to-market for private holdings, systematic and reproducible; and an AI-driven order management system on AWS processing about S$30m a day, replacing an email-based workflow."],
+    ["Forecasting under a scoreboard", "4th of 160+ teams (MIT, DoD, USAF) in the 2023 USAF AI Accelerator, predicting pilot flying difficulty from physiology; an ammunition recommender (quantile LightGBM) that cut wastage with no shortfall, Defence Manpower Committee Innovation Award 2022."],
+    ["COVID-19, 2021", "Built, in weeks, the system that engaged every home-recovery patient in Singapore, 10,000 people a day, on form.sg, Azure and Zendesk. The lesson that carries over: a system people rely on must say what it knows and what it does not."],
+  ];
+  built.forEach(([h, b], i) => {
+    const y = 2.15 + i * 1.12;
+    numCircle(s, 5.9, y + 0.05, i + 1);
+    text(s, h, { x: 6.45, y, w: 6.3, h: 0.35, fontSize: 13, bold: true, color: C.text2 });
+    text(s, b, { x: 6.45, y: y + 0.35, w: 6.3, h: 0.78, fontSize: 10.5, color: C.text1 });
+  });
 }
 
 // =========================================================================================================
@@ -78,6 +113,11 @@ pres.addSection({ title: "Objective" });
     "Ledger entry #16, hash-chained, replays exactly from its snapshot",
   ], { fontSize: 13.5, color: C.text1 }), { x: M + 0.4, y: 4.35, w: W - 2 * M - 0.8, h: 2.2, isTextBox: true, margin: 0, valign: "top" });
 }
+demo("Objective", 1, "the forecast", 1,
+  ["The app at localhost:8765, Forecast view", "Top bar: when the evidence was pulled, what is new at the sources"],
+  ["The two tracks side by side: machine only, and with views", "The meta line: ledger entry, snapshot hash, the specialists' tilt", "The five bars"],
+  ["This number was made at <time> from evidence frozen at <time>. Everything I show next is how it got there."],
+  "Keep this to one minute. The point is only that the number exists, is dated, and is traceable. Do not explain the models yet.");
 {
   const s = light("Objective", "Why build this", "Three reasons. First, accuracy is the wrong yardstick at this horizon: eight decisions a year, and the market already gets most of them right, so a good year proves nothing. Second, what a desk can use is a number whose every input it can see and challenge. Third, the harness is the asset: the same machine can target the December meeting, the year-end rate, or a different central bank, and the controls tell you whether it is still working.");
   const cards = [
@@ -163,6 +203,12 @@ pres.addSection({ title: "How it works" });
   text(s, "Percentages, rounded. The ordered probit is computed and shown but carries weight 0 until it has a live record.", { x: M, y: 6.1, w: W - 2 * M, h: 0.4, fontSize: 11, color: C.accent4 });
 }
 
+demo("How it works", 2, "the evidence graph and the pool", 3,
+  ["Evidence graph", "Click the Market-implied box", "Click the Pool box", "Methodology, scroll to the worked example"],
+  ["Market-implied: the futures price, 100 minus price, the expected change, the 90/10 split", "Pool: the four weights, the pooled line, the specialists' tilt line, machine_only", "Any evidence item: the frozen text and the link to the original"],
+  ["Blue is in the number, grey is computed but not in it. Click a model and you see only what it read.", "The language model's lean is the one line between pooled and machine_only. It can tilt, it cannot write."],
+  "This is the longest demo. Start at the raw futures price so the audience sees arithmetic, not a black box. Then the pool box, then one click into an evidence item to show the frozen text.");
+
 // =========================================================================================================
 pres.addSection({ title: "The harness" });
 {
@@ -200,6 +246,12 @@ pres.addSection({ title: "The harness" });
   });
 }
 
+demo("The harness", 3, "what each analyst is asked and given", 2,
+  ["Analyst prompts view", "Analyst 1: open the full prompt", "Analyst 6: open the full prompt"],
+  ["Analyst 1: 195 characters, no evidence", "Analyst 6: the system prompt, the enforced answer schema, the inflation pre-read, the item ids", "The prompt hash: five repeats share it"],
+  ["If it is not on this page, the analyst does not get it.", "Same model. The only difference between analyst 1 and analyst 6 is this page."],
+  "Open analyst 1 first so the contrast with analyst 6 lands. Scroll the full prompt slowly past the schema and the pre-read; do not read it out.");
+
 // =========================================================================================================
 pres.addSection({ title: "Evidence" });
 {
@@ -235,6 +287,11 @@ pres.addSection({ title: "Evidence" });
   text(s, "Quote: \"score\": 1.0   Item: signal.tone   Verified by code", { x: 8.7, y: 3.3, w: 3.8, h: 0.55, fontSize: 11, color: C.accent4, fontFace: "Courier New" });
   text(s, "The pre-read is our arithmetic over the two statements: 12 votes for, none against, eight hawkish words, no dovish ones. The analyst quoted it and code found the quote.", { x: 8.7, y: 3.9, w: 3.8, h: 1.3, fontSize: 11, color: C.text1 });
 }
+demo("Evidence", 4, "what the analysts concluded", 2,
+  ["Analyst results view", "Analyst 1 (naive) card", "Analyst 4 (communications) card"],
+  ["Analyst 1: cut 25 at 57%, numbers from memory flagged", "Analyst 4: the lean, grounded, leaked, watch-outs badges; one claim with its quote and the 'quote verified' mark", "Hover a badge for its definition"],
+  ["Every claim you see has a quote that code found character for character in the item named.", "The naive analyst still thinks the Fed is cutting. Same model, no evidence."],
+  "Pick the signal.tone claim on analyst 4 if asked where a quote comes from: it is the pre-read, our arithmetic over the two statements.");
 {
   const s = light("Evidence", "The scorecard: eight of ten dimensions measured by code", "Ten dimensions fixed before any forecasting code existed. Eight are now measured automatically on each new snapshot. The over-time table is the drift check: the marks never move, so a cell that turns red is a change in the system. It has already caught two things, bottom right.");
   const dims = [
@@ -257,6 +314,11 @@ pres.addSection({ title: "Evidence" });
   text(s, "What it has already caught", { x: 7.2, y: 4.45, w: 5.3, h: 0.4, fontSize: 14, bold: true, color: C.text2 });
   s.addText(bullets(["Four ledger entries stopped replaying after a model rule changed outside the hashed spec. Amendment #5 put every rule inside the hash; earlier entries are now labelled, not failed.", "A shock test was perturbing the wrong odds entry once two were on file. A red cell on the drift table pointed straight at it; fixed with a unit test the same hour."], { fontSize: 12, color: C.text1 }), { x: 7.2, y: 4.9, w: 5.3, h: 1.7, isTextBox: true, margin: 0, valign: "top" });
 }
+demo("Evidence", 5, "the scorecard and the drift table", 2,
+  ["Scorecard view", "The snapshot dropdown: pick 24 October, then 26 October", "Expand 'what was checked' under S4", "Scroll to the over-time table"],
+  ["The grid: red in the control columns, green in the judged columns", "S4's seven shocks with their deltas", "The over-time table: one row per snapshot, the marks never move"],
+  ["Analysts 1 and 2 are meant to fail. A red cell on the right would be a defect.", "This is the drift check. Two red cells have already pointed at defects and both are fixed."],
+  "If time is short, skip the dropdown and go straight to the over-time table.");
 {
   const s = light("Evidence", "Governance: pre-register, amend in the open, replay", "Seven amendments in five weeks, each logged with its reason, each changing the spec hash pinned in the tests. The point of the timeline is that every change to the method is visible and dated, and that the number can be recomputed under the spec it was made with.");
   const steps = [
@@ -274,6 +336,12 @@ pres.addSection({ title: "Evidence" });
   const facts = [["17", "ledger entries, hash-chained"], ["7", "amendments, each with its reason"], ["108", "tests, spec hash pinned"], ["0", "numbers tuned on outcomes"]];
   facts.forEach(([n, l], i) => stat(s, M + i * 3.1, 5.0, 2.9, n, l));
 }
+
+demo("Evidence", 6, "the ledger and replay", 1,
+  ["Ledger view", "Press Verify ledger"],
+  ["17 entries, each with its snapshot hash and code version", "The replay result: chain intact, entries under the current spec recompute exactly"],
+  ["Nothing in this ledger can be edited or deleted without the chain breaking.", "Any entry can be recomputed from its snapshot. That is what auditable means here."],
+  "One minute. Press the button, read the result line, move on.");
 
 // =========================================================================================================
 pres.addSection({ title: "Limits and next" });
