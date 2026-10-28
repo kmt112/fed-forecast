@@ -726,18 +726,18 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
               "groundedness_pct_mean": sum(r["summary"]["groundedness_pct_mean"] for r in specialists.values()) / len(specialists)}
         if generalist:
             gs = generalist["summary"]
-            rows.append(["Generalist (arm C): one agent, all the evidence, same schema and verifier",
+            rows.append(["Analyst 3, generalist: one reader, all the evidence, same schema and verifier",
                          f"tilt {gs['tilt_mean_bp']:+.1f} bp {_lean(gs['tilt_mean_bp'])}" + (f" (std {gs['tilt_std_bp']:.1f})" if gs["tilt_std_bp"] is not None else "")
                          + f", {gs['groundedness_pct_mean']:.0f}% grounded, {gs['leakage_total']} leaked, {gs['runs']} run(s)"])
         if evidence_only:
             es = evidence_only["summary"]
-            rows.append(["Evidence shown, free-form answer (arm B)",
+            rows.append(["Analyst 2, evidence shown, free-form answer",
                          f"{es['runs']} run(s): " + ", ".join(f"{_label(int(k))} {v * 100:.0f}%" for k, v in es["mean_probabilities"].items() if v >= 0.005)
                          + (f"; max std {es['max_std_pp']:.1f} pp" if es["max_std_pp"] is not None else "")
                          + f"; {es['leakage_total']} numbers not in the evidence; quotes not required, so groundedness is not measurable"])
         if naive:
             ns = naive["summary"]
-            rows.append(["Naive control (arm A), same snapshot date",
+            rows.append(["Analyst 1, naive control, same snapshot date",
                          f"{ns['runs']} run(s): " + ", ".join(f"{_label(int(k))} {v * 100:.0f}%" for k, v in ns["mean_probabilities"].items() if v >= 0.005)
                          + (f"; max std {ns['max_std_pp']:.1f} pp" if ns["max_std_pp"] is not None else "")
                          + f"; {ns['leakage_total']} numbers from memory, 0% groundedness"])

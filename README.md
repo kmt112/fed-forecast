@@ -28,7 +28,7 @@ Then:
 .venv\Scripts\fedcast forecast    # run the models + your views, append to the ledger
 .venv\Scripts\fedcast replay      # verify the ledger chain; entries under the current spec must recompute exactly
 .venv\Scripts\fedcast score       # once the decision is in the evidence: log and Brier scores for every forecast of that meeting
-.venv\Scripts\fedcast analyse     # run the LLM arms: --arm A|B|C|D or an analyst name, --runs 5, --replay to reuse recorded calls
+.venv\Scripts\fedcast analyse     # run the analysts: --analyst 1..8, a name, specialists or all; --runs 5; --replay to reuse recorded calls
 .venv\Scripts\python -m pytest -q
 ```
 
@@ -36,7 +36,7 @@ Then:
 
 Forecast (both tracks), Evidence graph (click a model to see only what it uses), Your input (views, watch-outs,
 documents, prediction-market odds), Methodology, Ledger, Scorecard (the yardstick and the measurements against it:
-S1-S3 and S10 per arm from the analyst runs; S4, S5, S6, S7 and S9 from shock, noise, paraphrase, coherence and
+S1-S3 and S10 per analyst from the recorded runs; S4, S5, S6, S7 and S9 from shock, noise, paraphrase, coherence and
 replay checks run by code, on any measured snapshot, with every recorded run and an over-time drift table),
 Analyst results (every claim with its quote and its verification) and Analyst prompts (the exact question,
 evidence items, pre-reads, schema and full prompt each analyst receives, built live from the latest snapshot).

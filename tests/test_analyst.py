@@ -87,13 +87,13 @@ def test_comms_run_summarises_repeatability_over_runs():
     s = rec["summary"]
     assert s["runs"] == 3 and s["tilt_mean_bp"] == pytest.approx(14 / 3, abs=0.01)
     assert s["tilt_std_bp"] > 0 and s["groundedness_pct_mean"] == 100.0 and s["watchouts_missing_total"] == 0
-    assert rec["arm"] == "D" and rec["backend"] == "fake"
+    assert rec["analyst_no"] == 4 and rec["backend"] == "fake"
 
 
 def test_naive_control_is_scored_as_ungrounded():
     naive = {"probabilities": {"-50": 0, "-25": 0.1, "0": 0.6, "25": 0.3, "50": 0}, "reasoning": "Inflation is 3.3% so a hike is likely."}
     rec = analyst.run_naive(comms_snapshot(), FakeBackend(naive), runs=2)
-    assert rec["arm"] == "A" and rec["summary"]["groundedness_pct_mean"] == 0.0
+    assert rec["analyst_no"] == 1 and rec["summary"]["groundedness_pct_mean"] == 0.0
     assert rec["summary"]["leakage_total"] == 2 and rec["summary"]["max_std_pp"] == 0.0
 
 

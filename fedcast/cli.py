@@ -134,9 +134,9 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
         return
     live = make_backend(args.model)
     backend = ReplayBackend(config.ROOT / "analyses" / "replay", live) if args.replay else live
-    arm_map = {"A": ["naive"], "B": ["evidence_only"], "C": ["generalist"], "D": list(analyst.SPECIALISTS)}
-    names = (analyst.ALL_ANALYSTS if args.arm == "all" else arm_map.get(args.arm)
-             or ["communications" if args.arm == "comms" else args.arm])
+    by_no = {str(n): name for name, n in analyst.ANALYST_NO.items()}
+    names = (analyst.ALL_ANALYSTS if args.analyst == "all" else list(analyst.SPECIALISTS) if args.analyst == "specialists"
+             else [by_no.get(args.analyst) or ("communications" if args.analyst == "comms" else args.analyst)])
     recs = []
     for name in names:
         if name == "naive":
@@ -150,7 +150,7 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
         analyst.save(recs[-1])
     rec = recs[-1]
     out = analyst.ANALYSES_DIR / snap.hash[:12]
-    print(f"{rec['analyst']} (arm {rec['arm']}) on snapshot {snap.hash[:12]} via {rec['backend']}: {args.runs} run(s)")
+    print(f"analyst {analyst.ANALYST_NO[rec['analyst']]} {rec['analyst']} on snapshot {snap.hash[:12]} via {rec['backend']}: {args.runs} run(s)")
     for k, v in rec["summary"].items():
         print(f"  {k}: {v}")
     if rec["analyst"] not in ("naive", "evidence_only"):
@@ -230,9 +230,10 @@ def main() -> None:
     sc.add_argument("--snapshot", help="snapshot directory (default: latest)")
     sc.set_defaults(fn=_cmd_score)
     a = sub.add_parser("analyse", help="run an LLM analyst on a snapshot and verify its claims")
-    a.add_argument("--arm", choices=["all", "A", "B", "C", "D", "comms", "communications", "minutes_digest", "inflation", "labour",
-                                     "financial", "generalist", "evidence_only", "naive"],
-                   default="all", help="an arm letter (A naive, B evidence only, C generalist with verifier, D specialists), an analyst name, or all")
+    a.add_argument("--analyst", choices=["all", "specialists", "1", "2", "3", "4", "5", "6", "7", "8", "comms", "communications",
+                                         "minutes_digest", "inflation", "labour", "financial", "generalist", "evidence_only", "naive"],
+                   default="all", help="an analyst number (1 naive, 2 evidence only, 3 generalist with verifier, 4 to 8 the specialists), "
+                                       "an analyst name, 'specialists' (4 to 8), or all")
     a.add_argument("--runs", type=int, default=1, help="repeat N times to measure repeatability (S1)")
     a.add_argument("--snapshot", help="snapshot directory (default: latest)")
     a.add_argument("--model", help="claude model id (default: the CLI's default)")

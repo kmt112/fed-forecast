@@ -330,7 +330,7 @@
         <ol class="rules" style="margin-top:8px">
           <li><strong>Eight analysts, one model.</strong> Analysts 1 to 3 are controls (naive; evidence shown, nothing verified; one generalist with the full harness). Analysts 4 to 8 are specialists, each an expert on one slice of the evidence: communications, the minutes, inflation, the labour market, financial conditions. The Analysts and Agents views show what each is asked and given.</li>
           <li><strong>The harness.</strong> Each analyst sees only its slice of the snapshot plus the numbers code has already computed, with every tool disabled. It answers in a fixed schema: claims, each with a verbatim quote and the item it came from; a report on every watch-out by id; a tilt bounded to ±10 bp. Code verifies every quote, every number and every watch-out, and the run is recorded.</li>
-          <li><strong>Measured on a ladder.</strong> The same snapshot and scorecard are applied to arms A to D (E and F planned), each adding one technique, so the value of each technique is the difference between neighbouring arms. Five repeats of each analyst measure repeatability.</li>
+          <li><strong>Measured on a ladder.</strong> Analysts 1, 2, 3 and 4 to 8 are the same model with one more piece of harness at each step: nothing; the evidence; a fixed answer shape with a quote per claim checked by code; one slice of evidence each. Same snapshot, same scorecard, five runs each, so the change in score at each step belongs to the one thing that was added.</li>
           <li><strong>A bounded lean, never a weight.</strong> Since amendment #6 the mean of the five specialists' tilts moves the pooled number by the same bounded mechanism as your views: one basis point of tilt is one percentage point of probability, capped at 10. The analysts can lean the number; they cannot write it. The machine track includes this lean; the pool before it is also recorded.</li>
         </ol>
       </div>
@@ -532,10 +532,10 @@ function render(s) {
 }
 
 const NA = `<span class="sub" style="margin:0">Not applicable</span>`;
-const ARM_HEAD = {"A naive": "Analyst 1<br><span class=\"sub\" style=\"margin:0\">naive (arm A)</span>",
-  "B evidence": "Analyst 2<br><span class=\"sub\" style=\"margin:0\">evidence shown (arm B)</span>",
-  "C structure": "Analyst 3<br><span class=\"sub\" style=\"margin:0\">generalist (arm C)</span>",
-  "D specialists": "Analysts 4 to 8<br><span class=\"sub\" style=\"margin:0\">specialists (arm D)</span>",
+const SCOPE_HEAD = {"1 naive": "Analyst 1<br><span class=\"sub\" style=\"margin:0\">naive: the question only</span>",
+  "2 evidence": "Analyst 2<br><span class=\"sub\" style=\"margin:0\">+ the evidence, free-form answer</span>",
+  "3 generalist": "Analyst 3<br><span class=\"sub\" style=\"margin:0\">+ answer shape and code verifier</span>",
+  "4-8 specialists": "Analysts 4 to 8<br><span class=\"sub\" style=\"margin:0\">+ one slice of evidence each</span>",
   "models + pool (code)": "Models and pool<br><span class=\"sub\" style=\"margin:0\">code</span>",
   "human views (code)": "Your views<br><span class=\"sub\" style=\"margin:0\">code</span>",
   "ledger (code)": "Ledger<br><span class=\"sub\" style=\"margin:0\">code</span>"};
@@ -545,13 +545,13 @@ const fmtValue = m => m.value === null ? "not measurable"
 const passMark = m => m.threshold === 0 ? "exactly 0" : (m.direction === "max" ? "at most " : "at least ") + m.threshold + (m.unit === "pct" ? "%" : m.unit === "pp" ? " pp" : "");
 function measureGrid(ms, caption) {
   if (!ms || !ms.length) return "";
-  const arms = [], dims = [];
-  ms.forEach(m => { if (!arms.includes(m.arm)) arms.push(m.arm); if (!dims.some(d => d.id === m.id)) dims.push(m); });
+  const scopes = [], dims = [];
+  ms.forEach(m => { if (!scopes.includes(m.scope)) scopes.push(m.scope); if (!dims.some(d => d.id === m.id)) dims.push(m); });
   const cell = m => !m ? `<td>${NA}</td>`
     : `<td title="${esc(m.note)}"><span class="flag ${m.pass === null ? "" : m.pass ? "ok" : "bad"}" style="margin:0">${m.pass === null ? "n/a" : m.pass ? "pass" : "fail"}</span><div style="margin-top:3px">${esc(fmtValue(m))}</div></td>`;
   return `<table style="margin:6px 0 10px">${caption ? `<caption class="sub" style="text-align:left;margin:0 0 4px">${caption}</caption>` : ""}
-    <tr><th>Dimension (pass mark)</th>${arms.map(a => `<th>${ARM_HEAD[a] || esc(a)}</th>`).join("")}</tr>`
-    + dims.map(d => `<tr><td><strong>${esc(d.id)}</strong> ${esc(d.name)}<div class="sub" style="margin:0">${passMark(d)}</div></td>${arms.map(a => cell(ms.find(m => m.id === d.id && m.arm === a))).join("")}</tr>`).join("") + `</table>`;
+    <tr><th>Dimension (pass mark)</th>${scopes.map(a => `<th>${SCOPE_HEAD[a] || esc(a)}</th>`).join("")}</tr>`
+    + dims.map(d => `<tr><td><strong>${esc(d.id)}</strong> ${esc(d.name)}<div class="sub" style="margin:0">${passMark(d)}</div></td>${scopes.map(a => cell(ms.find(m => m.id === d.id && m.scope === a))).join("")}</tr>`).join("") + `</table>`;
 }
 
 const MODEL_NAMES = {market_implied: "Market-implied", taylor_rule: "Taylor family", prediction_market: "Prediction market", historical_base_rates: "Historical base rates", ordered_probit: "Ordered probit (weight 0)"};
@@ -623,7 +623,7 @@ async function renderAgents() {
   const byName = Object.fromEntries(d.agents.map(a => [a.name, a]));
   el.innerHTML = `<div class="card"><div class="sub" style="margin:0">Built from snapshot <code>${esc(d.snapshot)}</code> (evidence of ${esc(d.as_of)}). The prompt hash is what the five repeats share; a different hash would mean a different agent.</div></div>`
     + order.filter(n => byName[n]).map(n => { const a = byName[n], d = AN_BY_KEY[n]; return `<div class="card">
-    <div class="an-head"><h3>${d ? anTitle(d) : esc(n.replace("_", " ")) + ` <span class="flag info">arm ${esc(a.arm)}</span>`}</h3><span class="sub" style="margin:0">${a.prompt_chars.toLocaleString()} characters · hash <code>${esc(a.prompt_hash)}</code></span></div>
+    <div class="an-head"><h3>${d ? anTitle(d) : `Analyst ${esc(String(a.analyst_no || ""))}: ` + esc(n.replace("_", " "))}</h3><span class="sub" style="margin:0">${a.prompt_chars.toLocaleString()} characters · hash <code>${esc(a.prompt_hash)}</code></span></div>
     ${d ? `<div class="sub" style="margin:2px 0 4px"><strong>Given:</strong> ${esc(d.given)}</div>` : ""}
     <table class="kv" style="margin-top:8px">
       <tr><td>Question</td><td>${esc(a.question)}</td></tr>
@@ -657,17 +657,17 @@ function renderSnapshotPanel(g) {
   const ms = g.measurements || [];
   $("measured-grid").innerHTML = measureGrid(ms, `Snapshot <code>${esc(g.snapshot)}</code>, evidence of ${esc(g.as_of || "?")}: ${g.analyses.length} record(s) from ${fmt(g.first)} to ${fmt(g.last)}${g.ledger_entries.length ? "; used by ledger entries #" + g.ledger_entries.join(", #") : "; no forecast recorded on it"}.`);
   $("measured").innerHTML = `<tr><th></th><th>Dimension</th><th>Part</th><th>Measured</th><th>Pass mark</th><th>Result</th><th>What was measured</th></tr>` +
-    ms.map(m => `<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${ARM_HEAD[m.arm] || esc(m.arm)}</td>
+    ms.map(m => `<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${SCOPE_HEAD[m.scope] || esc(m.scope)}</td>
       <td>${m.value === null ? "not measurable" : esc(fmtValue(m))}</td>
       <td style="white-space:nowrap">${passMark(m)}</td>
       <td>${m.pass === null ? `<span class="flag">not measurable</span>` : m.pass ? `<span class="flag ok">pass</span>` : `<span class="flag bad">fail</span>`}</td>
       <td class="sub" style="margin:0">${esc(m.note)}${m.runs ? " · " + m.runs + " run(s)" : ""}${detailList(m)}</td></tr>`).join("");
-  $("runs").innerHTML = `<div class="scroll"><table><tr><th>Recorded (UTC)</th><th>Analyst</th><th>Arm</th><th title="How many times the identical prompt was sent. Repeats measure repeatability (S1).">Runs</th><th>Result</th><th title="Share of the analyst's claims whose quote code found, character for character, in the snapshot item the analyst named." style="cursor:help">Grounded ⓘ</th><th title="Numbers in the analyst's claims that appear nowhere in the frozen snapshot, so they can only have come from the model's memory. Summed over all runs. For the naive control every number counts: it was given no evidence." style="cursor:help">Leaked ⓘ</th><th title="Your active watch-outs (H1) that a run failed to address by id, summed over runs. 0 means every watch-out was answered in every run." style="cursor:help">Watch-outs missing ⓘ</th><th>Model · runtime</th><th></th></tr>
+  $("runs").innerHTML = `<div class="scroll"><table><tr><th>Recorded (UTC)</th><th>Analyst</th><th title="How many times the identical prompt was sent. Repeats measure repeatability (S1).">Runs</th><th>Result</th><th title="Share of the analyst's claims whose quote code found, character for character, in the snapshot item the analyst named." style="cursor:help">Grounded ⓘ</th><th title="Numbers in the analyst's claims that appear nowhere in the frozen snapshot, so they can only have come from the model's memory. Summed over all runs. For the naive control every number counts: it was given no evidence." style="cursor:help">Leaked ⓘ</th><th title="Your active watch-outs (H1) that a run failed to address by id, summed over runs. 0 means every watch-out was answered in every run." style="cursor:help">Watch-outs missing ⓘ</th><th>Model · runtime</th><th></th></tr>
     ${g.analyses.slice().reverse().map((a, idx) => { const s = a.summary; const id = g.snapshot + "/" + a.file; const d = AN_BY_KEY[a.analyst];
       const result = a.runs[0] && a.runs[0].probabilities ? OUTCOMES.filter(o => s.mean_probabilities[o] >= 0.005).map(o => label(o) + " " + (s.mean_probabilities[o] * 100).toFixed(0) + "%").join(" · ") + (s.max_std_pp !== null ? ` (max std ${s.max_std_pp} pp)` : "")
         : `tilt ${s.tilt_mean_bp >= 0 ? "+" : ""}${s.tilt_mean_bp.toFixed(1)} bp ${lean(s.tilt_mean_bp)}${s.tilt_std_bp !== null ? " ± " + s.tilt_std_bp : ""}`;
       return `<tr><td>${fmt(a.created_at)}${a.reverified_at ? `<div class="sub" style="margin:0">re-scored ${fmt(a.reverified_at)}</div>` : ""}</td>
-        <td>${d ? `Analyst ${d.n}: ${esc(d.name)}` : esc(a.analyst.replace("_", " "))}</td><td>${esc(a.arm)}</td><td>${s.runs}</td><td>${result}</td>
+        <td>${d ? `Analyst ${d.n}: ${esc(d.name)}` : esc(a.analyst.replace("_", " "))}</td><td>${s.runs}</td><td>${result}</td>
         <td>${a.analyst === "naive" ? "0% (by construction)" : s.groundedness_pct_mean === null || s.groundedness_pct_mean === undefined ? "not measurable" : s.groundedness_pct_mean.toFixed(0) + "%"}</td><td>${s.leakage_total}</td>
         <td>${s.watchouts_missing_total === undefined ? NA : s.watchouts_missing_total}</td><td class="sub" style="margin:0">${esc(a.runs[0] && a.runs[0].model || "")} · ${esc(a.backend)} · ${esc(a.prompt_version || "")}</td>
         <td style="white-space:nowrap"><button class="link" data-toggle="r-${esc(g.snapshot)}-${idx}">runs</button> · <button class="link" data-open-analysis="${esc(id)}">record</button></td></tr>
@@ -677,15 +677,15 @@ function renderSnapshotPanel(g) {
     </table></div>`;
 }
 // the judged columns over every measured snapshot, oldest first
-const DRIFT_COLS = [["S1", "C structure"], ["S2", "C structure"], ["S3", "C structure"], ["S1", "D specialists"], ["S2", "D specialists"], ["S3", "D specialists"], ["S10", "D specialists"],
+const DRIFT_COLS = [["S1", "3 generalist"], ["S2", "3 generalist"], ["S3", "3 generalist"], ["S1", "4-8 specialists"], ["S2", "4-8 specialists"], ["S3", "4-8 specialists"], ["S10", "4-8 specialists"],
                     ["S4", "models + pool (code)"], ["S5", "models + pool (code)"], ["S6", "human views (code)"], ["S7", "ledger (code)"], ["S9", "ledger (code)"]];
-const DRIFT_HEAD = {"C structure": "analyst 3", "D specialists": "analysts 4-8", "models + pool (code)": "code", "human views (code)": "code", "ledger (code)": "code"};
+const DRIFT_HEAD = {"3 generalist": "analyst 3", "4-8 specialists": "analysts 4-8", "models + pool (code)": "code", "human views (code)": "code", "ledger (code)": "code"};
 function renderDrift(groups) {
   const rows = groups.slice().sort((a, b) => (a.as_of || "").localeCompare(b.as_of || "") || a.first.localeCompare(b.first));
-  const cols = DRIFT_COLS.filter(([id, arm]) => rows.some(g => g.measurements.some(m => m.id === id && m.arm === arm)));
+  const cols = DRIFT_COLS.filter(([id, scope]) => rows.some(g => g.measurements.some(m => m.id === id && m.scope === scope)));
   const cell = m => !m ? `<td>${NA}</td>` : `<td title="${esc(m.note)}"><span class="flag ${m.pass === null ? "" : m.pass ? "ok" : "bad"}" style="margin:0">${m.pass === null ? "n/a" : m.pass ? "pass" : "fail"}</span><div class="sub" style="margin:2px 0 0">${esc(fmtValue(m))}</div></td>`;
-  $("drift").innerHTML = `<table><tr><th>Snapshot</th>${cols.map(([id, arm]) => `<th>${id}<br><span class="sub" style="margin:0">${DRIFT_HEAD[arm]}</span></th>`).join("")}</tr>` +
-    rows.map(g => `<tr><td>${esc(g.as_of || "?")}<div class="sub" style="margin:0"><code>${esc(g.snapshot)}</code>${g.ledger_entries.length ? " · #" + g.ledger_entries.join(", #") : ""}</div></td>${cols.map(([id, arm]) => cell(g.measurements.find(m => m.id === id && m.arm === arm))).join("")}</tr>`).join("") + `</table>`;
+  $("drift").innerHTML = `<table><tr><th>Snapshot</th>${cols.map(([id, scope]) => `<th>${id}<br><span class="sub" style="margin:0">${DRIFT_HEAD[scope]}</span></th>`).join("")}</tr>` +
+    rows.map(g => `<tr><td>${esc(g.as_of || "?")}<div class="sub" style="margin:0"><code>${esc(g.snapshot)}</code>${g.ledger_entries.length ? " · #" + g.ledger_entries.join(", #") : ""}</div></td>${cols.map(([id, scope]) => cell(g.measurements.find(m => m.id === id && m.scope === scope))).join("")}</tr>`).join("") + `</table>`;
 }
 $("scorecard-measured").onclick = async e => {
   const t = e.target.dataset.toggle; if (t) { const row = document.getElementById(t); row.style.display = row.style.display === "none" ? "" : "none"; }
@@ -700,20 +700,20 @@ $("scorecard-measured").onclick = async e => {
 // The eight analysts, numbered the way they appear everywhere in the app. "Asked" is the question in its prompt,
 // shortened; "Given" is what the prompt contains. The Agents view shows the exact text.
 const ANALYSTS = [
-  {key: "naive", n: 1, name: "Naive control", arm: "A", asked: "What will the FOMC decide at the next meeting? Give probabilities and a short reasoning.", given: "the question and the date only: no evidence, no rules. The 'just ask the model' baseline."},
-  {key: "evidence_only", n: 2, name: "Evidence shown, nothing verified", arm: "B", asked: "Using only the evidence below, give probabilities and a short reasoning.", given: "every document in the snapshot and every pre-computed number; a free-form answer, so nothing can be checked."},
-  {key: "generalist", n: 3, name: "Generalist with verifier", arm: "C", asked: "From all of the evidence, which way does the next decision lean, and why?", given: "the same evidence as analyst 2, but a fixed answer shape: claims each with a verbatim quote, a watch-out report, a tilt of at most ±10 bp. Code checks every quote and number."},
-  {key: "communications", n: 4, name: "Communications", arm: "D", asked: "From the committee's own communications, which way does the next decision lean, and why?", given: "both statements, the minutes, the press-conference transcript, the speeches since the last decision, the computed tone pre-read."},
-  {key: "minutes_digest", n: 5, name: "Minutes digest", arm: "D", asked: "What did 'most', 'many', 'several', 'some' or 'a few' participants think about inflation, the labour market, the path of policy and the risks, and what would change their minds? Then the net lean.", given: "the minutes only."},
-  {key: "inflation", n: 6, name: "Inflation", arm: "D", asked: "Is inflation arguing for a hike, a hold or a cut at the next meeting, and how strongly?", given: "the computed inflation-gap pre-read, the committee's projections table and pre-read, both statements."},
-  {key: "labour", n: 7, name: "Labour market", arm: "D", asked: "Is the labour market arguing for a hike, a hold or a cut at the next meeting, and how strongly?", given: "the computed labour-slack pre-read, the committee's projections table and pre-read, both statements."},
-  {key: "financial", n: 8, name: "Financial conditions", arm: "D", asked: "What is the bond market expecting, and does it corroborate or contradict the other evidence?", given: "the computed financial-conditions pre-read (2-year gap, breakevens, NFCI), the base-rates pre-read, both statements."},
+  {key: "naive", n: 1, name: "Naive control", adds: "nothing: the question only", asked: "What will the FOMC decide at the next meeting? Give probabilities and a short reasoning.", given: "the question and the date only: no evidence, no rules. The 'just ask the model' baseline."},
+  {key: "evidence_only", n: 2, name: "Evidence shown, nothing verified", adds: "the evidence", asked: "Using only the evidence below, give probabilities and a short reasoning.", given: "every document in the snapshot and every pre-computed number; a free-form answer, so nothing can be checked."},
+  {key: "generalist", n: 3, name: "Generalist with verifier", adds: "a fixed answer shape and the code verifier", asked: "From all of the evidence, which way does the next decision lean, and why?", given: "the same evidence as analyst 2, but a fixed answer shape: claims each with a verbatim quote, a watch-out report, a tilt of at most ±10 bp. Code checks every quote and number."},
+  {key: "communications", n: 4, name: "Communications", adds: "one slice of evidence", asked: "From the committee's own communications, which way does the next decision lean, and why?", given: "both statements, the minutes, the press-conference transcript, the speeches since the last decision, the computed tone pre-read."},
+  {key: "minutes_digest", n: 5, name: "Minutes digest", adds: "one slice of evidence", asked: "What did 'most', 'many', 'several', 'some' or 'a few' participants think about inflation, the labour market, the path of policy and the risks, and what would change their minds? Then the net lean.", given: "the minutes only."},
+  {key: "inflation", n: 6, name: "Inflation", adds: "one slice of evidence", asked: "Is inflation arguing for a hike, a hold or a cut at the next meeting, and how strongly?", given: "the computed inflation-gap pre-read, the committee's projections table and pre-read, both statements."},
+  {key: "labour", n: 7, name: "Labour market", adds: "one slice of evidence", asked: "Is the labour market arguing for a hike, a hold or a cut at the next meeting, and how strongly?", given: "the computed labour-slack pre-read, the committee's projections table and pre-read, both statements."},
+  {key: "financial", n: 8, name: "Financial conditions", adds: "one slice of evidence", asked: "What is the bond market expecting, and does it corroborate or contradict the other evidence?", given: "the computed financial-conditions pre-read (2-year gap, breakevens, NFCI), the base-rates pre-read, both statements."},
 ];
 const AN_BY_KEY = Object.fromEntries(ANALYSTS.map(a => [a.key, a]));
 const lean = bp => bp > 0 ? "hawkish (toward a hike)" : bp < 0 ? "dovish (toward a cut)" : "neutral";
-const anTitle = a => `Analyst ${a.n}: ${a.name} <span class="flag info">arm ${a.arm}</span>`;
+const anTitle = a => `Analyst ${a.n}: ${a.name}`;
 const anBlurb = a => `<div class="sub" style="margin:2px 0 8px"><strong>Asked:</strong> ${esc(a.asked)} <strong>Given:</strong> ${esc(a.given)}</div>`;
-const AN_LABELS = Object.fromEntries(ANALYSTS.map(a => [a.key, `${a.name} (arm ${a.arm})`]));
+const AN_LABELS = Object.fromEntries(ANALYSTS.map(a => [a.key, `${a.n} ${a.name}`]));
 function renderAnalysts(an) {
   const el = $("analysts");
   if (!an || !Object.values(an).some(Boolean)) { el.innerHTML = `<div class="card"><div class="empty">No analyses on this snapshot yet. Click "Run analysts".</div></div>`; return; }

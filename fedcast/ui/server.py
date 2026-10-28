@@ -57,7 +57,7 @@ _SCORECARD_STATUS = {
     "S3": "Measured per snapshot by the code verifier (table below)",
     "S4": "Measured on the latest snapshot: shock tests on the models and the pool (table below)",
     "S5": "Measured on the latest snapshot: irrelevant changes to the snapshot (table below)",
-    "S6": "Measured for the typed human inputs; the LLM arms' reworded-prompt test is not built yet",
+    "S6": "Measured for the typed human inputs; the analysts' reworded-prompt test is not built yet",
     "S7": "Measured over every ledger entry (table below)",
     "S8": "Not measured yet: needs a rubric grader for the traces",
     "S9": "Measured: entries recorded under the current code recompute bit-for-bit (table below)",
@@ -154,7 +154,8 @@ def _trim_analysis(rec: dict | None) -> dict | None:
     if not rec:
         return None
     last = rec["runs"][-1]
-    out = {k: rec[k] for k in ("analyst", "arm", "prompt_version", "created_at", "backend", "summary")}
+    out = {k: rec[k] for k in ("analyst", "prompt_version", "created_at", "backend", "summary")}
+    out["analyst_no"] = analyst_mod.ANALYST_NO.get(rec["analyst"])
     out["prompt_chars"] = rec.get("prompt_chars")
     if "probabilities" in last:
         out["last"] = {"probabilities": last["probabilities"], "reasoning": last["completion"]["output"].get("reasoning", ""),
@@ -232,7 +233,7 @@ def _audit() -> dict:
                                  "leakage": v["leakage_count"], "watchouts_missing": len(v["watchouts_missing"]),
                                  "confidence": c["output"].get("confidence"), "model": c.get("model"), "duration_s": c.get("duration_s"),
                                  "summary": c["output"].get("summary", "")[:300]})
-            recs.append({"file": f.name, "analyst": rec["analyst"], "arm": rec["arm"], "created_at": rec["created_at"],
+            recs.append({"file": f.name, "analyst": rec["analyst"], "analyst_no": analyst_mod.ANALYST_NO.get(rec["analyst"]), "created_at": rec["created_at"],
                          "backend": rec["backend"], "prompt_version": rec.get("prompt_version"), "prompt_chars": rec.get("prompt_chars"),
                          "reverified_at": rec.get("reverified_at"), "summary": rec["summary"], "runs": runs})
         if not recs:
@@ -251,7 +252,7 @@ def _audit() -> dict:
             try:
                 measurements += evals.deterministic(snap_obj, ledger.read(LEDGER), _snapshot_by_hash, spec_hash())
             except Exception as exc:  # shown, never hidden
-                measurements.append({"id": "S4", "name": "Directional sanity", "arm": "models + pool (code)", "value": None, "unit": "pct",
+                measurements.append({"id": "S4", "name": "Directional sanity", "scope": "models + pool (code)", "value": None, "unit": "pct",
                                      "threshold": 100.0, "direction": "min", "pass": None, "runs": None, "details": [],
                                      "note": f"could not run the code checks on this snapshot: {type(exc).__name__}: {exc}"})
         groups[folder.name] = {"snapshot": folder.name, "as_of": as_of, "ledger_entries": used_by, "analyses": recs,

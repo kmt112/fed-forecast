@@ -19,7 +19,7 @@ def test_compute_is_deterministic():
 
 
 def specialist_record(name, tilt):
-    return {"analyst": name, "arm": "D", "created_at": "2026-10-25T00:00:00+00:00", "prompt_version": "t",
+    return {"analyst": name, "analyst_no": 4, "created_at": "2026-10-25T00:00:00+00:00", "prompt_version": "t",
             "summary": {"runs": 5, "tilt_mean_bp": tilt, "tilt_std_bp": 0.4, "groundedness_pct_mean": 100.0, "leakage_total": 0, "watchouts_missing_total": 0}}
 
 

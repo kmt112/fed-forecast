@@ -68,10 +68,10 @@ and, where it is a fitted model, a pre-registered spec and the expanding-window 
 
 ## LLM analysts
 - [x] N=5 runs per specialist on each snapshot for S1 (repeatability); UI runs selector (done 2026-10-16/24).
-- [ ] Hawk-versus-dove debate and a synthesiser (arm F); verifier extended to numbers in summaries.
-- [x] Arms B and C of the ablation ladder (evidence shown free-form; one generalist with schema and verifier) (done 2026-10-19).
-- [x] S1-S3, S10 per arm from the analyses; S4, S5, S6 (typed inputs), S7, S9 from the code chain (evals.deterministic, 2026-10-25).
-- [ ] S6 for the LLM arms: the same evidence under reworded prompts (three paraphrases of each specialist's question),
+- [ ] Hawk-versus-dove debate and a synthesiser as one more step on the ladder; verifier extended to numbers in summaries.
+- [x] Analysts 2 and 3 of the ladder (evidence shown free-form; one generalist with schema and verifier) (done 2026-10-19).
+- [x] S1-S3, S10 per analyst from the analyses; S4, S5, S6 (typed inputs), S7, S9 from the code chain (evals.deterministic, 2026-10-25).
+- [ ] S6 for the analysts: the same evidence under reworded prompts (three paraphrases of each specialist's question),
       scored as the max shift in tilt; pre-register the paraphrases.
 - [ ] S8: a rubric grader for the traces (base rate first, both sides, uncertainties, pre-mortem), run by a second model
       family, graded against hand-marked examples before it counts.

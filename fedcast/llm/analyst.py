@@ -15,7 +15,7 @@ Specialists share one schema and one verifier; they differ in the question asked
   inflation        the inflation-gap pre-read, the SEP inflation medians, the statement
   labour           the labour-slack pre-read, the SEP unemployment medians, the statement
   financial        the financial-conditions pre-read, the market data, the statement
-The naive control (ablation arm A) asks the question with no evidence at all; by construction it cannot
+The naive control (analyst 1) asks the question with no evidence at all; by construction it cannot
 cite, so its groundedness is 0 and every number it gives is from memory.
 """
 
@@ -301,7 +301,7 @@ def run_specialist(spec: Spec, snap: Snapshot, backend: LLMBackend, watchlist: l
         results.append({"completion": _dump(c), "verification": v})
     tilts = [r["verification"]["tilt_bp"] for r in results]
     return {
-        "analyst": spec.name, "arm": "C" if spec.name == "generalist" else "D", "prompt_version": PROMPT_VERSION, "prompt_chars": len(prompt),
+        "analyst": spec.name, "analyst_no": ANALYST_NO[spec.name], "prompt_version": PROMPT_VERSION, "prompt_chars": len(prompt),
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "snapshot_hash": snap.hash, "backend": backend.name, "runs": results,
         "summary": {
@@ -319,7 +319,7 @@ def run_comms(snap: Snapshot, backend: LLMBackend, watchlist: list[dict], runs: 
 
 
 def run_evidence_only(snap: Snapshot, backend: LLMBackend, runs: int = 1, log: Callable[[str], None] | None = None) -> dict:
-    """Ablation arm B: the full evidence is shown, but the model answers with a free-form distribution and
+    """Analyst 2: the full evidence is shown, but the model answers with a free-form distribution and
     reasoning; nothing is cited, so groundedness cannot be measured. Leakage can: numbers in the reasoning
     are checked against the evidence."""
     say = log or (lambda m: print(m, file=sys.stderr, flush=True))
@@ -352,7 +352,7 @@ def run_evidence_only(snap: Snapshot, backend: LLMBackend, runs: int = 1, log: C
         results.append({"completion": _dump(c), "probabilities": probs, "numbers_from_memory": len(leaked), "leaked_numbers": leaked})
     by_outcome = {str(o): [r["probabilities"][str(o)] for r in results] for o in OUTCOMES_BP}
     return {
-        "analyst": "evidence_only", "arm": "B", "prompt_version": "evidence-only-v1", "prompt_chars": len(prompt),
+        "analyst": "evidence_only", "analyst_no": 2, "prompt_version": "evidence-only-v1", "prompt_chars": len(prompt),
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "snapshot_hash": snap.hash, "backend": backend.name, "runs": results,
         "summary": {
@@ -366,7 +366,7 @@ def run_evidence_only(snap: Snapshot, backend: LLMBackend, runs: int = 1, log: C
 
 
 def run_naive(snap: Snapshot, backend: LLMBackend, runs: int = 1, log: Callable[[str], None] | None = None) -> dict:
-    """Ablation arm A: the same question with no evidence. Nothing to cite, so nothing can be verified."""
+    """Analyst 1: the same question with no evidence. Nothing to cite, so nothing can be verified."""
     say = log or (lambda m: print(m, file=sys.stderr, flush=True))
     cal = snap.get("calendar")
     prompt = (f"Today is {snap.as_of.isoformat()}. What will the FOMC decide at its {cal['next_meeting']} meeting? "
@@ -385,7 +385,7 @@ def run_naive(snap: Snapshot, backend: LLMBackend, runs: int = 1, log: Callable[
         results.append({"completion": _dump(c), "probabilities": probs, "numbers_from_memory": len(nums)})
     by_outcome = {str(o): [r["probabilities"][str(o)] for r in results] for o in OUTCOMES_BP}
     return {
-        "analyst": "naive", "arm": "A", "prompt_version": "naive-v1",
+        "analyst": "naive", "analyst_no": 1, "prompt_version": "naive-v1",
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "snapshot_hash": snap.hash, "backend": backend.name, "runs": results,
         "summary": {
@@ -425,7 +425,7 @@ def describe_agents(snap: Snapshot, watchlist: list[dict]) -> list[dict]:
     out = []
     for name, spec in list(SPECIALISTS.items()) + [("generalist", GENERALIST)]:
         prompt = build_prompt(snap, watchlist, spec)
-        out.append({"name": name, "arm": "C" if name == "generalist" else "D", "question": spec.question,
+        out.append({"name": name, "analyst_no": ANALYST_NO[name], "question": spec.question,
                     "items": spec.items(snap), "pre_reads": list(spec.pre_reads(snap)), "system": SYSTEM,
                     "schema": SCHEMA, "prompt": prompt, "prompt_chars": len(prompt),
                     "prompt_hash": prompt_hash(SYSTEM, prompt, SCHEMA, 0), "output": "claims with quotes, watch-outs, tilt ±10 bp"})
@@ -437,7 +437,7 @@ def describe_agents(snap: Snapshot, watchlist: list[dict]) -> list[dict]:
     for item_id in _all_docs(snap):
         b_parts += ["", f"=== ITEM {item_id} ===", _item_text(snap, item_id, 60000)]
     b_prompt = "\n".join(b_parts)
-    out.append({"name": "evidence_only", "arm": "B", "question": b_parts[1], "items": _all_docs(snap),
+    out.append({"name": "evidence_only", "analyst_no": 2, "question": b_parts[1], "items": _all_docs(snap),
                 "pre_reads": list(_all_pre(snap)), "system": SYSTEM, "schema": NAIVE_SCHEMA, "prompt": b_prompt,
                 "prompt_chars": len(b_prompt), "prompt_hash": prompt_hash(SYSTEM, b_prompt, NAIVE_SCHEMA, 0),
                 "output": "probabilities and free-form reasoning"})
@@ -445,7 +445,7 @@ def describe_agents(snap: Snapshot, watchlist: list[dict]) -> list[dict]:
     n_prompt = (f"Today is {snap.as_of.isoformat()}. What will the FOMC decide at its {cal['next_meeting']} meeting? "
                 "Give a probability for each outcome in basis points of change (-50, -25, 0, 25, 50), summing to 1, "
                 "and a short reasoning.")
-    out.append({"name": "naive", "arm": "A", "question": n_prompt, "items": [], "pre_reads": [], "system": n_system,
+    out.append({"name": "naive", "analyst_no": 1, "question": n_prompt, "items": [], "pre_reads": [], "system": n_system,
                 "schema": NAIVE_SCHEMA, "prompt": n_prompt, "prompt_chars": len(n_prompt),
                 "prompt_hash": prompt_hash(n_system, n_prompt, NAIVE_SCHEMA, 0), "output": "probabilities and free-form reasoning"})
     return out
@@ -482,6 +482,10 @@ def record_at(snapshot_hash: str, analyst: str, created_at: str) -> dict | None:
 
 
 ALL_ANALYSTS = list(SPECIALISTS) + ["generalist", "evidence_only", "naive"]
+# The eight analysts, numbered the way they appear everywhere: 1 to 3 read all the evidence with ever more harness,
+# 4 to 8 are the specialists. The number is the rung on the ladder.
+ANALYST_NO = {"naive": 1, "evidence_only": 2, "generalist": 3, "communications": 4, "minutes_digest": 5,
+              "inflation": 6, "labour": 7, "financial": 8}
 
 
 def latest_all(snapshot_hash: str) -> dict[str, dict | None]:

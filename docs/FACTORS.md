@@ -67,7 +67,7 @@ scores, never outcomes.
 2. **Contamination through the developer.** The model knows outcomes through mid-2026. Pre-register
    probit features and fit procedure before the first backtest; evaluate once on a held-out
    window; no iteration after seeing results.
-3. **Control arm scheduled last.** Build Arm A (naive prompt) with the LLM backend, early.
+3. **Control scheduled last.** Build analyst 1 (naive prompt) with the LLM backend, early.
 4. **Pool averages non-independent models.** Market-implied is the anchor; others are bounded,
    calibrated adjustments; deterministic weights fitted pre-2024; LLM weight from process scores.
 5. **Communications evidence thin.** Previous statement + diff, press conference, speeches.
@@ -81,5 +81,5 @@ scores, never outcomes.
 1. Surprise floor + base-rate table.
 2. Evidence robustness: previous statement + diff, release calendar, futures staleness + second source.
 3. Taylor rule with ranges; pre-registered probit spec; then fit.
-4. LLM backend + Arm A + first analyst with quote verification.
+4. LLM backend + analyst 1 (naive control) + first analyst with quote verification.
 5. Post-meeting review screen.

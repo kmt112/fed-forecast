@@ -16,7 +16,7 @@ bounded lean with cited reasons, and code checks every citation before the lean 
 We measured that. Asked the bare question with no evidence, five times, the same model said a rate *cut*
 was most likely, moved its probabilities by over three points between runs, cited nothing, and used 36
 numbers that exist nowhere in the evidence. Its memory of the economy is stale and it cannot tell. That
-unassisted run is kept as the control (arm A) so the harness is always measured against it.
+unassisted run is kept as the control (analyst 1) so the harness is always measured against it.
 
 ## The harness: five mechanisms around every analyst
 
@@ -67,13 +67,14 @@ instruction cannot be verified and a number can.
 - They are not in the forecast yet. Their tilt is computed and displayed; whether and how it enters the
   pool is a logged amendment decision, taken on their measured record.
 
-## The ladder of arms
+## The ladder
 
-The harness is evaluated as an ablation ladder: arm A is the bare model; each later arm adds one technique
-(B: give it the evidence; C: require citations and verify; D: split into specialists, the current build;
-E: run each several times and pool; F: hawk-versus-dove debate with a synthesiser). Every arm sees the same
-snapshot and is scored on the same scorecard, so the difference between neighbouring arms is the measured
-value of the one technique between them. Only A and D exist today.
+The harness is evaluated as a ladder of analysts, each one step up from the last. Analyst 1 is the bare model
+with the question only. Analyst 2 adds the evidence. Analyst 3 adds the fixed answer shape with a quote per
+claim and the code verifier. Analysts 4 to 8 add specialisation, one slice of evidence each. Every analyst sees
+the same snapshot and is scored on the same scorecard, five runs each, so the change in score at each step is
+the measured value of the one thing that was added. A planned further step is a hawk-versus-dove debate with a
+synthesiser.
 
 ## Runtime
 

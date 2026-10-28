@@ -123,7 +123,7 @@ demo("Objective", 1, "the forecast", 1,
   const cards = [
     ["1", "Judge the process, not the luck", "Eight decisions a year is far too few to tell skill from chance. So the yardstick is a ten-dimension scorecard fixed before any code existed: repeatability, groundedness, leakage, directional sanity, noise invariance, coherence, auditability and more. Outcomes are logged and never used to tune."],
     ["2", "A number you can audit", "Every forecast runs on one fingerprinted snapshot. Every model lists the items it read. Every analyst claim carries a verbatim quote that code has matched. Every entry in the ledger recomputes exactly from its snapshot. Nothing moves the number silently."],
-    ["3", "A harness that transfers", "The decision is the first target, not the only one. The same chain can forecast the December meeting, the year-end rate, or another central bank, and the control arms measure whether the language model is still earning its place."],
+    ["3", "A harness that transfers", "The decision is the first target, not the only one. The same chain can forecast the December meeting, the year-end rate, or another central bank, and the control analysts measure whether the language model is still earning its place."],
   ];
   cards.forEach(([n, h, b], i) => {
     const x = M + i * 4.1; card(s, x, 1.7, 3.85, 4.0);
@@ -140,7 +140,7 @@ demo("Objective", 1, "the forecast", 1,
     ["Prediction markets (Polymarket, Kalshi)", "Crowd odds on each outcome", "Independent crowd; fast to move", "Thin and fee-distorted; a $22 entry can sit next to a $67m one"],
     ["Economist surveys", "Median of polled forecasters", "Human judgement, broad", "Slow, unauditable, consensus-seeking"],
     ["Policy rules (Taylor family)", "Rate a formula says is appropriate", "Transparent, the Fed's own benchmarks", "Depends on unobservable r* and u*; says where rates should be, not what the committee will do"],
-    ["LLM 'FOMC agent' papers (2025)", "Models that read Fed text and vote", "Reported 90%+ accuracy on 2023 to 2024", "16 meetings; no frozen evidence, no quote verification, no replay, no control arm"],
+    ["LLM 'FOMC agent' papers (2025)", "Models that read Fed text and vote", "Reported 90%+ accuracy on 2023 to 2024", "16 meetings; no frozen evidence, no quote verification, no replay, no control"],
     [{ text: "FedCast", options: { bold: true, color: C.text2 } }, "All of the above pooled by code, plus verified analysts", "Every number traceable; repeatable; a scorecard that catches drift", "No live record yet; no accuracy claim at five weeks"],
   ];
   s.addTable(rows, { x: M, y: 1.55, w: W - 2 * M, colW: [2.6, 2.9, 3.2, 3.43], fontSize: 11.5, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.06, rowH: 0.62 });
@@ -212,22 +212,22 @@ demo("How it works", 2, "the evidence graph and the pool", 3,
 // =========================================================================================================
 pres.addSection({ title: "The harness" });
 {
-  const s = light("The harness", "Eight analysts, one model, four arms", "This is the slide that explains what harnessing means. The same model is run eight ways on the same snapshot. Analyst 1 gets nothing but the question: that is what the model does on its own, the control. Each later arm adds exactly one technique, so the score difference between neighbouring arms is the value of that technique. Arms A and B are meant to fail; the tool is judged on C and D.");
-  const arms = [
-    ["A", "Analyst 1: naive", "The question and the date. Nothing else.", "What the model does on its own. The control every other arm is measured against.", THEME.colors.accent4],
-    ["B", "Analyst 2: evidence shown, nothing verified", "Every document and every pre-computed number, 128,000 characters. Free-form answer.", "Adds the evidence. Shows what evidence alone fixes, and what it does not.", THEME.colors.accent4],
-    ["C", "Analyst 3: generalist with verifier", "Same evidence, but a fixed answer shape: a verbatim quote per claim, a watch-out report, a tilt capped at ±10 bp. Code checks every quote and number.", "Adds structure and verification. This is where the output becomes stable and checkable.", THEME.colors.dk2],
-    ["D", "Analysts 4 to 8: specialists", "One slice each: communications, minutes, inflation, labour, financial conditions. Same schema, same verifier.", "Adds specialisation. Each judgement is attributable to its evidence; a dissent survives instead of being averaged away.", THEME.colors.accent2],
+  const s = light("The harness", "Eight analysts, one model, one ladder", "This is the slide that explains what harnessing means. The same model is run eight ways on the same snapshot. Analyst 1 gets nothing but the question: that is what the model does on its own, the control. Each step up adds exactly one thing, so the score difference between neighbouring steps is the value of that thing. Analysts 1 and 2 are meant to fail; the tool is judged on 3 and 4 to 8.");
+  const steps = [
+    ["1", "Analyst 1: naive", "The question and the date. Nothing else.", "What the model does on its own. The control every later step is measured against.", THEME.colors.accent4],
+    ["2", "Analyst 2: evidence shown, nothing verified", "Every document and every pre-computed number, 128,000 characters. Free-form answer.", "Adds the evidence. Shows what evidence alone fixes, and what it does not.", THEME.colors.accent4],
+    ["3", "Analyst 3: generalist with verifier", "Same evidence, but a fixed answer shape: a verbatim quote per claim, a watch-out report, a tilt capped at ±10 bp. Code checks every quote and number.", "Adds structure and verification. This is where the output becomes stable and checkable.", THEME.colors.dk2],
+    ["4-8", "Analysts 4 to 8: specialists", "One slice each: communications, minutes, inflation, labour, financial conditions. Same schema, same verifier.", "Adds specialisation. Each judgement is attributable to its evidence; a dissent survives instead of being averaged away.", THEME.colors.accent2],
   ];
-  arms.forEach(([a, h, gets, adds, col], i) => {
+  steps.forEach(([a, h, gets, adds, col], i) => {
     const y = 1.55 + i * 1.27;
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y, w: 0.9, h: 1.1, fill: { color: col }, line: { color: col }, rectRadius: 0.1 });
-    text(s, a, { x: M, y, w: 0.9, h: 1.1, fontSize: 30, bold: true, color: C.background1, align: "center", valign: "middle", fontFace: THEME.headFontFace });
+    text(s, a, { x: M, y, w: 0.9, h: 1.1, fontSize: a.length > 1 ? 22 : 30, bold: true, color: C.background1, align: "center", valign: "middle", fontFace: THEME.headFontFace });
     text(s, h, { x: M + 1.1, y: y + 0.02, w: 4.0, h: 0.5, fontSize: 14, bold: true, color: C.text2, valign: "middle" });
     text(s, gets, { x: M + 1.1, y: y + 0.5, w: 4.0, h: 0.65, fontSize: 10.5, color: C.text1 });
     text(s, adds, { x: 6.0, y: y + 0.1, w: 6.7, h: 0.95, fontSize: 12.5, color: C.text1, valign: "middle" });
   });
-  text(s, "Each arm adds one technique. The value of the technique is the difference between neighbouring arms.", { x: M, y: 6.65, w: W - 2 * M, h: 0.35, fontSize: 12, italic: true, color: C.accent4 });
+  text(s, "Each step adds one thing. The value of that thing is the difference in score between neighbouring steps.", { x: M, y: 6.65, w: W - 2 * M, h: 0.35, fontSize: 12, italic: true, color: C.accent4 });
 }
 {
   const s = light("The harness", "What the harness enforces around every analyst", "Five mechanisms. None of them is clever; together they are what makes a language model's output usable in a forecast.");
@@ -255,20 +255,20 @@ demo("The harness", 3, "what each analyst is asked and given", 2,
 // =========================================================================================================
 pres.addSection({ title: "Evidence" });
 {
-  const s = light("Evidence", "The ladder, three snapshots, five runs each", "Read left to right. The naive model wobbles by three to five points between identical runs, cites nothing, and leaks three dozen numbers from memory; it still thinks the Fed is cutting. Showing it the evidence removes the leaks but not the wobble, and nothing can be checked. Structure plus verification makes the output stable and fully verifiable. Specialists keep that and add attribution. Same model, same day; the difference is the harness.");
+  const s = light("Evidence", "The ladder, four snapshots, five runs each", "Read left to right as an evolution. Analyst 1 wobbles by three to five points between identical runs, cites nothing, and leaks three dozen numbers from memory; it still thinks the Fed is cutting. Adding the evidence (analyst 2) removes the leaks but not the wobble, and nothing can be checked. Adding the answer shape and the verifier (analyst 3) is the step that makes the output stable and fully verifiable. Specialists (4 to 8) keep that and add attribution. Same model, same day; the difference at each step is the one thing added.");
   const H_ = t => ({ text: t, options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } });
   const ok = t => ({ text: t, options: { color: THEME.colors.accent3, bold: true, align: "center" } });
   const bad = t => ({ text: t, options: { color: THEME.colors.accent2, bold: true, align: "center" } });
   const na = t => ({ text: t, options: { color: THEME.colors.accent4, align: "center" } });
   const rows = [
-    [{ text: "Dimension (pass mark)", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, H_("Arm A: naive"), H_("Arm B: evidence shown"), H_("Arm C: generalist + verifier"), H_("Arm D: specialists")],
-    ["S1 Repeatability (≤ 2 pp)\nmax move of any probability across 5 identical runs", bad("3.4 / 4.5 / 4.9 pp, fail"), bad("3.3 / 2.3 / 4.8 pp, fail"), ok("0.6 / 0.5 / 0.5 bp of tilt, pass"), ok("0.5 / 0.8 / 1.2 bp of tilt, pass")],
-    ["S2 Groundedness (≥ 95%)\nshare of claims whose quote code found in the evidence", bad("0%, fail"), na("not measurable: no quotes"), ok("100% on all three, pass"), ok("100 / 97 / 100%, pass")],
-    ["S3 Leakage (exactly 0)\nnumbers in the answer that are not in the snapshot", bad("36 / 36 / 39, fail"), ok("0, pass"), ok("0, pass"), ok("0, pass")],
-    ["What it concluded", na("Cut 25 bps at 57%: its memory of the Fed is stale"), na("+25 bps at 55 to 57%: reads the evidence, overshoots the market"), na("+7.0 / +6.6 / +6.4 bp hawkish"), na("+4.4 / +4.1 / +4.4 bp hawkish; labour the lone non-hawk")],
+    [{ text: "Dimension (pass mark)", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, H_("Analyst 1: the question only"), H_("Analyst 2: + the evidence"), H_("Analyst 3: + answer shape + verifier"), H_("Analysts 4-8: + one slice each")],
+    ["S1 Repeatability (≤ 2 pp)\nmax move of any probability across 5 identical runs", bad("3.4 / 4.5 / 4.9 / 4.1 pp, fail"), bad("3.3 / 2.3 / 4.8 / 3.4 pp, fail"), ok("0.6 / 0.5 / 0.5 / 0.8 bp of tilt, pass"), ok("0.5 / 0.8 / 1.2 / 0.8 bp of tilt, pass")],
+    ["S2 Groundedness (≥ 95%)\nshare of claims whose quote code found in the evidence", bad("0%, fail"), na("not measurable: no quotes"), ok("100 / 100 / 100 / 99%, pass"), ok("100 / 97 / 100 / 100%, pass")],
+    ["S3 Leakage (exactly 0)\nnumbers in the answer that are not in the snapshot", bad("36 / 36 / 39 / 38, fail"), ok("0, pass"), ok("0, pass"), ok("0, pass")],
+    ["What it concluded", na("Cut 25 bps at 57 to 67%: its memory of the Fed is stale"), na("+25 bps at 50 to 57%: reads the evidence, overshoots the market"), na("+7.0 / +6.6 / +6.4 / +5.8 bp hawkish"), na("+4.4 / +4.1 / +4.4 / +4.0 bp hawkish; labour the lone non-hawk")],
   ];
   s.addTable(rows, { x: M, y: 1.55, w: W - 2 * M, colW: [3.3, 2.2, 2.2, 2.2, 2.23], fontSize: 11.5, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.06, rowH: 0.85 });
-  text(s, "Snapshots of 15, 24 and 26 October 2026. Arms C and D report S1 in basis points of tilt because they output a lean, not a distribution.", { x: M, y: 6.35, w: W - 2 * M, h: 0.5, fontSize: 10.5, color: C.accent4 });
+  text(s, "Snapshots of 15, 24, 26 and 28 October 2026. Analysts 3 to 8 report S1 in basis points of tilt because they output a lean, not a distribution.", { x: M, y: 6.35, w: W - 2 * M, h: 0.5, fontSize: 10.5, color: C.accent4 });
 }
 {
   const s = light("Evidence", "What the specialists said on 26 October", "Make it concrete. Each specialist's lean, and one real claim with the quote code matched. The labour analyst is the one that does not lean hawkish, and because it is a separate reader that dissent is visible rather than averaged away.");
@@ -370,7 +370,7 @@ pres.addSection({ title: "Limits and next" });
     ["An events agent for regime shifts", "1987, 1998, 2008, 2020: the Fed cut because of financial stress, not the data. A watch-out agent that scans the last three months for bank failures, funding stress and market dislocations, and raises a typed watch-out every analyst must answer."],
     ["Pre-registered weight sets", "Three or four candidate weight sets written down now, all scored on each live decision; the live set changes only by amendment on that record."],
     ["Reasoning quality, S8", "Twenty traces hand-graded on four questions; a model grader trusted only once it agrees with those grades."],
-    ["Arm F and a second model family", "A hawk, a dove and a synthesiser on the ladder; a second model family as a cross-check that the harness, not the model, is doing the work."],
+    ["One more step and a second model family", "A hawk, a dove and a synthesiser on the ladder; a second model family as a cross-check that the harness, not the model, is doing the work."],
   ];
   items.forEach(([h, b], i) => {
     const x = M + (i % 2) * 6.2, y = 1.55 + Math.floor(i / 2) * 1.7;

@@ -68,19 +68,21 @@ fedcast/
 - Every LLM output is schema-validated; invalid → bounded retry → fail loudly.
 - Every run records: snapshot hash, prompt hashes, backend + model id, code git SHA.
 
-## 5. Ablation ladder (the experiment)
+## 5. The ladder (the experiment)
 
-| Arm | Adds | Expected to improve |
+As built (the original plan named these rungs with letters; the letters were retired on 2026-10-28 because each
+rung is one analyst, and the analyst number says the same thing):
+
+| Analyst | Adds | Expected to improve |
 |---|---|---|
-| A | Naive single prompt, no data supplied | (control) |
-| B | Snapshot supplied + structured output | S3, S7 |
-| C | Quant models + deterministic aggregation, LLM bounded | S1, S4 |
-| D | Evidence-citation requirement + verifier agent | S2, S3 |
-| E | Self-consistency sampling (k runs → median) | S1, S6 |
-| F | Specialists + hawk/dove debate + superforecasting scaffold | S8, S4 |
+| 1 naive | Nothing: the question and the date | (control) |
+| 2 evidence shown | The frozen snapshot, free-form answer | S3 |
+| 3 generalist with verifier | A fixed answer shape with a quote per claim, checked by code; bounded tilt | S1, S2, S3, S10 |
+| 4 to 8 specialists | One slice of evidence each | attribution; a dissent survives |
+| planned | Hawk/dove debate with a synthesiser | S8, S4 |
 
-All arms scored on the same frozen snapshots with the same scorecard. Result = a table
-and chart of scorecard dimension × arm. That table *is* the proof.
+All analysts scored on the same frozen snapshots with the same scorecard, five runs each. Result = a table
+of scorecard dimension × analyst. That table *is* the proof.
 
 ## 6. Phases & exit criteria
 
@@ -90,7 +92,7 @@ and chart of scorecard dimension × arm. That table *is* the proof.
 | 1 | Data fetchers + snapshot + futures-implied baseline | Baseline within ~2 pp of CME FedWatch on a live check |
 | 2 | Quant models + aggregation + ledger | Vintage-data backtest runs; ledger replay passes (S9 deterministic) |
 | 3 | LLM backend interface + ClaudeCode/Replay backends + comms analyst + verifier | S2, S3 measurable on one snapshot |
-| 4 | Specialists, debate, self-consistency | Full Arm F forecast end-to-end |
+| 4 | Specialists, debate, self-consistency | Full forecast end-to-end with the top rung of the ladder |
 | 5 | Eval suite S1–S9, metamorphic generator, ablation runner, dashboard | `fedcast ablate` produces the ladder table |
 | 6 | Live forward tracking from next FOMC meeting; eval-gated prompt changes | Forecast pre-registered in ledger before each meeting |
 
@@ -144,14 +146,14 @@ How human input touches each scorecard dimension:
 
 `fedcast/llm/backend.py` — `ClaudeCodeBackend` (claude -p, --json-schema, --tools "" so no tool can be used),
 `ReplayBackend` (hash-keyed recordings), `FakeBackend` (tests). `fedcast/llm/analyst.py` — the communications
-analyst (arm D: snapshot + schema + citations + code verifier + watch-outs + bounded tilt) and the naive control
-(arm A). `fedcast analyse --arm comms|naive --runs N`. Analyses are saved under `analyses/<snapshot>/` and shown in
+analyst (analyst 4: snapshot + schema + citations + code verifier + watch-outs + bounded tilt) and the naive control
+(analyst 1). `fedcast analyse --analyst comms|naive --runs N`. Analyses are saved under `analyses/<snapshot>/` and shown in
 the graph as *computed*; the analyst enters the pool only after passing S1–S3/S10 and an amendment sets its weight.
 
 ## 9. Known risks / honest caveats
 - **`claude -p` has no temperature/seed control** → repeatability must come from harness design
   (that is the point), and S1 is measured, not assumed. API backend later allows temperature=0 comparison.
-- **Subscription rate limits** make N=10 × 6 arms slow → ReplayBackend caching + run ablations in batches.
+- **Subscription rate limits** make N=10 × 8 analysts slow → ReplayBackend caching + run ablations in batches.
 - **Futures data source**: standalone app cannot use the in-chat IBKR connector; plan is free
   delayed ZQ quotes first, IBKR API optional later.
 - **FRED needs a free API key** — you create it; it lives in a local `.env`, never in the repo.
