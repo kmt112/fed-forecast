@@ -85,6 +85,8 @@ def build(as_of: date) -> Snapshot:
     else:
         snap.missing["history.target_rate"] = "FRED_API_KEY not set in .env"
 
+    attempt("nyfed.dsge", "model_estimate", sources.DSGE_PAGE, sources.fetch_dsge)
+
     for mk in load_markets(config.ROOT / "human" / "prediction_markets.yaml"):
         if mk.status == "active" and mk.meeting == nxt.decision_date:
             snap.add(Item.make(f"human.pm.{mk.id}", "prediction_market", "human/prediction_markets.yaml",

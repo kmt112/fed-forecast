@@ -583,6 +583,10 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
     if tr:
         rows = [["Inputs", f"inflation {tr['inputs']['inflation_12m']:.2f}%, unemployment {tr['inputs']['unemployment']:.1f}% "
                            f"(year ago {tr['inputs']['unemployment_year_ago']:.1f}%), rate {tr['rate_before']:.2f}%"]]
+        rs = tr.get("r_star", {"source": "fixed grid", "grid": (0.5, 1.0, 1.5)})
+        rows.append(["Neutral real rate r*", ", ".join(f"{g:.2f}%" for g in rs["grid"]) + (
+            f" (NY Fed DSGE natural rate, {rs['kind']} for the quarter to {rs['quarter_end']}, released {rs['release']}: "
+            f"68% band and mean)" if rs["source"] == "nyfed.dsge" else " (fixed grid; no DSGE item in this snapshot)")])
         rows += [[f"{v} rule, prescribed change", f"{bp:+.1f} bp"] for v, bp in tr["by_variant_bp"].items()]
         rows += [["All variants × parameter grid", f"mean {tr['expected_change_bp']:+.1f} bp, spread {tr['spread_bp']:.0f} bp, "
                                                    f"σ {tr['sigma_bp']:.0f} bp"],
@@ -592,8 +596,10 @@ def build(entry: dict, snap: Snapshot, watchlist: list[dict] | None = None,
             what=_TAY_WHAT, why=_TAY_WHY,
             how="Each level rule gives a rule rate; the prescribed change for one meeting is 15% of the distance to "
                 "it (partial adjustment, ρ = 0.85). The first-difference rule gives a change directly, halved from a "
-                "quarter to a meeting. All four run over a grid of neutral real rates (0.5, 1.0, 1.5%) and "
-                "sustainable unemployment (4.0, 4.2, 4.4%). The mean prescription and its spread, plus a 15 bp floor, "
+                "quarter to a meeting. All four run over three values of the neutral real rate r* (the New York Fed "
+                "DSGE model's natural rate for the meeting's quarter: its 68% band and mean; a fixed 0.5, 1.0, 1.5% "
+                "when the snapshot has no DSGE item) and three of sustainable unemployment (4.0, 4.2, 4.4%). "
+                "The mean prescription and its spread, plus a 15 bp floor, "
                 "define a normal distribution whose mass in each 25 bp bucket is the model's probability.",
             rows=rows, evidence=tr["evidence"]))
         for s in ("sig.inflation", "sig.labour", "sig.rate_before"):

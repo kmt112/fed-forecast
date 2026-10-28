@@ -92,7 +92,10 @@ def model_rules() -> dict:
         "market_implied": {"method": "next-month contract when the month after the meeting has no meeting, else the "
                                      "meeting-month contract by day count; expected change split linearly between the "
                                      "two adjacent 25 bp outcomes"},
-        "taylor_rule": {"inflation_measure": "12-month core PCE", "rho": taylor.RHO, "r_star_grid": list(taylor.R_STAR_GRID),
+        "taylor_rule": {"inflation_measure": "12-month core PCE", "rho": taylor.RHO,
+                        "r_star_source": "NY Fed DSGE real natural rate for the meeting's quarter: 68% lower band, mean, "
+                                         "68% upper band, from the latest release in the snapshot (amendment #7)",
+                        "r_star_fallback_grid": list(taylor.R_STAR_GRID),
                         "u_star_grid": list(taylor.U_STAR_GRID), "sigma_floor_bp": taylor.SIGMA_FLOOR_BP,
                         "first_diff_meeting_scale": taylor.FIRST_DIFF_MEETING_SCALE, "goal": taylor.GOAL},
         "prediction_market": {"stale_after_days": prediction_market.STALE_AFTER_DAYS, "stale_odds": "used and flagged, never skipped"},

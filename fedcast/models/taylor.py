@@ -8,11 +8,13 @@ Variants (the MPR's quarterly rules, read with monthly data; π = 12-month core 
 
 Level rules are applied with partial adjustment: prescribed change = (1 − ρ)(R − R_before), ρ = 0.85,
 because the Fed moves toward a rule rate gradually rather than jumping to it.
-The unknowable inputs run over a grid, r* ∈ {0.5, 1.0, 1.5} and u* ∈ {4.0, 4.2, 4.4}. All prescriptions
-(variants × grid) are summarised by their mean and spread; σ = sqrt(spread² + 15 bp²); outcome probabilities
-are the normal mass in each 25 bp bucket, with the end buckets taking the tails.
+The unknowable inputs run over a grid. u* ∈ {4.0, 4.2, 4.4}. r*: the New York Fed DSGE model's real natural
+rate for the quarter that contains the meeting, taken as {68% lower band, mean, 68% upper band} from the latest
+release in the snapshot (item nyfed.dsge); when the snapshot has no such item, the fixed grid {0.5, 1.0, 1.5}.
+All prescriptions (variants × grid) are summarised by their mean and spread; σ = sqrt(spread² + 15 bp²);
+outcome probabilities are the normal mass in each 25 bp bucket, with the end buckets taking the tails.
 
-Pre-registered 2026-10-02. Not fitted to outcomes.
+Pre-registered 2026-10-02; r* source amended 2026-10-28 (amendment #7). Not fitted to outcomes.
 """
 
 from __future__ import annotations
@@ -32,11 +34,24 @@ FIRST_DIFF_MEETING_SCALE = 0.5  # the rule is quarterly; there are about two mee
 GOAL = 2.0
 
 
-def prescriptions(pi: float, u: float, u_lag: float, rate_before: float) -> list[dict]:
+def r_star_grid(snap: Snapshot) -> dict:
+    """r* values for the rules: the DSGE natural rate's 68% band and mean for the meeting's quarter, else the fixed grid."""
+    meeting = snap.get("calendar")["next_meeting"]
+    if "nyfed.dsge" in snap.items:
+        dsge = snap.get("nyfed.dsge")
+        q = next((p for p in dsge["natural_rate"] if p["quarter_end"] >= meeting), None)
+        if q:
+            return {"source": "nyfed.dsge", "release": dsge["release"], "quarter_end": q["quarter_end"], "kind": q["kind"],
+                    "grid": (round(q["band68"][0], 2), round(q["mean"], 2), round(q["band68"][1], 2))}
+    return {"source": "fixed grid", "release": None, "quarter_end": None, "kind": None, "grid": R_STAR_GRID}
+
+
+def prescriptions(pi: float, u: float, u_lag: float, rate_before: float,
+                  r_star_grid: tuple[float, ...] = R_STAR_GRID) -> list[dict]:
     out = []
     for u_star in U_STAR_GRID:
         gap = u_star - u
-        for r_star in R_STAR_GRID:
+        for r_star in r_star_grid:
             levels = {
                 "taylor93": r_star + pi + 0.5 * (pi - GOAL) + 1.0 * gap,
                 "balanced": r_star + pi + 0.5 * (pi - GOAL) + 2.0 * gap,
@@ -66,7 +81,8 @@ def taylor_rule(snap: Snapshot) -> dict:
     infl = inflation.compute(snap)
     lab = labour.compute(snap)
     rate_before = snap.get("effr")["latest"]["effr"]
-    pres = prescriptions(infl["anchor_12m"], lab["unemployment"], lab["unemployment_year_ago"], rate_before)
+    rs = r_star_grid(snap)
+    pres = prescriptions(infl["anchor_12m"], lab["unemployment"], lab["unemployment_year_ago"], rate_before, rs["grid"])
     changes = [p["change_bp"] for p in pres]
     mu, spread = mean(changes), pstdev(changes)
     sigma = math.sqrt(spread ** 2 + SIGMA_FLOOR_BP ** 2)
@@ -78,12 +94,14 @@ def taylor_rule(snap: Snapshot) -> dict:
         "rate_before": rate_before,
         "inputs": {"inflation_12m": infl["anchor_12m"], "inflation_gap_pp": infl["gap_pp"],
                    "unemployment": lab["unemployment"], "unemployment_year_ago": lab["unemployment_year_ago"]},
+        "r_star": rs,
         "expected_change_bp": round(mu, 2),
         "spread_bp": round(spread, 2),
         "sigma_bp": round(sigma, 2),
         "by_variant_bp": by_variant,
         "prescriptions": pres,
         "probabilities": bucket_from_normal(mu, sigma),
-        "evidence": sorted(set(infl["evidence"] + lab["evidence"] + ["effr", "calendar"])),
+        "evidence": sorted(set(infl["evidence"] + lab["evidence"] + ["effr", "calendar"]
+                               + (["nyfed.dsge"] if rs["source"] == "nyfed.dsge" else []))),
         "snapshot_hash": snap.hash,
     }

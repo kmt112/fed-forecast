@@ -205,3 +205,40 @@ def fetch_speeches(since: date, limit: int = 15, max_chars: int = 20000) -> dict
         if len(out) >= limit:
             break
     return {"feed": "https://www.federalreserve.gov/feeds/speeches.xml", "since": since.isoformat(), "speeches": out}
+
+
+# --- New York Fed DSGE: the real natural rate of interest ---------------------------------
+
+DSGE_PAGE = "https://www.newyorkfed.org/research/policy/dsge#/interactive"
+DSGE_DATA = "https://www.newyorkfed.org/medialibrary/research/interactives/data/dsge"
+_RELEASE = re.compile(r"([A-Z][a-z]+ \d{1,2}, \d{4})")
+
+
+def parse_dsge(updated: str, natural_csv: str, table_csv: str) -> dict:
+    """The model's mean estimate and forecast of the real natural rate (r*) by quarter, with the 68% band,
+    plus the headline table. Amendment #7: the Taylor-rule family reads r* from here."""
+    import csv
+    import io
+    from datetime import datetime
+
+    m = _RELEASE.search(updated)
+    release = datetime.strptime(m.group(1), "%B %d, %Y").date().isoformat() if m else None
+    path = []
+    for r in csv.DictReader(io.StringIO(natural_csv)):
+        hist, fc = r.get("mean_history") or "", r.get("mean_forecast") or ""
+        if not hist and not fc:
+            continue
+        path.append({"quarter_end": r["dates"], "kind": "estimate" if hist else "forecast",
+                     "mean": round(float(hist or fc), 3),
+                     "band68": [round(float(r["68.0%_lb"]), 3), round(float(r["68.0%_ub"]), 3)]})
+    rows = [r for r in csv.reader(io.StringIO(table_csv)) if r and any(c.strip() for c in r)]
+    table = {"years": rows[0][1:], "rows": {r[0]: [float(c) for c in r[1:]] for r in rows[1:]}} if rows else {}
+    return {"release": release, "page": DSGE_PAGE, "natural_rate": path, "table": table,
+            "note": "Real natural rate of interest, percent. 'estimate' is the model's mean estimate on data through "
+                    "that quarter; 'forecast' is its mean forecast; band68 is the 68% band."}
+
+
+def fetch_dsge() -> dict:
+    return parse_dsge(http.get_text(f"{DSGE_DATA}/updated.txt"),
+                      http.get_text(f"{DSGE_DATA}/Percent_NaturalRate.csv"),
+                      http.get_text(f"{DSGE_DATA}/dsgeTableData.csv"))

@@ -82,11 +82,16 @@ def build(entry: dict, snap: Snapshot) -> list[dict]:
     floor = fc.get("surprise_floor", 0.0)
     tr = fc["models"].get("taylor_rule")
     if tr:
+        rs = tr.get("r_star", {"source": "fixed grid", "grid": (0.5, 1.0, 1.5)})
+        r_star_note = (f"r* from the New York Fed DSGE model's natural rate for the quarter to {rs['quarter_end']} "
+                       f"({', '.join(f'{g:.2f}' for g in rs['grid'])}%: 68% band and mean, release {rs['release']})"
+                       if rs["source"] == "nyfed.dsge" else
+                       f"r* on the fixed grid {', '.join(f'{g:.1f}' for g in rs['grid'])}% (no DSGE item in this snapshot)")
         steps.append({
             "title": "Read the rate against the Taylor-rule family",
             "body": (f"With 12-month core PCE at {tr['inputs']['inflation_12m']:.2f}% and unemployment at "
-                     f"{tr['inputs']['unemployment']:.1f}%, the four Monetary Policy Report rules, over a grid of "
-                     f"neutral-rate and sustainable-unemployment assumptions, prescribe an average move of "
+                     f"{tr['inputs']['unemployment']:.1f}%, the four Monetary Policy Report rules, with {r_star_note} "
+                     f"and sustainable unemployment on a 4.0-4.4% grid, prescribe an average move of "
                      f"{tr['expected_change_bp']:+.1f} bp from {tr['rate_before']:.2f}% (spread {tr['spread_bp']:.0f} bp). "
                      f"That spread plus a 15 bp floor sets the width of the distribution."),
             "rows": [[f"{v} rule", f"{bp:+.1f} bp"] for v, bp in tr["by_variant_bp"].items()]

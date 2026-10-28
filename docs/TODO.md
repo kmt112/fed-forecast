@@ -39,8 +39,9 @@ and, where it is a fitted model, a pre-registered spec and the expanding-window 
 ## Taylor-rule family (the rules are the Fed's; the inputs and the conversion are ours)
 - [ ] Inflation measure: show the 3-month-momentum variant beside the 12-month anchor (today they differ in sign:
       +11 bp vs -11 bp); decide by amendment whether the anchor stays 12-month only.
-- [ ] r* and u*: read them from the SEP longer-run medians already in the snapshot (3.2% nominal funds rate,
-      4.2% unemployment) instead of the fixed grids 0.5-1.5% and 4.0-4.4%.
+- [x] r*: read from the New York Fed DSGE model's natural rate for the meeting's quarter (amendment #7, 2026-10-28;
+      snapshot item nyfed.dsge). The fixed grid 0.5-1.5% remains the fallback when a snapshot has no DSGE item.
+- [ ] u*: read from the SEP longer-run median already in the snapshot (4.2%) instead of the fixed grid 4.0-4.4%.
 - [ ] Partial adjustment (rho = 0.85 per meeting) and the quarter-to-meeting scaling of the first-difference rule
       (0.5): document a source or estimate them on the decision history (pre-register first).
 - [ ] Rule rate -> probability: the normal with sigma = sqrt(spread^2 + 15 bp^2) is our construction; test
