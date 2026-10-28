@@ -82,3 +82,27 @@ def test_ledger_verifies_records_with_non_string_keys(tmp_path):
     path = tmp_path / "l.jsonl"
     ledger.append(path, {"probs": {-25: 0.4, 0: 0.6}})
     assert ledger.verify(path) == 1
+
+
+def test_replay_uses_the_analyst_records_the_entry_names(tmp_path, monkeypatch):
+    import json
+    from fedcast import evals
+    from fedcast.llm import analyst
+    from fedcast.scorecard import spec_hash
+
+    monkeypatch.setattr(analyst, "ANALYSES_DIR", tmp_path)
+    snap = make_snapshot()
+    first = dict(specialist_record("communications", 6.0), snapshot_hash=snap.hash, created_at="2026-10-25T00:00:00+00:00")
+    analyst.save(first)
+    entry = forecast.run(snap, [])  # reads the latest record: tilt +6 bp
+    assert entry["forecast"]["analysts"]["tilts_bp"] == {"communications": 6.0}
+    # a newer, different record lands on the same snapshot after the entry was published
+    analyst.save(dict(specialist_record("communications", -8.0), snapshot_hash=snap.hash, created_at="2026-10-26T00:00:00+00:00"))
+    assert analyst.latest(snap.hash, "communications")["summary"]["tilt_mean_bp"] == -8.0
+    det = evals.replay([{"seq": 0, **json.loads(json.dumps(entry))}], lambda h: snap, spec_hash())
+    assert det[0]["ok"] is True
+    # an entry that names a record which no longer exists fails, and says which
+    gone = json.loads(json.dumps(entry)); gone["forecast"]["analysts"]["records"]["communications"]["created_at"] = "2020-01-01T00:00:00+00:00"
+    det = evals.replay([{"seq": 1, **gone}], lambda h: snap, spec_hash())
+    assert det[0]["ok"] is False and "communications" in det[0]["note"]
+

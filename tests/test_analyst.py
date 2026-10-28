@@ -126,3 +126,12 @@ def test_describe_agents_lists_every_agent_with_its_inputs():
     assert "fed.statement.2026-09-16" in comm["items"] and comm["prompt_chars"] == len(comm["prompt"]) and len(comm["prompt_hash"]) == 16
     naive = next(a for a in agents if a["name"] == "naive")
     assert naive["items"] == [] and naive["pre_reads"] == []
+
+
+def test_zero_in_a_claim_matches_zero_in_the_evidence():
+    from fedcast.llm.analyst import _number_in_evidence
+
+    assert _number_in_evidence("0", {"12", "0"})          # "a 12-0 vote" against '"against": 0'
+    assert not _number_in_evidence("0.004", {"12", "0"})  # a tiny number is not the evidence's zero
+    assert not _number_in_evidence("0", {"12"})
+

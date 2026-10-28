@@ -262,9 +262,12 @@ def replay(entries: list[dict], find_snapshot: Callable[[str], Snapshot | None],
     snapshot is recomputed with the current code. Entries recorded under an earlier spec (pool weights, floor or a
     model rule changed since, by logged amendment) are labelled and left out of the share; whether their numbers
     still match is shown for information. Fields added to the record since (new weight-0 models, annotations) do
-    not count against an entry; the published numbers do."""
+    not count against an entry; the published numbers do. The specialists' tilt is recomputed from the analyst
+    records the entry names (by created_at), not from the latest records on the snapshot, so a forecast still
+    replays after the analysts are rerun; an entry that names no record is recomputed with a tilt of 0."""
     from fedcast import forecast
     from fedcast.human.views import View
+    from fedcast.llm import analyst as analyst_mod
 
     details = []
     for e in entries:
@@ -274,7 +277,10 @@ def replay(entries: list[dict], find_snapshot: Callable[[str], Snapshot | None],
         if snap is None:
             details.append({"entry": e["seq"], "spec": spec[:8], "ok": None if spec != current_spec else False, "note": "snapshot not found"})
             continue
-        got = json.loads(json.dumps(forecast.compute(snap, [View(**v) for v in f["human"]["views_applied"]])))
+        named = (f.get("analysts") or {}).get("records") or {}
+        analyses = {name: analyst_mod.record_at(f["snapshot_hash"], name, r["created_at"]) for name, r in named.items()}
+        missing = [name for name, rec in analyses.items() if rec is None]
+        got = json.loads(json.dumps(forecast.compute(snap, [View(**v) for v in f["human"]["views_applied"]], analyses=analyses)))
         nums = got["machine_only"] == f["machine_only"] and got["human_adjusted"] == f["human_adjusted"]
         full = got == f
         if spec != current_spec:
@@ -283,6 +289,7 @@ def replay(entries: list[dict], find_snapshot: Callable[[str], Snapshot | None],
             continue
         details.append({"entry": e["seq"], "spec": spec[:8], "ok": nums,
                         "note": "" if full else "numbers match; record has fields added since" if nums
+                        else f"the analyst record(s) this entry names are missing: {', '.join(missing)}" if missing
                         else "published numbers differ under the current code: a rule changed after this entry without a new spec hash (amendment log)"})
     return details
 

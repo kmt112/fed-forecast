@@ -228,10 +228,12 @@ def _number_forms(n: str) -> set[str]:
         v = float(n)
     except ValueError:
         return forms
+    if v == 0:
+        return {n, "0", "0.0"}  # a zero written by the model matches a zero in the evidence ("12-0", "against": 0)
     for alt in (v, v / 100, v * 100):
         for fmt in ("{:g}", "{:.1f}", "{:.2f}", "{:.3f}", "{:.4f}"):
             forms.add(fmt.format(alt))
-    return {f for f in forms if f and f != "0"}
+    return {f for f in forms if f and f != "0"}  # a tiny non-zero number never matches the evidence's zeros
 
 
 def _number_in_evidence(n: str, evidence_numbers: set[str]) -> bool:
@@ -464,6 +466,19 @@ def latest(snapshot_hash: str, analyst: str) -> dict | None:
         return None
     files = sorted(folder.glob(f"*_{analyst}.json"))
     return json.loads(files[-1].read_text(encoding="utf-8")) if files else None
+
+
+def record_at(snapshot_hash: str, analyst: str, created_at: str) -> dict | None:
+    """The one record a ledger entry says it used (its created_at), not the latest: a forecast must replay against the
+    analyst runs it was made from, even after newer runs are recorded on the same snapshot."""
+    folder = ANALYSES_DIR / snapshot_hash[:12]
+    if not folder.exists():
+        return None
+    for path in folder.glob(f"*_{analyst}.json"):
+        rec = json.loads(path.read_text(encoding="utf-8"))
+        if rec.get("created_at") == created_at:
+            return rec
+    return None
 
 
 ALL_ANALYSTS = list(SPECIALISTS) + ["generalist", "evidence_only", "naive"]
