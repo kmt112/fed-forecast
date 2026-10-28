@@ -135,3 +135,43 @@ def test_zero_in_a_claim_matches_zero_in_the_evidence():
     assert not _number_in_evidence("0.004", {"12", "0"})  # a tiny number is not the evidence's zero
     assert not _number_in_evidence("0", {"12"})
 
+
+def _bad():
+    bad = json.loads(json.dumps(GOOD))
+    bad["claims"][0]["quote"] = "raise the target range by 50 basis points"   # not in the statement
+    return bad
+
+
+def test_repair_loop_sends_the_answer_back_once_with_the_verifier_report_and_keeps_both():
+    fb = FakeBackend([_bad(), GOOD])
+    rec = analyst.run_comms(comms_snapshot(), fb, WATCH, runs=1)
+    assert len(fb.calls) == 2
+    prompt2 = fb.calls[1][1]
+    assert "VERIFIER REPORT" in prompt2 and "raise the target range by 50 basis points" in prompt2 and "quote not found" in prompt2
+    assert prompt2.startswith(fb.calls[0][1])  # the original prompt, unchanged, plus the report
+    run = rec["runs"][0]
+    assert run["verification"]["groundedness_pct"] == 100.0           # the repaired answer counts
+    assert run["repair"]["first"]["verification"]["groundedness_pct"] == 75.0
+    assert run["repair"]["n_verified_before"] == 3 and run["repair"]["reasons"][0]["problem"] == "quote not found"
+    s = rec["summary"]
+    assert s["repairs"] == 1 and s["groundedness_pct_mean"] == 100.0 and s["groundedness_before_repair_pct_mean"] == 75.0
+    assert rec["prompt_version"] == "specialists-v3-repair"
+
+
+def test_repair_is_one_round_only_and_a_still_bad_answer_stays_unverified():
+    fb = FakeBackend([_bad(), _bad()])
+    rec = analyst.run_comms(comms_snapshot(), fb, WATCH, runs=1)
+    assert len(fb.calls) == 2
+    assert rec["runs"][0]["verification"]["groundedness_pct"] == 75.0 and rec["summary"]["repairs"] == 1
+
+
+def test_no_repair_when_the_verifier_accepts_the_answer_and_none_for_the_generalist():
+    clean = json.loads(json.dumps(GOOD))
+    clean["claims"][3]["text"] = "My note says claims rose for six weeks."   # GOOD carries a deliberate leaked "6"
+    fb = FakeBackend(clean)
+    rec = analyst.run_comms(comms_snapshot(), fb, WATCH, runs=2)
+    assert len(fb.calls) == 2 and all("repair" not in r for r in rec["runs"]) and rec["summary"]["repairs"] == 0
+    fb = FakeBackend([_bad(), clean])
+    rec = analyst.run_specialist(analyst.GENERALIST, comms_snapshot(), fb, WATCH, runs=1, repair=False)
+    assert len(fb.calls) == 1 and "repair" not in rec["runs"][0] and rec["runs"][0]["verification"]["groundedness_pct"] == 75.0
+

@@ -61,7 +61,11 @@ def measure(analyses: dict[str, dict | None]) -> list[dict]:
         rows.append(_row("S1", "4-8 specialists", max(stds) if stds else None, "bp of tilt (proxy)",
                          "max std of tilt across runs, worst specialist; needs 2+ runs" if stds else "needs 2+ runs per specialist", n_runs))
         g = [v["summary"]["groundedness_pct_mean"] for v in specialists.values()]
-        rows.append(_row("S2", "4-8 specialists", round(min(g), 1), "pct", "quote-verified share, worst specialist", n_runs))
+        n_rep = sum(v["summary"].get("repairs", 0) for v in specialists.values())
+        g_before = [v["summary"].get("groundedness_before_repair_pct_mean", v["summary"]["groundedness_pct_mean"]) for v in specialists.values()]
+        rows.append(_row("S2", "4-8 specialists", round(min(g), 1), "pct",
+                         "quote-verified share, worst specialist" + (f"; after the one-retry repair loop ({n_rep} run(s) repaired; "
+                                                                      f"before repair: {min(g_before):.1f}%)" if n_rep else ""), n_runs))
         rows.append(_row("S3", "4-8 specialists", sum(v["summary"]["leakage_total"] for v in specialists.values()), "count",
                          "numbers not in the quoted evidence, all specialists and runs", n_runs))
         rows.append(_row("S10", "4-8 specialists", 100.0 if all(v["summary"]["watchouts_missing_total"] == 0 for v in specialists.values()) else 0.0,

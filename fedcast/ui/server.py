@@ -164,7 +164,8 @@ def _trim_analysis(rec: dict | None) -> dict | None:
         o = last["completion"]["output"]
         out["last"] = {"summary": o.get("summary", ""), "confidence": o.get("confidence"), "watchouts": o.get("watchouts", []),
                        "verification": last["verification"], "model": last["completion"].get("model"),
-                       "duration_s": last["completion"].get("duration_s")}
+                       "duration_s": last["completion"].get("duration_s"),
+                       "repair": {k: v for k, v in last["repair"].items() if k != "first"} if "repair" in last else None}
     return out
 
 
@@ -232,7 +233,9 @@ def _audit() -> dict:
                     runs.append({"i": i + 1, "tilt_bp": v["tilt_bp"], "n_claims": v["n_claims"], "n_verified": v["n_verified"],
                                  "leakage": v["leakage_count"], "watchouts_missing": len(v["watchouts_missing"]),
                                  "confidence": c["output"].get("confidence"), "model": c.get("model"), "duration_s": c.get("duration_s"),
-                                 "summary": c["output"].get("summary", "")[:300]})
+                                 "summary": c["output"].get("summary", "")[:300],
+                                 "repair": {k: r["repair"][k] for k in ("tilt_before_bp", "n_verified_before", "n_claims_before", "leakage_before")}
+                                 if "repair" in r else None})
             recs.append({"file": f.name, "analyst": rec["analyst"], "analyst_no": analyst_mod.ANALYST_NO.get(rec["analyst"]), "created_at": rec["created_at"],
                          "backend": rec["backend"], "prompt_version": rec.get("prompt_version"), "prompt_chars": rec.get("prompt_chars"),
                          "reverified_at": rec.get("reverified_at"), "summary": rec["summary"], "runs": runs})

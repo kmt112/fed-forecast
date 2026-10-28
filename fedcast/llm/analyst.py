@@ -38,7 +38,8 @@ from fedcast.snapshot import Snapshot
 
 ANALYSES_DIR = config.ROOT / "analyses"
 TILT_CAP_BP = 10
-PROMPT_VERSION = "specialists-v2"
+PROMPT_VERSION = "specialists-v3-repair"
+REPAIR_ROUNDS = 1  # one retry when the verifier finds a quote it cannot locate or a number not in the evidence
 
 SYSTEM = ("You are an analyst inside an audited Federal Reserve forecasting harness. You may use ONLY the evidence in "
           "the user message. Do not use anything you remember about the economy, the Fed or markets; if the evidence "
@@ -286,8 +287,35 @@ def verify(output: dict, snap: Snapshot, watchlist: list[dict], spec: Spec | Non
     }
 
 
+def repair_reasons(v: dict) -> list[dict]:
+    """What the verifier could not accept in an answer: a quote it could not find in the named item, or a number that
+    appears nowhere in the evidence. Missing watch-outs and a clipped tilt are reported, not repaired."""
+    out = []
+    for c in v["claims"]:
+        if not c["verified"]:
+            out.append({"claim": c["text"], "item": c.get("item", ""), "quote": c.get("quote", ""), "problem": "quote not found"})
+        if c["leaked_numbers"]:
+            out.append({"claim": c["text"], "item": c.get("item", ""), "quote": c.get("quote", ""),
+                        "problem": "numbers not in the evidence: " + ", ".join(c["leaked_numbers"])})
+    return out
+
+
+def repair_prompt(prompt: str, reasons: list[dict]) -> str:
+    """The original prompt plus the verifier's report. The model may fix or drop the listed claims; it may not add
+    new ones. The same schema applies, so the repaired answer is verified exactly like the first."""
+    lines = ["", "=== VERIFIER REPORT (code checked your previous answer against the evidence) ===",
+             "The following claims could not be verified. For each one, either replace the quote with a passage copied "
+             "verbatim from the item named (or name the item the passage really comes from), remove any number that is not "
+             "in the evidence, or drop the claim. Do not add new claims. Return the complete answer again in the same format."]
+    for i, r in enumerate(reasons, 1):
+        lines.append(f"{i}. [{r['problem']}] claim: {r['claim']} | item: {r['item']} | quote given: {r['quote']}")
+    return prompt + "\n".join(lines)
+
+
 def run_specialist(spec: Spec, snap: Snapshot, backend: LLMBackend, watchlist: list[dict], runs: int = 1,
-                   log: Callable[[str], None] | None = None) -> dict:
+                   log: Callable[[str], None] | None = None, repair: bool = True) -> dict:
+    """Run one analyst `runs` times. With `repair` (the specialists, analysts 4 to 8), a run whose answer the verifier
+    cannot fully accept is sent back once with the verifier's report; both answers are recorded, the repaired one counts."""
     say = log or (lambda m: print(m, file=sys.stderr, flush=True))
     prompt = build_prompt(snap, watchlist, spec)
     results = []
@@ -298,8 +326,22 @@ def run_specialist(spec: Spec, snap: Snapshot, backend: LLMBackend, watchlist: l
         v = verify(c.output, snap, watchlist, spec)
         say(f"  {spec.name} run {i + 1}/{runs}: done in {time.time() - t0:.0f}s, tilt {v['tilt_bp']:+.0f} bp, "
             f"{v['n_verified']}/{v['n_claims']} claims verified")
-        results.append({"completion": _dump(c), "verification": v})
+        result = {"completion": _dump(c), "verification": v}
+        reasons = repair_reasons(v) if repair else []
+        for _ in range(REPAIR_ROUNDS if reasons else 0):
+            say(f"  {spec.name} run {i + 1}/{runs}: {len(reasons)} claim(s) sent back to the model once…")
+            c2 = backend.complete(SYSTEM, repair_prompt(prompt, reasons), SCHEMA, run=i)
+            v2 = verify(c2.output, snap, watchlist, spec)
+            say(f"  {spec.name} run {i + 1}/{runs}: repaired, tilt {v['tilt_bp']:+.0f} -> {v2['tilt_bp']:+.0f} bp, "
+                f"{v2['n_verified']}/{v2['n_claims']} claims verified")
+            result = {"completion": _dump(c2), "verification": v2,
+                      "repair": {"first": {"completion": _dump(c), "verification": v}, "reasons": reasons,
+                                 "tilt_before_bp": v["tilt_bp"], "groundedness_before_pct": v["groundedness_pct"],
+                                 "leakage_before": v["leakage_count"], "n_verified_before": v["n_verified"], "n_claims_before": v["n_claims"]}}
+        results.append(result)
     tilts = [r["verification"]["tilt_bp"] for r in results]
+    repaired = [r for r in results if "repair" in r]
+    before_g = [r["repair"]["groundedness_before_pct"] if "repair" in r else r["verification"]["groundedness_pct"] for r in results]
     return {
         "analyst": spec.name, "analyst_no": ANALYST_NO[spec.name], "prompt_version": PROMPT_VERSION, "prompt_chars": len(prompt),
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -310,6 +352,10 @@ def run_specialist(spec: Spec, snap: Snapshot, backend: LLMBackend, watchlist: l
             "groundedness_pct_mean": round(statistics.mean(r["verification"]["groundedness_pct"] for r in results), 1),
             "leakage_total": sum(r["verification"]["leakage_count"] for r in results),
             "watchouts_missing_total": sum(len(r["verification"]["watchouts_missing"]) for r in results),
+            "repairs": len(repaired),
+            "repair_tilt_changes": sum(1 for r in repaired if r["repair"]["tilt_before_bp"] != r["verification"]["tilt_bp"]),
+            "groundedness_before_repair_pct_mean": round(statistics.mean(before_g), 1),
+            "leakage_before_repair_total": sum(r["repair"]["leakage_before"] if "repair" in r else r["verification"]["leakage_count"] for r in results),
         },
     }
 

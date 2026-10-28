@@ -144,7 +144,7 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
         elif name == "evidence_only":
             recs.append(analyst.run_evidence_only(snap, backend, runs=args.runs))
         elif name == "generalist":
-            recs.append(analyst.run_specialist(analyst.GENERALIST, snap, backend, watchlist, runs=args.runs))
+            recs.append(analyst.run_specialist(analyst.GENERALIST, snap, backend, watchlist, runs=args.runs, repair=False))
         else:
             recs.append(analyst.run_specialist(analyst.SPECIALISTS[name], snap, backend, watchlist, runs=args.runs))
         analyst.save(recs[-1])
@@ -153,6 +153,9 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
     print(f"analyst {analyst.ANALYST_NO[rec['analyst']]} {rec['analyst']} on snapshot {snap.hash[:12]} via {rec['backend']}: {args.runs} run(s)")
     for k, v in rec["summary"].items():
         print(f"  {k}: {v}")
+    if rec["summary"].get("repairs"):
+        print(f"  repair loop: {rec['summary']['repairs']} run(s) sent back once; the lean changed in {rec['summary']['repair_tilt_changes']}; "
+              f"grounded {rec['summary']['groundedness_before_repair_pct_mean']}% before, {rec['summary']['groundedness_pct_mean']}% after")
     if rec["analyst"] not in ("naive", "evidence_only"):
         v = rec["runs"][-1]["verification"]
         print("  last run claims:")

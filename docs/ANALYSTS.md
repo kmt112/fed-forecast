@@ -30,6 +30,14 @@ unassisted run is kept as the control (analyst 1) so the harness is always measu
 3. **Verification by code.** Each quote is string-matched against the named item. Each number in a claim
    is checked against the whole evidence set. Each active watch-out must be answered by id. The tilt is
    clipped to its bounds. The scores that matter come from these checks, not from the model's confidence.
+   **One repair round (specialists only, from 28 October 2026).** If the verifier cannot find a quote or finds a
+   number that is not in the evidence, the answer is sent back once with the verifier's report: fix the quote
+   from the named item, remove the number, or drop the claim; no new claims. The repaired answer is verified
+   the same way and is the one that counts; the first answer is kept in the record beside it, with how many
+   claims were sent back and whether the lean changed. There is no second round: a claim the model cannot
+   substantiate after one correction stays unverified and counts against groundedness. Analyst 3 does not get
+   the repair round, so the step from 3 to 4-8 on the ladder is specialisation plus repair; the record shows
+   groundedness before and after repair so the two can be told apart.
 4. **Recording.** Every call is stored under a hash of its prompt and run index, with the model's full
    output and usage. Any result can be replayed exactly and nothing can be edited without a visible commit.
 5. **Scoring.** Repeated runs measure repeatability; the verifier measures groundedness and leakage; the
