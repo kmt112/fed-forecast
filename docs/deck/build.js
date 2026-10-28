@@ -271,6 +271,29 @@ pres.addSection({ title: "Evidence" });
   text(s, "Snapshots of 15, 24, 26 and 28 October 2026. Analysts 3 to 8 report S1 in basis points of tilt because they output a lean, not a distribution.", { x: M, y: 6.35, w: W - 2 * M, h: 0.5, fontSize: 10.5, color: C.accent4 });
 }
 {
+  const s = light("Evidence", "What each step bought", "Three charts, one per dimension, averaged over the four snapshots. Left: how much the answer moves between identical runs. The step that matters is analyst 2 to analyst 3: the answer shape and the verifier take the wobble from three and a half points to under one. Middle: numbers from memory, gone as soon as the evidence is shown. Right: share of claims whose quote code found verbatim; analyst 2 cannot be measured because it quotes nothing. The specialists keep what analyst 3 achieved. For analysts 3 to 8 the wobble is in their lean, which maps one basis point to one percentage point of probability, so the four bars are comparable.");
+  const cats = ["1: question only", "2: + evidence", "3: + shape, verifier", "4-8: + one slice each"];
+  const cw = (W - 2 * M - 0.5) / 3;
+  const chart = (title, labels, vals, x, max, note, fmt = "0.0") => {
+    text(s, title, { x, y: 1.45, w: cw, h: 0.4, fontSize: 13, bold: true, color: C.text2 });
+    s.addChart(pres.charts.BAR, [{ name: title, labels, values: vals }], {
+      x, y: 1.85, w: cw, h: 3.9, barDir: "col", barGapWidthPct: 60,
+      chartColors: [THEME.colors.dk2], showValue: true, dataLabelFontSize: 11, dataLabelColor: THEME.colors.dk1, dataLabelFormatCode: fmt,
+      catAxisLabelFontSize: 9, catAxisLabelColor: THEME.colors.dk1, valAxisLabelFontSize: 9, valAxisLabelColor: THEME.colors.accent4,
+      valAxisMinVal: 0, valAxisMaxVal: max, showLegend: false, catAxisLineShow: false, valAxisLineShow: false,
+      valGridLine: { color: "E5E7EB", style: "solid", size: 0.5 },
+    });
+    text(s, note, { x, y: 5.8, w: cw, h: 0.7, fontSize: 9.5, color: C.accent4 });
+  };
+  chart("S1: wobble between identical runs (pp)", cats, [4.2, 3.5, 0.6, 0.8], M, 5,
+        "Largest standard deviation across five runs, mean of four snapshots. Pass mark 2 pp. Analysts 3 to 8: standard deviation of the lean, 1 bp = 1 pp.");
+  chart("S3: numbers from memory (count)", cats, [37, 0, 0, 0], M + cw + 0.25, 40,
+        "Numbers in the answer that exist nowhere in the frozen evidence, summed over five runs. Pass mark: exactly 0.", "0");
+  chart("S2: claims with a verbatim quote (%)", ["1: question only", "3: + shape, verifier", "4-8: + one slice each"], [0, 99.7, 99.2], M + 2 * (cw + 0.25), 100,
+        "Share of claims whose quote code found character for character in the item named. Pass mark 95%. Analyst 2 is not shown: it quotes nothing, so it cannot be measured.");
+  text(s, "The step from analyst 2 to analyst 3 is the harness: a fixed answer shape with a quote per claim, checked by code. It is the step that makes the model repeatable and checkable. Specialists keep both and add attribution.", { x: M, y: 6.55, w: W - 2 * M, h: 0.45, fontSize: 11.5, italic: true, color: C.accent2 });
+}
+{
   const s = light("Evidence", "What the specialists said on 26 October", "Make it concrete. Each specialist's lean, and one real claim with the quote code matched. The labour analyst is the one that does not lean hawkish, and because it is a separate reader that dissent is visible rather than averaged away.");
   const rows = [
     [{ text: "Analyst", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, { text: "Reads", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, { text: "Lean (5 runs)", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } }, { text: "Verified", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } }],
