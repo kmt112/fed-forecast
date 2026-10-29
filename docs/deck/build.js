@@ -517,32 +517,23 @@ demo("Evidence", 6, "the ledger and replay", 1,
 // =========================================================================================================
 pres.addSection({ title: "Limits and next" });
 {
-  const s = light("Limits and next", "What this does not claim, and what comes next", "Left, the limits, said before anyone asks: one scored decision; weights by judgement; the fitted model outside; the market is the anchor. Right, what is next, in order of value: the December window is already running on the same chain; pre-registered weight sets scored live; an events agent for the regime shifts the models cannot read (1987, 1998, 2008, 2020 were financial-stress cuts); the reasoning grader and a second model family.");
-  text(s, "What this does not claim", { x: M, y: 1.5, w: 6.0, h: 0.4, fontSize: 16, bold: true, color: C.text2 });
-  const limits = [
-    ["One scored decision", "28 October is the first. Everything before it is process evidence, which is the point, but calibration needs a record."],
-    ["Weights are judgement", "Market 0.6, Taylor 0.2, odds 0.1, base rates 0.1, the floor and the lean cap were set by reasoning and logged, never fitted."],
-    ["The fitted model is outside", "Probit v1 failed its gate and was reported, not tuned; v2 beats the base rate but carries a contamination caveat, so weight 0. About 130 usable decisions, 68% holds: no gradient-boosted anything."],
-    ["The market is the anchor", "At five weeks futures call most decisions. The claim is auditability and discipline, not a better hit rate."],
-  ];
-  limits.forEach(([h, b], i) => {
-    const y = 2.0 + i * 1.15;
-    card(s, M, y, 6.0, 1.05);
-    text(s, h, { x: M + 0.25, y: y + 0.08, w: 5.5, h: 0.35, fontSize: 13, bold: true, color: C.text2 });
-    text(s, b, { x: M + 0.25, y: y + 0.42, w: 5.5, h: 0.6, fontSize: 10.5, color: C.text1 });
-  });
-  text(s, "What comes next, in order of value", { x: 6.95, y: 1.5, w: 6.0, h: 0.4, fontSize: 16, bold: true, color: C.text2 });
+  const s = light("Limits and next", "What comes next", "Six follow-ups, in order of value. One: pre-registered weight sets scored on every live decision, so the weights stop being judgement. Two: reasoning quality graded by people in the app, which becomes the tenth measured dimension and a gate. Three: an events agent for the regime shifts the models cannot read. Four: a second model family to show the harness, not the model, does the work. Five: other central banks; the chain needs a calendar, a rate series, the statements and a curve, and the scorecard transfers unchanged. Six: better classical models, judged by the expanding window only.");
+  text(s, "December is on file: entry #23 for the 9 December meeting, +25 bps 73.6%, no change 16.7%, specialists +4.0 bp. The 28 October call is scored the moment the post-meeting rate row lands.", { x: M, y: 1.4, w: W - 2 * M, h: 0.4, fontSize: 11.5, color: C.accent4 });
   const next = [
-    ["The December window, same chain: on file", "Entry #23 for the 9 December meeting: +25 bps 73.6%, no change 16.7%, +50 bps 7.8%. Futures 84.5% and Polymarket 77.4% for a hike; the specialists lean +4.0 bp, labour again the lone dove. The chain needed only a new target, and the repair round fired twice on the inflation reader, both fixed."],
-    ["Pre-registered weight sets, scored live", "Three or four candidate sets written down now, all scored on every live decision; the live set changes only by amendment on that record."],
-    ["An events agent for regime shifts", "1987, 1998, 2008, 2020: the Fed cut on financial stress, not the data the models read. A watch-out agent that scans for bank failures, funding stress and dislocations, and raises a watch-out every analyst must answer."],
-    ["Reasoning quality and a second model family", "Twenty traces hand-graded, a model grader trusted only once it agrees; a second model family to show the harness, not the model, does the work."],
+    ["Pre-registered weight sets, scored live", "Write down three or four candidate weight sets now (for example market 0.6 / 0.5 / 0.7 with the rest redistributed). Score every set on every live decision with the same log score and Brier. The live set changes only by amendment, on that record. Weights stop being judgement without ever being fitted to the past."],
+    ["Reasoning quality, graded by people", "A grading form in the app: a user marks an analyst's answer from 1 to 5 on four questions (did it start from the base rate, argue both sides, say what it was unsure of, say what would prove it wrong). Twenty hand grades become the reference; a model grader is trusted only once it agrees with them. The grade becomes the tenth measured dimension and a gate on the lean."],
+    ["An events agent for regime shifts", "1987, 1998, 2008, 2020: the Fed cut on financial stress, not the data the models read. A watch-out agent that scans for bank failures, funding stress and market dislocations and raises a typed watch-out every analyst must answer."],
+    ["A second model family", "The same harness, the same snapshots, a different language model. If the ladder reads the same, the harness is doing the work, not the model."],
+    ["Other central banks and geographies", "ECB, Bank of England, MAS. The chain needs four things: a meeting calendar, a policy-rate series, the bank's own statements and minutes, and a futures or swap curve. The scorecard, the ledger and the analysts transfer unchanged; only the evidence sources change."],
+    ["Better classical models", "The probit's successor: features written down before fitting, a regularised ordinal model, a reliability check beside the log score, and the expanding window as the only judge. A regularised boosted model as one pre-registered candidate. About 130 usable decisions, 68% holds: small models, honestly tested, not big ones."],
   ];
   next.forEach(([h, b], i) => {
-    const y = 2.0 + i * 1.15;
-    numCircle(s, 6.95, y + 0.1, i + 1);
-    text(s, h, { x: 7.5, y, w: 5.25, h: 0.4, fontSize: 13, bold: true, color: C.text2, valign: "middle" });
-    text(s, b, { x: 7.5, y: y + 0.4, w: 5.25, h: 0.7, fontSize: 10.5, color: C.text1 });
+    const col = i % 2, row = Math.floor(i / 2);
+    const x = M + col * 6.2, y = 1.95 + row * 1.6, w = 5.95;
+    card(s, x, y, w, 1.45);
+    numCircle(s, x + 0.2, y + 0.18, i + 1);
+    text(s, h, { x: x + 0.75, y: y + 0.12, w: w - 0.95, h: 0.4, fontSize: 13, bold: true, color: C.text2, valign: "middle" });
+    text(s, b, { x: x + 0.2, y: y + 0.55, w: w - 0.4, h: 0.88, fontSize: 10, color: C.text1 });
   });
 }
 {
