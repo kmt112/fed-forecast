@@ -1,6 +1,10 @@
 const pptxgen = require("pptxgenjs");
 const path = require("path");
-const { applyTheme } = require(String.raw`C:\Users\tan_k\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\local-agent-mode-sessions\skills-plugin\ca9dbd77-06d9-4224-b79b-84131dcbdd53\1cf79891-da1f-46df-a0de-7e44b570a773\skills\pptx\scripts\apply_theme.js`);
+// apply_theme.js ships with the pptx skill; set PPTX_APPLY_THEME to its path on another machine
+const APPLY_THEME_CANDIDATES = [process.env.PPTX_APPLY_THEME,
+  String.raw`C:\Users\tan_k\AppData\Local\Claude-Data\claude_pzs8sxrjxfjjc\local-agent-mode-sessions\skills-plugin\ca9dbd77-06d9-4224-b79b-84131dcbdd53\1cf79891-da1f-46df-a0de-7e44b570a773\skills\pptx\scripts\apply_theme.js`,
+  "/Users/tankahming/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/ca9dbd77-06d9-4224-b79b-84131dcbdd53/1cf79891-da1f-46df-a0de-7e44b570a773/skills/pptx/scripts/apply_theme.js"].filter(Boolean);
+const { applyTheme } = require(APPLY_THEME_CANDIDATES.find(f => require("fs").existsSync(f)));
 
 const THEME = {
   name: "FedCast",
@@ -100,8 +104,8 @@ pres.addSection({ title: "Opening" });
 pres.addSection({ title: "Objective" });
 {
   const s = light("Objective", "The question, the answer, and what happened", "The question is narrow on purpose: what will the FOMC decide at its next scheduled meeting, as probabilities over five outcomes. The final entry before the meeting said no change at 67.6%, hike at 22.4%, with the specialists leaning hawkish by four basis points. The Fed held, ten votes to two, and both dissents wanted the quarter-point hike the specialists were leaning toward. Say plainly that the market alone was more confident (90/10) and we do not claim to beat it at five weeks; what the system adds is the reasons, and the vote bore the reasons out. Then: one decision proves little, which is why the rest of the talk is about process.");
-  stat(s, M, 1.55, 3.0, "28 Oct", "2026: the decision being forecast");
-  stat(s, 3.7, 1.55, 3.0, "67.6%", "FedCast, no change: ledger entry #18, 27 hours before", C.text2);
+  stat(s, M, 1.55, 3.0, "28 Oct", "the decision being forecast, 2026");
+  stat(s, 3.7, 1.55, 3.0, "67.6%", "FedCast, no change: ledger entry #18, nine hours before", C.text2);
   stat(s, 6.9, 1.55, 3.0, "Hold", "what the Fed did: 3.75 to 4.00%, unchanged", THEME.colors.accent3);
   stat(s, 10.1, 1.55, 2.6, "10 to 2", "two dissents, both for the +25 bps the specialists leaned toward", THEME.colors.accent2);
   card(s, M, 3.35, 6.0, 3.35);
@@ -153,18 +157,68 @@ demo("Objective", 1, "the forecast", 1,
   });
 }
 {
-  const s = light("Objective", "What others do, and what each lacks", "The honest comparison. At thirty days the futures market, read through CME FedWatch, calls about 88% of decisions right over thirty years, and nothing here claims to beat that. The academic LLM papers report higher accuracy but on sixteen meetings, with no replay and no verification of what the model read. The gap we fill is the right-hand column: not a better guess, a checkable one.");
-  const rows = [
-    [{ text: "Predictor", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, { text: "What it is", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, { text: "Strength", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, { text: "What it lacks", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }],
-    ["Fed funds futures (CME FedWatch)", "Price of the contract that settles on the month's average rate", "About 88% right at 30 days over 1994 to 2024 (Bonini, Huang, Simaan). The anchor of our pool", "No reasons. One number with no evidence trail; fails silently when the Fed surprises"],
-    ["Prediction markets (Polymarket, Kalshi)", "Crowd odds on each outcome", "Independent crowd; fast to move", "Thin and fee-distorted; a $22 entry can sit next to a $67m one"],
-    ["Economist surveys", "Median of polled forecasters", "Human judgement, broad", "Slow, unauditable, consensus-seeking"],
-    ["Policy rules (Taylor family)", "Rate a formula says is appropriate", "Transparent, the Fed's own benchmarks", "Depends on unobservable r* and u*; says where rates should be, not what the committee will do"],
-    ["LLM 'FOMC agent' papers (2025)", "Models that read Fed text and vote", "Reported 90%+ accuracy on 2023 to 2024", "16 meetings; no frozen evidence, no quote verification, no replay, no control"],
-    [{ text: "FedCast", options: { bold: true, color: C.text2 } }, "All of the above pooled by code, plus verified analysts", "Every number traceable; repeatable; a scorecard that catches drift", "No live record yet; no accuracy claim at five weeks"],
+  const s = light("Objective", "Four kinds of signal, and where FedCast sits", "Four kinds of signal exist already; each is good at one thing. Market prices are the best single predictor at thirty days and are the anchor of the pool. Surveys carry judgement; FedCast takes the data the committee reads instead, as history and a fitted model. The rules are the Fed's own benchmarks. The LLM papers show a model can read the Fed, on sixteen meetings. FedCast's claim is not a better guess but the combination: one of each kind, pooled by code at fixed weights, every number traceable to frozen evidence.");
+  // --- four signal groups ---------------------------------------------------------------------------------
+  const groups = [
+    { name: "Market signals", color: THEME.colors.accent1,
+      who: "Fed funds futures (CME FedWatch); prediction markets (Polymarket, Kalshi)",
+      what: "Prices and crowd odds on each outcome",
+      strength: "Futures about 88% right at 30 days, 1994 to 2024; odds move fast" },
+    { name: "Economic signals", color: THEME.colors.accent3,
+      who: "Economist surveys; the macro data itself",
+      what: "The median of polled forecasters; the data the committee reads",
+      strength: "Broad human judgement; the data is the Fed's own input" },
+    { name: "Policy rules", color: THEME.colors.accent6,
+      who: "The Taylor family",
+      what: "The rate a formula says is appropriate given inflation and unemployment",
+      strength: "Transparent; the Fed's own published benchmarks" },
+    { name: "ML / AI signals", color: THEME.colors.accent2,
+      who: "LLM 'FOMC agent' papers (2025)",
+      what: "Models that read the Fed's text and vote",
+      strength: "Reported 90%+ accuracy on 2023 to 2024" },
   ];
-  s.addTable(rows, { x: M, y: 1.55, w: W - 2 * M, colW: [2.6, 2.9, 3.2, 3.43], fontSize: 11.5, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.06, rowH: 0.62 });
-  text(s, "Sources: Bonini, Huang and Simaan, 'Watching the FedWatch' (232 meetings, May 1994 to March 2024); FedSight AI preprint, December 2025; Takano, Hirano and Nakagawa, arXiv 2511.02469.", { x: M, y: 6.45, w: W - 2 * M, h: 0.4, fontSize: 9.5, color: C.accent4 });
+  const gw = 2.86, gap = (W - 2 * M - 4 * gw) / 3, gy = 1.55, gh = 2.55;
+  groups.forEach((g, i) => {
+    const x = M + i * (gw + gap);
+    card(s, x, gy, gw, gh);
+    s.addShape(pres.shapes.RECTANGLE, { x: x + 0.25, y: gy + 0.3, w: 0.16, h: 0.16, fill: { color: g.color }, line: { color: g.color } });
+    text(s, g.name, { x: x + 0.5, y: gy + 0.18, w: gw - 0.7, h: 0.4, fontSize: 15, bold: true, color: C.text2 });
+    text(s, g.who, { x: x + 0.25, y: gy + 0.68, w: gw - 0.5, h: 0.62, fontSize: 12, bold: true, color: C.text1 });
+    text(s, [{ text: "What it is  ", options: { bold: true, color: THEME.colors.accent4 } }, { text: g.what }],
+         { x: x + 0.25, y: gy + 1.32, w: gw - 0.5, h: 0.6, fontSize: 11.5, color: C.text1 });
+    text(s, [{ text: "Strength  ", options: { bold: true, color: THEME.colors.accent4 } }, { text: g.strength }],
+         { x: x + 0.25, y: gy + 1.94, w: gw - 0.5, h: 0.58, fontSize: 11.5, color: C.text1 });
+  });
+
+  // --- the spectrum: pure data at one end, pure model at the other, FedCast in the middle -----------------
+  const ly = 4.98, lx0 = M + 0.2, lx1 = W - M - 0.2, L = lx1 - lx0;
+  s.addShape(pres.shapes.LINE, { x: lx0, y: ly, w: L, h: 0, line: { color: THEME.colors.accent4, width: 1.75, beginArrowType: "triangle", endArrowType: "triangle" } });
+  text(s, "Pure data", { x: M, y: ly + 0.12, w: 2.4, h: 0.3, fontSize: 12, bold: true, color: C.accent4 });
+  text(s, "prices and formulas; no reading of the Fed's words", { x: M, y: ly + 0.4, w: 2.6, h: 0.5, fontSize: 10.5, color: C.accent4 });
+  text(s, "Pure model", { x: W - M - 2.4, y: ly + 0.12, w: 2.4, h: 0.3, fontSize: 12, bold: true, color: C.accent4, align: "right" });
+  text(s, "one model's judgement; nothing it reads is checked", { x: W - M - 2.6, y: ly + 0.4, w: 2.6, h: 0.5, fontSize: 10.5, color: C.accent4, align: "right" });
+  // where each kind of signal sits (markers above the line)
+  const marks = [
+    [0.11, THEME.colors.accent1, "Futures, prediction markets"],
+    [0.30, THEME.colors.accent6, "Policy rules"],
+    [0.70, THEME.colors.accent3, "Economist surveys"],
+    [0.90, THEME.colors.accent2, "LLM 'FOMC agents'"],
+  ];
+  marks.forEach(([f, col, label]) => {
+    const x = lx0 + f * L;
+    s.addShape(pres.shapes.OVAL, { x: x - 0.1, y: ly - 0.1, w: 0.2, h: 0.2, fill: { color: col }, line: { color: THEME.colors.lt1, width: 1 } });
+    text(s, label, { x: x - 1.15, y: ly - 0.52, w: 2.3, h: 0.3, fontSize: 11.5, bold: true, color: C.text1, align: "center", valign: "bottom" });
+  });
+  // FedCast in the middle (below the line)
+  const fx = lx0 + 0.5 * L;
+  s.addShape(pres.shapes.LINE, { x: fx, y: ly, w: 0, h: 0.28, line: { color: THEME.colors.dk2, width: 1.75 } });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: fx - 0.7, y: ly + 0.28, w: 1.4, h: 0.4, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.2 });
+  text(s, "FedCast", { x: fx - 0.7, y: ly + 0.28, w: 1.4, h: 0.4, fontSize: 13, bold: true, color: C.background1, align: "center", valign: "middle", fontFace: THEME.headFontFace });
+  text(s, "Takes one input from each area, prices, 32 years of decisions, the Fed's own rules and a language model that must quote what it reads, and combines them by code at fixed weights. Neither a formula nor an oracle.",
+       { x: fx - 3.9, y: ly + 0.8, w: 7.8, h: 0.6, fontSize: 11.5, color: C.text1, align: "center" });
+
+  text(s, "Sources: Bonini, Huang and Simaan, 'Watching the FedWatch' (232 meetings, May 1994 to March 2024); FedSight AI preprint, December 2025; Takano, Hirano and Nakagawa, arXiv 2511.02469.",
+       { x: M, y: 6.62, w: W - 2 * M, h: 0.3, fontSize: 9.5, color: C.accent4 });
 }
 
 // =========================================================================================================
@@ -213,67 +267,175 @@ pres.addSection({ title: "How it works" });
   });
 }
 {
-  const s = light("How it works", "The arithmetic: from five models to one number", "Entry 18, the final one before the meeting. The pool is a weighted average, then the floor. The specialists' mean lean of +4.0 basis points becomes 4.0 points of probability moved toward a hike, through the same capped mechanism a human view uses. Then the sentence in red: the weights are judgement, logged, not backtested. The backtest decides who is in the pool, not the weight; the probit failed its gate and sits at zero. Live scores from 28 October onward will move the weights, by amendment, on the record.");
+  const s = light("How it works", "The arithmetic: from five models to one number", "Entry 18, the final one before the meeting. The pool is a weighted average, then the floor. The specialists' mean lean of +4.0 basis points becomes 4.0 points of probability moved toward a hike, through the same capped mechanism a human view uses. The lean row is tinted and labelled 'after pooling': it is a modifier on the pooled number, not a model in the pool. Then the footer: the weights are judgement, logged; ideally they would be backtested, but there is no live record yet, so live scores from 28 October onward decide them by amendment.");
   const hdr = t => ({ text: t, options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } });
   const r = (a, b, c, d, e, f, g, bold) => [{ text: a, options: { bold: !!bold } }, { text: b, options: { fontSize: 10.5 } }, ...[c, d, e, f, g].map(v => ({ text: v, options: { align: "center", bold: !!bold } }))];
   const rows = [
     [{ text: "Model", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, { text: "What it reads", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, hdr("−25"), hdr("no change"), hdr("+25"), hdr("+50"), hdr("weight")],
     r("Market-implied", "November fed-funds future against the overnight rate: +2.5 bp expected, split between the two nearest outcomes", "0", "90", "10", "0", "0.6"),
-    r("Taylor family", "12-month core PCE 3.0%, unemployment 4.2%, r* from the NY Fed DSGE model (0.65 / 1.86 / 3.06%), four rules × nine r*/u* pairs: +22.5 bp mean", "4.5", "26.9", "44.6", "23.8", "0.2"),
-    r("Prediction market", "Polymarket, 26 Oct, $67m traded: 94.5% no change", "0.2", "94.9", "4.5", "0.4", "0.1"),
+    r("Taylor family", "12-month core PCE 3.0%, unemployment 4.2%, r* from the NY Fed DSGE model (0.65 / 1.86 / 3.06%); three level rules × nine r*/u* pairs plus the first-difference rule × three u*: 30 prescriptions, mean +22.5 bp", "4.5", "26.9", "44.6", "23.8", "0.2"),
+    r("Prediction market", "Polymarket, 26 Oct, $67m traded: 94.5% no change at the mid price, 94.9% once the five prices are renormalised", "0.2", "94.9", "4.5", "0.4", "0.1"),
     r("Historical base rates", "What followed a hike at the 49 scheduled meetings since 1994 that came after one", "0", "34.7", "52.2", "13.1", "0.1"),
     r("Ordered probit v2", "Nine features on first-published data; failed v1, caveated v2", "0", "24.2", "63.8", "12.0", "0"),
     r("Pooled", "Weighted average, then the 1.5% floor", "1.5", "70.9", "20.2", "6.0", "", true),
-    r("Specialists' lean", "+4.0 bp hawkish, mean of analysts 4 to 8: 4.0 points moved toward the hike outcomes", "", "", "", "", ""),
+    [{ text: "After pooling", options: { bold: true, color: THEME.colors.accent2, fill: { color: "FBEFEA" } } },
+     { text: [{ text: "Specialists' lean: a modifier on the pooled number, not a model in the pool. ", options: { bold: true } }, { text: "Mean of analysts 4 to 8, +4.0 bp hawkish = 4.0 points of probability moved toward a hike, capped at 10." }], options: { fontSize: 10, fill: { color: "FBEFEA" } } },
+     ...["−0.3", "−3.3", "+2.2", "+1.7", "—"].map(v => ({ text: v, options: { align: "center", color: THEME.colors.accent4, fill: { color: "FBEFEA" } } }))],
     r("Machine forecast", "Ledger entry #18, 28 October", "1.2", "67.6", "22.4", "7.7", "", true),
   ];
-  s.addTable(rows, { x: M, y: 1.5, w: W - 2 * M, colW: [2.0, 4.73, 0.9, 1.3, 0.9, 0.9, 1.4], fontSize: 11.5, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.05, rowH: 0.5 });
-  card(s, M, 6.05, W - 2 * M, 0.85);
-  text(s, "The weights are judgement, logged, not backtested. The backtest (expanding window, 129 decisions since 2010) decides who is in the pool: the base rates beat the fitted probit and joined; the probit failed its gate and sits at weight 0. Live scores from 28 October onward decide the weights, by amendment, on the record. Fitting them on the same history the models came from would prove nothing.", { x: M + 0.25, y: 6.12, w: W - 2 * M - 0.5, h: 0.72, fontSize: 11, color: THEME.colors.accent2, valign: "middle" });
+  s.addTable(rows, { x: M, y: 1.45, w: W - 2 * M, colW: [2.0, 4.73, 0.9, 1.3, 0.9, 0.9, 1.4], fontSize: 11, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.04, rowH: 0.44 });
+  card(s, M, 6.28, W - 2 * M, 0.62);
+  text(s, "Weights are based on judgement", { x: M + 0.25, y: 6.3, w: 3.0, h: 0.58, fontSize: 13, bold: true, color: THEME.colors.accent2, valign: "middle" });
+  text(s, "Logged as amendments, never fitted. Ideally we would backtest the appropriate weights; with eight decisions a year there is no record to fit on yet, so live scores from 28 October onward decide them, by amendment.", { x: M + 3.35, y: 6.3, w: W - 2 * M - 3.6, h: 0.58, fontSize: 10.5, color: C.text1, valign: "middle" });
 }
 
 demo("How it works", 2, "the evidence graph and the pool", 3,
   ["Evidence graph", "Click the Market-implied box", "Click the Pool box", "Methodology, scroll to the worked example"],
-  ["Market-implied: the futures price, 100 minus price, the expected change, the 90/10 split", "Pool: the four weights, the pooled line, the specialists' tilt line, machine_only", "Any evidence item: the frozen text and the link to the original"],
-  ["Blue is in the number, grey is computed but not in it. Click a model and you see only what it read.", "The language model's lean is the one line between pooled and machine_only. It can tilt, it cannot write."],
+  ["Market-implied: the futures price, 100 minus price, the expected change, the 90/10 split", "Pool: the four weights, the pooled line, the specialists' tilt line, Machine track", "Any evidence item: the frozen text and the link to the original"],
+  ["Blue is in the number, grey is computed but not in it. Click a model and you see only what it read.", "The language model's lean is the one line between Pooled and Machine track. It can tilt, it cannot write."],
   "This is the longest demo. Start at the raw futures price so the audience sees arithmetic, not a black box. Then the pool box, then one click into an evidence item to show the frozen text.");
 
 // =========================================================================================================
 pres.addSection({ title: "The harness" });
 {
-  const s = light("The harness", "Eight analysts, one model, one ladder", "This is the slide that explains what harnessing means. The same model is run eight ways on the same snapshot. Analyst 1 gets nothing but the question: that is what the model does on its own, the control. Each step up adds exactly one thing, so the score difference between neighbouring steps is the value of that thing. Analysts 1 and 2 are meant to fail; the tool is judged on 3 and 4 to 8.");
-  const steps = [
-    ["1", "Analyst 1: naive", "The question and the date. Nothing else.", "What the model does on its own. The control every later step is measured against.", THEME.colors.accent4],
-    ["2", "Analyst 2: evidence shown, nothing verified", "Every document and every pre-computed number, 128,000 characters. Free-form answer.", "Adds the evidence. Shows what evidence alone fixes, and what it does not.", THEME.colors.accent4],
-    ["3", "Analyst 3: generalist with verifier", "Same evidence, but a fixed answer shape: a verbatim quote per claim, a watch-out report, a tilt capped at ±10 bp. Code checks every quote and number.", "Adds structure and verification. This is where the output becomes stable and checkable.", THEME.colors.dk2],
-    ["4-8", "Analysts 4 to 8: specialists", "One slice each: communications, minutes, inflation, labour, financial conditions. Same schema, same verifier.", "Adds specialisation. Each judgement is attributable to its evidence; a dissent survives instead of being averaged away.", THEME.colors.accent2],
+  const s = light("The harness", "Working around the model's limits", "Three things a language model cannot be made to stop doing: it remembers, it varies between runs, and it can invent support. None is removed. Each is designed around, and the design is measured on every snapshot. Walk the three columns top to bottom: the limit, what we do, the proof. The proof numbers are from the 28 October records and the four-snapshot means.");
+  text(s, "Three things a language model cannot be made to stop doing. None is removed; each is designed around, and the design is measured on every snapshot.", { x: M, y: 1.38, w: W - 2 * M, h: 0.3, fontSize: 12, color: C.accent4 });
+  const cols = [
+    { limit: "Memory cannot be switched off", sub: "Everything it knows about the Fed is in its weights, and it will use it unless something stops it.",
+      items: [["Prompt engineering: ", "use only the evidence; do not use anything you remember about the economy, the Fed or markets."],
+              ["Answer shape: ", "every claim must carry a verbatim quote from a named item, so a remembered fact has nowhere to stand."],
+              ["Harness: ", "every number in the answer is matched to the snapshot by code; one that is not found is flagged as from memory and sent back once to be removed."]],
+      plabel: "PROOF, 28 OCTOBER", stat: "38 → 0", proof: "figures in the answer that appear nowhere in the evidence: analyst 1, which sees no evidence, against analysts 2 to 8, five runs each" },
+    { limit: "The same question gets different answers", sub: "Ask twice and the number moves.",
+      items: [["Answer shape: ", "a JSON schema fixes the form of the answer; the runtime rejects anything else before anyone reads it."],
+              ["Five identical runs ", "per analyst per snapshot: the same evidence, the same question, the same schema, only the run number differs. Each is stored and hashed, so it can be audited later."],
+              ["Repeatability is measured: ", "how far the answer moves between those five runs. Pass mark: 2 points."]],
+      plabel: "PROOF, FOUR SNAPSHOTS", stat: "4.2 → 0.8", proof: "how far the answer moves between identical runs: naive 4.2 points, specialists 0.8 bp, mean of four snapshots" },
+    { limit: "It can invent its own support", sub: "A fluent quote or figure that was never in the document.",
+      items: [["Harness: ", "every quote and every number in a claim is verified by code, not by a model. A quote must match its item character for character; a quote stitched from two places fails."],
+              ["Bounds: ", "every watch-out must be answered by id; the direction call is clipped to ±10 bp."],
+              ["One repair round ", "with the verifier's report; both answers are kept. What still fails is recorded as unverified, never hidden."]],
+      plabel: "PROOF, 28 OCTOBER", stat: "326 / 327", proof: "claims whose quote code found verbatim, analysts 3 to 8, 30 runs; the one miss is on the record" },
   ];
-  steps.forEach(([a, h, gets, adds, col], i) => {
-    const y = 1.55 + i * 1.27;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y, w: 0.9, h: 1.1, fill: { color: col }, line: { color: col }, rectRadius: 0.1 });
-    text(s, a, { x: M, y, w: 0.9, h: 1.1, fontSize: a.length > 1 ? 22 : 30, bold: true, color: C.background1, align: "center", valign: "middle", fontFace: THEME.headFontFace });
-    text(s, h, { x: M + 1.1, y: y + 0.02, w: 4.0, h: 0.5, fontSize: 14, bold: true, color: C.text2, valign: "middle" });
-    text(s, gets, { x: M + 1.1, y: y + 0.5, w: 4.0, h: 0.65, fontSize: 10.5, color: C.text1 });
-    text(s, adds, { x: 6.0, y: y + 0.1, w: 6.7, h: 0.95, fontSize: 12.5, color: C.text1, valign: "middle" });
+  const cw = (W - 2 * M - 2 * 0.17) / 3;
+  cols.forEach((c, i) => {
+    const x = M + i * (cw + 0.17);
+    let y = 1.78;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: cw, h: 1.05, fill: { color: THEME.colors.accent2 }, line: { color: THEME.colors.accent2 }, rectRadius: 0.1 });
+    s.addShape(pres.shapes.RECTANGLE, { x, y: y + 0.85, w: cw, h: 0.2, fill: { color: THEME.colors.accent2 }, line: { color: THEME.colors.accent2 } });
+    text(s, "LIMIT", { x: x + 0.17, y: y + 0.1, w: cw - 0.3, h: 0.2, fontSize: 9, bold: true, color: "F8D7CE", charSpacing: 1 });
+    text(s, c.limit, { x: x + 0.17, y: y + 0.3, w: cw - 0.3, h: 0.32, fontSize: 14, bold: true, color: C.background1 });
+    text(s, c.sub, { x: x + 0.17, y: y + 0.62, w: cw - 0.3, h: 0.4, fontSize: 10.5, color: "F8D7CE" });
+    y += 1.05;
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w: cw, h: 2.2, fill: { color: THEME.colors.lt2 }, line: { color: THEME.colors.lt2 } });
+    text(s, "WHAT WE DO", { x: x + 0.17, y: y + 0.12, w: cw - 0.3, h: 0.2, fontSize: 9, bold: true, color: C.accent4, charSpacing: 1 });
+    const runs = [];
+    c.items.forEach(([k, v], j) => { runs.push({ text: k, options: { bullet: true, bold: true, color: THEME.colors.dk1 } }); runs.push({ text: v, options: { breakLine: j < c.items.length - 1, paraSpaceAfter: 5 } }); });
+    s.addText(runs, { x: x + 0.17, y: y + 0.38, w: cw - 0.3, h: 1.78, fontSize: 10.5, color: C.text1, isTextBox: true, margin: 0, valign: "top" });
+    y += 2.2;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: cw, h: 1.05, fill: { color: THEME.colors.lt1 }, line: { color: "D5DBE5" }, rectRadius: 0.1 });
+    text(s, c.plabel, { x: x + 0.17, y: y + 0.1, w: cw - 0.3, h: 0.2, fontSize: 9, bold: true, color: C.accent4, charSpacing: 1 });
+    text(s, c.stat, { x: x + 0.17, y: y + 0.35, w: 1.55, h: 0.6, fontSize: 22, bold: true, color: THEME.colors.accent3, fontFace: THEME.headFontFace, valign: "middle" });
+    text(s, c.proof, { x: x + 1.75, y: y + 0.32, w: cw - 1.9, h: 0.68, fontSize: 10, color: C.text1, valign: "middle" });
   });
-  text(s, "Each step adds one thing; the value of that thing is the difference in score between neighbouring steps. Only analysts 4 to 8 enter the number. Analysts 1 to 3 never touch it: they exist as checks and balances, to show what the harness adds and to catch drift.", { x: M, y: 6.6, w: W - 2 * M, h: 0.5, fontSize: 12, italic: true, color: THEME.colors.accent2 });
 }
 {
-  const s = light("The harness", "What the harness enforces around every analyst", "Six mechanisms. None of them is clever; together they are what makes a language model's output usable in a forecast. This is the architecture slide: spend time here. The repair round is the newest: a bounded correction against frozen evidence, with both answers kept so it cannot turn into prompt tuning.");
-  const items = [
-    ["Tools off, slice only", "The model sees its slice of the frozen snapshot and nothing else: no browsing, no memory of the Fed, no other analyst's output."],
-    ["Pre-reads", "Numbers are computed by code and handed over: inflation gap, labour slack, financial conditions, tone, base rates. The model never does arithmetic."],
-    ["Fixed answer shape", "Claims, each with a verbatim quote and the item it came from; a report on every watch-out by id; a tilt bounded to ±10 basis points. Enforced by the runtime."],
-    ["Code verifies", "Every quote is string-matched to its item. Every number is matched to the snapshot. Every watch-out must be answered. Failures are counted, never hidden."],
-    ["Recorded and repeated", "Five identical runs per analyst per snapshot, each stored with its prompt hash. Repeatability is measured, and a recorded run replays for free."],
-    ["One repair round", "If a quote is not found or a number is not in the evidence, the answer goes back once with the verifier's report: fix the quote verbatim, drop the number, or drop the claim. Both answers are kept; the repaired one counts. No second round."],
+  const s = light("The harness", "LLM breakdown: the group of analysts", "One model, the same frozen evidence, eight configurations. Left: analysts 1 to 3 are controls, drawn grey and dashed; they never enter the number. Right: the five specialists that do. Every analyst runs five times on the same snapshot; for 1 to 3 those runs build the benchmark 4 to 8 are measured against. Analyst 1 sets the baseline (variance, numbers from memory, nothing quoted); 2 tests what immutable evidence fixes; 3 tests the answer shape and code verification. Each rung adds one thing, so the change in the measurements is the value of that thing.");
+  const tag = (x, y, t, fill, col) => { s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: 1.5, h: 0.22, fill: { color: fill }, line: { color: fill }, rectRadius: 0.11 }); text(s, t, { x, y, w: 1.5, h: 0.22, fontSize: 8, bold: true, color: col, align: "center", valign: "middle", charSpacing: 1 }); };
+  text(s, "CONTROLS", { x: M, y: 1.46, w: 1.0, h: 0.24, fontSize: 9.5, bold: true, color: C.accent4, charSpacing: 1, valign: "middle" });
+  tag(M + 0.95, 1.47, "BUILD THE LADDER", "E5E7EB", "4B5563");
+  const controls = [
+    ["1", "Naive", "The question and the date. Nothing else.", "what the model does on its own, from memory. Its output also forms the baseline for every other step."],
+    ["2", "Evidence shown, nothing verified", "Every document and pre-read, 128,000 characters. Free-form answer.", "to observe what evidence alone fixes (memory), and what it does not (variance; nothing checkable)."],
+    ["3", "Generalist with verifier", "Same evidence; a fixed answer shape, a quote per claim, code checks every quote and number.", "isolate the value of the structure and verification."],
   ];
-  items.forEach(([h, b], i) => {
-    const y = 1.5 + i * 0.86;
-    numCircle(s, M, y + 0.1, i + 1);
-    text(s, h, { x: M + 0.65, y, w: 3.4, h: 0.6, fontSize: 15, bold: true, color: C.text2, valign: "middle" });
-    text(s, b, { x: 4.4, y: y + 0.02, w: 8.3, h: 0.9, fontSize: 12.5, color: C.text1, valign: "middle" });
+  controls.forEach(([n, h, gets, intent], i) => {
+    const y = 1.75 + i * 1.36;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y, w: 4.17, h: 1.24, fill: { color: "F3F4F6" }, line: { color: "9CA3AF", width: 1.2, dashType: "dash" }, rectRadius: 0.12 });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M + 0.17, y: y + 0.16, w: 0.42, h: 0.42, fill: { color: THEME.colors.accent4 }, line: { color: THEME.colors.accent4 }, rectRadius: 0.1 });
+    text(s, n, { x: M + 0.17, y: y + 0.16, w: 0.42, h: 0.42, fontSize: 15, bold: true, color: C.background1, align: "center", valign: "middle", fontFace: THEME.headFontFace });
+    text(s, h, { x: M + 0.72, y: y + 0.12, w: 3.3, h: 0.3, fontSize: 13, bold: true, color: C.text1 });
+    text(s, gets, { x: M + 0.72, y: y + 0.42, w: 3.3, h: 0.32, fontSize: 11, color: C.text1 });
+    s.addText([{ text: "Intent: ", options: { bold: true } }, { text: intent }], { x: M + 0.72, y: y + 0.74, w: 3.3, h: 0.48, fontSize: 10.5, color: THEME.colors.accent4, isTextBox: true, margin: 0, valign: "top" });
   });
+  s.addShape(pres.shapes.LINE, { x: 4.95, y: 3.45, w: 0.5, h: 0, line: { color: THEME.colors.dk2, width: 2.5, endArrowType: "triangle" } });
+  text(s, "SPECIALISTS · THE FIVE THAT ENTER THE NUMBER", { x: 5.65, y: 1.46, w: 3.6, h: 0.24, fontSize: 9.5, bold: true, color: C.accent4, charSpacing: 1, valign: "middle" });
+  tag(9.3, 1.47, "IN THE FORECAST", THEME.colors.dk2, THEME.colors.lt1);
+  const bx = 5.65, bw = W - M - bx;
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: bx, y: 1.75, w: bw, h: 4.2, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.12 });
+  s.addText([{ text: "Analyst 3's shape and verifier, with one change: each reader gets " }, { text: "one slice of evidence", options: { bold: true, color: THEME.colors.lt1 } }, { text: ". A judgement is attributable to its slice, and a dissent survives instead of being averaged away." }],
+            { x: bx + 0.2, y: 1.9, w: bw - 0.4, h: 0.5, fontSize: 11.5, color: THEME.colors.accent5, isTextBox: true, margin: 0, valign: "top" });
+  const specs = [
+    ["4", "Communications", "Both statements, the minutes, the transcript, the speeches, the tone pre-read.", "what the committee is signalling."],
+    ["5", "Minutes digest", "The minutes only.", "the committee's own account of its debate, read in isolation."],
+    ["6", "Inflation", "Projections table, both statements, the inflation pre-read.", "is inflation pulling toward a hike."],
+    ["7", "Labour market", "Projections table, both statements, the labour pre-read.", "is labour pulling the other way."],
+    ["8", "Financial conditions", "Both statements, the financial-conditions and base-rate pre-reads.", "is the market or stress already doing the committee's work."],
+  ];
+  const cellW = (bw - 0.4 - 0.12) / 2;
+  specs.forEach(([n, h, gets, intent], i) => {
+    const full = i === 4;
+    const x = bx + 0.2 + (i % 2) * (cellW + 0.12), y = 2.48 + Math.floor(i / 2) * 0.86, w = full ? bw - 0.4 : cellW;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h: 0.76, fill: { color: THEME.colors.lt1, transparency: 90 }, line: { color: THEME.colors.lt1, transparency: 90 }, rectRadius: 0.1 });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: x + 0.12, y: y + 0.12, w: 0.34, h: 0.34, fill: { color: THEME.colors.accent2 }, line: { color: THEME.colors.accent2 }, rectRadius: 0.08 });
+    text(s, n, { x: x + 0.12, y: y + 0.12, w: 0.34, h: 0.34, fontSize: 12, bold: true, color: C.background1, align: "center", valign: "middle", fontFace: THEME.headFontFace });
+    text(s, h, { x: x + 0.56, y: y + 0.06, w: w - 0.66, h: 0.26, fontSize: 12, bold: true, color: C.background1 });
+    s.addText([{ text: gets, options: { breakLine: true } }, { text: "Intent: ", options: { bold: true, color: THEME.colors.lt1 } }, { text: intent }], { x: x + 0.56, y: y + 0.3, w: w - 0.66, h: 0.44, fontSize: 9.5, color: THEME.colors.accent5, isTextBox: true, margin: 0, valign: "top" });
+  });
+  text(s, "Output per specialist: all claims with verbatim quotes, and a decision on interest-rate direction of at most ±10 bp. The mean of the five model outputs becomes a modifier on the pooled number.", { x: bx + 0.2, y: 5.12, w: bw - 0.4, h: 0.7, fontSize: 11.5, color: THEME.colors.accent5 });
+  card(s, M, 6.06, W - 2 * M, 0.85, "F3F4F6");
+  s.addText([{ text: "Every analyst runs five times on the same snapshot. ", options: { bold: true } }, { text: "For analysts 1 to 3 those runs are not forecasts: they build the benchmark that 4 to 8 are measured against." }], { x: M + 0.17, y: 6.12, w: W - 2 * M - 0.34, h: 0.26, fontSize: 11.5, color: C.text1, isTextBox: true, margin: 0 });
+  const bench = [["1 sets the baseline: ", "variance of the probabilities across runs; numbers from memory (all of them); nothing quoted."], ["2 tests immutable evidence: ", "numbers from memory fall to zero; the variance does not; nothing can be checked."], ["3 tests the answer shape and code verification: ", "variance falls under 1 bp; every claim quoted and checked."]];
+  const bwid = (W - 2 * M - 0.34 - 0.3) / 3;
+  bench.forEach(([k, v], i) => s.addText([{ text: k, options: { bold: true } }, { text: v }], { x: M + 0.17 + i * (bwid + 0.15), y: 6.42, w: bwid, h: 0.45, fontSize: 10, color: C.text1, isTextBox: true, margin: 0, valign: "top" }));
+}
+{
+  const s = light("The harness", "How the five specialists are run, end to end", "Every specialist run passes through the same five stages: tools off and one slice only; immutable evidence plus pre-reads computed by code; a fixed answer shape enforced as a JSON schema; verification by code with one repair round; recorded, five identical runs. The band is analysts 4 to 8 on the 28 October snapshot: 25 runs, 263 claims, all 263 verified with no number from memory, five direction calls. Bottom left: four said hike, labour said no hike; the plain mean is +4.0 bp, which moves 4.0 points of probability toward a hike after the pool, +25 bp from 20.2 to 22.4%. Bottom right: one verified claim exactly as recorded.");
+  const stages = [
+    ["Tools off, slice only", "No browsing, no files, no session: enforced by the runtime. Each specialist sees only its slice of the frozen snapshot. Memory is not off; it is detected: every number is checked against the evidence."],
+    ["Immutable evidence", "One frozen, hashed snapshot; each analyst gets only its slice. Pre-reads are numbers computed by code and handed over as text: the model never does sums."],
+    ["Fixed answer shape", "A JSON schema enforced by the runtime: claims with a verbatim quote and item id, a report on each watch-out, a lean within ±10 bp. Anything else is rejected unread."],
+    ["Verified by code, no LLM", "Each quote string-matched to its item; each number matched to the snapshot; watch-outs by id; lean clipped. A failure goes back once with the report, then stands as it is."],
+    ["Recorded, five times", "Stored under a hash of the prompt with the full output; replays exactly. Five identical runs measure repeatability. Only then may a lean touch the number."],
+  ];
+  const sg = 0.146, sw = (W - 2 * M - 4 * sg) / 5;
+  stages.forEach(([h, d], i) => {
+    const x = M + i * (sw + sg), y = 1.42;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: sw, h: 1.6, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.1 });
+    text(s, "STAGE " + (i + 1), { x: x + 0.15, y: y + 0.1, w: sw - 0.3, h: 0.2, fontSize: 9, bold: true, color: THEME.colors.accent6, charSpacing: 1 });
+    text(s, h, { x: x + 0.15, y: y + 0.3, w: sw - 0.3, h: 0.3, fontSize: 12.5, bold: true, color: C.background1 });
+    text(s, d, { x: x + 0.15, y: y + 0.6, w: sw - 0.3, h: 0.95, fontSize: 9.5, color: THEME.colors.accent5 });
+  });
+  // the flow band: analysts 4 to 8 only, stepping down toward the five direction calls
+  const band = [["40 runs", ""], ["25 prompts", "one slice each, hashed"], ["263 claims", "every one with a verbatim quote"], ["263 verified", "100%; 0 numbers from memory"], ["5 direction calls", "+6.0 · +6.2 · +5.8 · −1.4 · +3.4 bp"]];
+  band[0] = ["25 runs", "5 specialists × 5 identical runs"];
+  const bh = [1.35, 1.27, 1.17, 1.1, 0.82], bfill = ["CADCFC", "B9CEF3", "A8C3EC", "97B7E5", THEME.colors.dk2], cy = 3.9;
+  band.forEach(([big, small], i) => {
+    const x = M + i * (sw + sg), w = i < 4 ? sw + sg : sw, h = bh[i], y = cy - h / 2;
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: { color: bfill[i] }, line: { color: bfill[i] } });
+    const dark = i === 4;
+    text(s, big, { x, y: cy - 0.38, w, h: 0.4, fontSize: 18, bold: true, color: dark ? C.background1 : C.text1, align: "center", valign: "middle" });
+    text(s, small, { x, y: cy + 0.02, w, h: 0.3, fontSize: 10, color: dark ? THEME.colors.accent5 : C.text1, align: "center", valign: "middle" });
+  });
+  // bottom left: what the five said, and what it did to the number
+  const ly = 4.95, lh = 1.9;
+  card(s, M, ly, 4.85, lh, "FBEFEA");
+  text(s, "WHAT THE FIVE SAID, AND WHAT IT DID TO THE NUMBER", { x: M + 0.17, y: ly + 0.1, w: 4.5, h: 0.2, fontSize: 9, bold: true, color: THEME.colors.accent2, charSpacing: 1 });
+  const said = [["Communications", "+6.0 hike"], ["Minutes", "+6.2 hike"], ["Inflation", "+5.8 hike"], ["Financial conditions", "+3.4 hike"], ["Labour market", "−1.4 no hike"], ["Equal-weight mean", "+4.0 bp"]];
+  s.addTable(said.map(([a, b], i) => [{ text: a, options: { color: i === 4 ? THEME.colors.accent3 : THEME.colors.dk1, bold: i === 5 } }, { text: b, options: { align: "right", bold: true, color: i === 4 ? THEME.colors.accent3 : THEME.colors.dk1 } }]),
+             { x: M + 0.17, y: ly + 0.38, w: 2.25, colW: [1.45, 0.8], fontSize: 9.5, border: { type: "none" }, margin: 0.02, rowH: 0.22 });
+  s.addText([{ text: "Four say hike, one says hold back. ", options: { bold: true } }, { text: "Plain average, one vote each: +4.0 bp.", options: { breakLine: true } },
+             { text: "+4.0 bp = 4.0 points of probability ", options: { bold: true } }, { text: "moved toward a hike, after the pool:" }],
+            { x: M + 2.55, y: ly + 0.38, w: 2.15, h: 0.9, fontSize: 9.5, color: C.text1, isTextBox: true, margin: 0, valign: "top" });
+  text(s, "+25 bp: 20.2% → 22.4%", { x: M + 2.55, y: ly + 1.3, w: 2.2, h: 0.3, fontSize: 13, bold: true, color: C.text2, fontFace: THEME.headFontFace });
+  text(s, "+50 bp 6.0 → 7.7; no change 70.9 → 67.6; cuts 3.0 → 2.3", { x: M + 2.55, y: ly + 1.6, w: 2.2, h: 0.26, fontSize: 9, color: C.accent4 });
+  // bottom right: one verified claim as recorded
+  const rx = M + 5.0, rw = W - M - rx;
+  card(s, rx, ly, rw, lh);
+  text(s, "ONE VERIFIED CLAIM, AS RECORDED · ANALYST 4, COMMUNICATIONS, RUN 1 OF 5", { x: rx + 0.17, y: ly + 0.1, w: rw - 0.34, h: 0.2, fontSize: 9, bold: true, color: C.accent4, charSpacing: 1 });
+  s.addText([{ text: "Claim ", options: { bold: true } }, { text: "The September statement stressed elevated inflation and a resolve to return to target on a timelier basis." }], { x: rx + 0.17, y: ly + 0.38, w: rw - 0.34, h: 0.4, fontSize: 11, color: C.text1, isTextBox: true, margin: 0, valign: "top" });
+  text(s, "\u201cInflation remains elevated. Today's policy action will support a timelier return to the Committee's 2 percent goal. The Committee will deliver price stability.\u201d", { x: rx + 0.17, y: ly + 0.82, w: rw - 0.34, h: 0.5, fontSize: 9.5, color: "374151", fontFace: "Courier New" });
+  s.addText([{ text: "Item " }, { text: "fed.statement.2026-09-16", options: { bold: true, color: THEME.colors.dk1 } }, { text: " · quote found by code, character for character · lean hawkish · 12 of 12 claims in this run verified" }], { x: rx + 0.17, y: ly + 1.4, w: rw - 0.34, h: 0.4, fontSize: 10, color: C.accent4, isTextBox: true, margin: 0, valign: "top" });
 }
 
 demo("The harness", 3, "what each analyst is asked and given", 2,
@@ -284,22 +446,6 @@ demo("The harness", 3, "what each analyst is asked and given", 2,
 
 // =========================================================================================================
 pres.addSection({ title: "Evidence" });
-{
-  const s = light("Evidence", "The ladder, four snapshots, five runs each", "Read left to right as an evolution. Analyst 1 wobbles by three to five points between identical runs, cites nothing, and leaks three dozen numbers from memory; it still thinks the Fed is cutting. Adding the evidence (analyst 2) removes the leaks but not the wobble, and nothing can be checked. Adding the answer shape and the verifier (analyst 3) is the step that makes the output stable and fully verifiable. Specialists (4 to 8) keep that and add attribution. Same model, same day; the difference at each step is the one thing added.");
-  const H_ = t => ({ text: t, options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } });
-  const ok = t => ({ text: t, options: { color: THEME.colors.accent3, bold: true, align: "center" } });
-  const bad = t => ({ text: t, options: { color: THEME.colors.accent2, bold: true, align: "center" } });
-  const na = t => ({ text: t, options: { color: THEME.colors.accent4, align: "center" } });
-  const rows = [
-    [{ text: "Dimension (pass mark)", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, H_("Analyst 1: the question only"), H_("Analyst 2: + the evidence"), H_("Analyst 3: + answer shape + verifier"), H_("Analysts 4-8: + one slice each")],
-    ["S1 Repeatability (≤ 2 pp)\nmax move of any probability across 5 identical runs", bad("3.4 / 4.5 / 4.9 / 4.1 pp, fail"), bad("3.3 / 2.3 / 4.8 / 3.4 pp, fail"), ok("0.6 / 0.5 / 0.5 / 0.8 bp of tilt, pass"), ok("0.5 / 0.8 / 1.2 / 0.8 bp of tilt, pass")],
-    ["S2 Groundedness (≥ 95%)\nshare of claims whose quote code found in the evidence", bad("0%, fail"), na("not measurable: no quotes"), ok("100 / 100 / 100 / 99%, pass"), ok("100 / 97 / 100 / 100%, pass")],
-    ["S3 Leakage (exactly 0)\nnumbers in the answer that are not in the snapshot", bad("36 / 36 / 39 / 38, fail"), ok("0, pass"), ok("0, pass"), ok("0, pass")],
-    ["What it concluded", na("Cut 25 bps at 57 to 67%: its memory of the Fed is stale"), na("+25 bps at 50 to 57%: reads the evidence, overshoots the market"), na("+7.0 / +6.6 / +6.4 / +5.8 bp hawkish"), na("+4.4 / +4.1 / +4.4 / +4.0 bp hawkish; labour the lone non-hawk")],
-  ];
-  s.addTable(rows, { x: M, y: 1.55, w: W - 2 * M, colW: [3.3, 2.2, 2.2, 2.2, 2.23], fontSize: 11.5, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.06, rowH: 0.85 });
-  text(s, "Snapshots of 15, 24, 26 and 28 October 2026. Analysts 3 to 8 report S1 in basis points of tilt because they output a lean, not a distribution.", { x: M, y: 6.35, w: W - 2 * M, h: 0.5, fontSize: 10.5, color: C.accent4 });
-}
 {
   const s = light("Evidence", "How good is the harness: what each step bought", "Three charts, one per dimension, averaged over the four snapshots. Left: how much the answer moves between identical runs. The step that matters is analyst 2 to analyst 3: the answer shape and the verifier take the wobble from three and a half points to under one. Middle: numbers from memory, gone as soon as the evidence is shown. Right: share of claims whose quote code found verbatim; analyst 2 cannot be measured because it quotes nothing. The specialists keep what analyst 3 achieved. For analysts 3 to 8 the wobble is in their lean, which maps one basis point to one percentage point of probability, so the four bars are comparable.");
   const cats = ["1: question only", "2: + evidence", "3: + shape, verifier", "4-8: + one slice each"];
@@ -315,41 +461,41 @@ pres.addSection({ title: "Evidence" });
     });
     text(s, note, { x, y: 5.8, w: cw, h: 0.7, fontSize: 9.5, color: C.accent4 });
   };
-  chart("S1: wobble between identical runs (pp)", cats, [4.2, 3.5, 0.6, 0.8], M, 5,
+  chart("Repeatability: variance between identical runs (pp)", cats, [4.2, 3.5, 0.6, 0.8], M, 5,
         "Largest standard deviation across five runs, mean of four snapshots. Pass mark 2 pp. Analysts 3 to 8: standard deviation of the lean, 1 bp = 1 pp.");
-  chart("S3: numbers from memory (count)", cats, [37, 0, 0, 0], M + cw + 0.25, 40,
+  chart("Numbers from memory (count)", cats, [37, 0, 0, 0], M + cw + 0.25, 40,
         "Numbers in the answer that exist nowhere in the frozen evidence, summed over five runs. Pass mark: exactly 0.", "0");
-  chart("S2: claims with a verbatim quote (%)", ["1: question only", "3: + shape, verifier", "4-8: + one slice each"], [0, 99.7, 99.2], M + 2 * (cw + 0.25), 100,
+  chart("Claims with a verbatim quote (%)", ["1: question only", "3: + shape, verifier", "4-8: + one slice each"], [0, 99.7, 99.2], M + 2 * (cw + 0.25), 100,
         "Share of claims whose quote code found character for character in the item named. Pass mark 95%. Analyst 2 is not shown: it quotes nothing, so it cannot be measured.");
-  text(s, "The step from analyst 2 to analyst 3 is the harness: a fixed answer shape with a quote per claim, checked by code. It is the step that makes the model repeatable and checkable. Specialists keep both and add attribution.", { x: M, y: 6.55, w: W - 2 * M, h: 0.45, fontSize: 11.5, italic: true, color: C.accent2 });
+  text(s, "The step from analyst 2 to analyst 3 is the harness: a fixed answer shape with a quote per claim, checked by code. Specialists keep both and add attribution. What they concluded, four snapshots: analyst 1 a cut at 57 to 67%; analyst 2 +25 bp at 50 to 57%; analyst 3 +5.8 to +7.0 bp hawkish; specialists +4.0 to +4.4 bp, labour the lone non-hawk.", { x: M, y: 6.42, w: W - 2 * M, h: 0.55, fontSize: 10.5, italic: true, color: C.accent2, valign: "top" });
 }
 {
-  const s = light("Evidence", "What the specialists said on 26 October", "Make it concrete. Each specialist's lean, and one real claim with the quote code matched. The labour analyst is the one that does not lean hawkish, and because it is a separate reader that dissent is visible rather than averaged away.");
+  const s = light("Evidence", "What the specialists said on 28 October", "Make it concrete: the five leans behind entry #18, and one real claim with the quote code matched. The labour analyst is the one that does not lean hawkish, and because it is a separate reader that dissent is visible rather than averaged away.");
   const rows = [
     [{ text: "Analyst", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, { text: "Reads", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, { text: "Lean (5 runs)", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } }, { text: "Verified", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } }],
     ["4 Communications", "Both statements, minutes, transcript, speeches, tone pre-read", { text: "+6.0 bp hawkish", options: { align: "center", color: THEME.colors.accent2, bold: true } }, { text: "100%, 0 leaked", options: { align: "center" } }],
-    ["5 Minutes digest", "The minutes only", { text: "+6.6 bp hawkish", options: { align: "center", color: THEME.colors.accent2, bold: true } }, { text: "100%, 0 leaked", options: { align: "center" } }],
-    ["6 Inflation", "Inflation pre-read, projections, both statements", { text: "+6.4 bp hawkish", options: { align: "center", color: THEME.colors.accent2, bold: true } }, { text: "100%, 0 leaked", options: { align: "center" } }],
-    ["7 Labour market", "Labour pre-read, projections, both statements", { text: "−0.4 bp, neutral", options: { align: "center", color: THEME.colors.accent3, bold: true } }, { text: "100%, 0 leaked", options: { align: "center" } }],
+    ["5 Minutes digest", "The minutes only", { text: "+6.2 bp hawkish", options: { align: "center", color: THEME.colors.accent2, bold: true } }, { text: "100%, 0 leaked", options: { align: "center" } }],
+    ["6 Inflation", "Inflation pre-read, projections, both statements", { text: "+5.8 bp hawkish", options: { align: "center", color: THEME.colors.accent2, bold: true } }, { text: "100%, 0 leaked", options: { align: "center" } }],
+    ["7 Labour market", "Labour pre-read, projections, both statements", { text: "−1.4 bp, no hike", options: { align: "center", color: THEME.colors.accent3, bold: true } }, { text: "100%, 0 leaked", options: { align: "center" } }],
     ["8 Financial conditions", "Financial pre-read, base rates, both statements", { text: "+3.4 bp hawkish", options: { align: "center", color: THEME.colors.accent2, bold: true } }, { text: "100%, 0 leaked", options: { align: "center" } }],
   ];
   s.addTable(rows, { x: M, y: 1.55, w: 7.4, colW: [1.9, 3.0, 1.4, 1.1], fontSize: 11.5, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.06, rowH: 0.55 });
   card(s, 8.4, 1.55, 4.33, 3.75);
   text(s, "One claim, as recorded", { x: 8.7, y: 1.75, w: 3.8, h: 0.4, fontSize: 14, bold: true, color: C.text2 });
-  text(s, "Communications analyst: the deterministic tone read scores the most recent policy communication as fully hawkish, with a unanimous hike vote and no dovish lexicon hits.", { x: 8.7, y: 2.2, w: 3.8, h: 1.1, fontSize: 12, color: C.text1 });
-  text(s, "Quote: \"score\": 1.0   Item: signal.tone   Verified by code", { x: 8.7, y: 3.3, w: 3.8, h: 0.55, fontSize: 11, color: C.accent4, fontFace: "Courier New" });
-  text(s, "The pre-read is our arithmetic over the two statements: 12 votes for, none against, eight hawkish words, no dovish ones. The analyst quoted it and code found the quote.", { x: 8.7, y: 3.9, w: 3.8, h: 1.3, fontSize: 11, color: C.text1 });
+  text(s, "Communications analyst, run 1 of 5: the September statement stressed elevated inflation and a resolve to return to target on a timelier basis.", { x: 8.7, y: 2.2, w: 3.8, h: 0.9, fontSize: 12, color: C.text1 });
+  text(s, "\u201cInflation remains elevated. Today's policy action will support a timelier return to the Committee's 2 percent goal. The Committee will deliver price stability.\u201d", { x: 8.7, y: 3.1, w: 3.8, h: 0.9, fontSize: 10, color: "374151", fontFace: "Courier New" });
+  text(s, "Item fed.statement.2026-09-16 · quote found by code, character for character · 12 of 12 claims in this run verified, none from memory.", { x: 8.7, y: 4.05, w: 3.8, h: 1.1, fontSize: 11, color: C.text1 });
 }
 demo("Evidence", 4, "what the analysts concluded", 2,
   ["Analyst results view", "Analyst 1 (naive) card", "Analyst 4 (communications) card"],
   ["Analyst 1: cut 25 at 57%, numbers from memory flagged", "Analyst 4: the lean, grounded, leaked, watch-outs badges; one claim with its quote and the 'quote verified' mark", "Hover a badge for its definition"],
   ["Every claim you see has a quote that code found character for character in the item named.", "The naive analyst still thinks the Fed is cutting. Same model, no evidence."],
-  "Pick the signal.tone claim on analyst 4 if asked where a quote comes from: it is the pre-read, our arithmetic over the two statements.");
+  "If asked where a quote comes from, open the statement claim on analyst 4: the quote is the statement's own line, found by code in item fed.statement.2026-09-16.");
 {
   const s = light("Evidence", "The scorecard: eight of ten dimensions measured by code", "Ten dimensions fixed before any forecasting code existed. Eight are now measured automatically on each new snapshot. The over-time table is the drift check: the marks never move, so a cell that turns red is a change in the system. It has already caught two things, bottom right.");
   const dims = [
-    ["S1", "Repeatability", true], ["S2", "Groundedness", true], ["S3", "Leakage", true], ["S4", "Directional sanity", true], ["S5", "Noise invariance", true],
-    ["S6", "Paraphrase stability", "part"], ["S7", "Coherence", true], ["S8", "Reasoning quality", false], ["S9", "Auditability", true], ["S10", "Human-input discipline", true],
+    ["1", "Repeatability", true], ["2", "Quotes verified", true], ["3", "Numbers from memory", true], ["4", "Shock direction", true], ["5", "Noise invariance", true],
+    ["6", "Rewording", "part"], ["7", "Coherence", true], ["8", "Reasoning quality", false], ["9", "Replay", true], ["10", "Human-input discipline", true],
   ];
   dims.forEach(([id, name, m], i) => {
     const x = M + (i % 5) * 2.45, y = 1.6 + Math.floor(i / 5) * 1.25;
@@ -362,14 +508,14 @@ demo("Evidence", 4, "what the analysts concluded", 2,
   });
   card(s, M, 4.3, 6.0, 2.4);
   text(s, "Measured by code on the 28 October snapshot", { x: M + 0.3, y: 4.45, w: 5.4, h: 0.4, fontSize: 14, bold: true, color: C.text2 });
-  s.addText(bullets(["S4: 7 shocks, one input each, the pool must move the right way: 7 of 7", "S5: 5 irrelevant changes to the snapshot: 0.0 points moved", "S7: every ledger entry coherent and attributable", "S9: entries under the current spec recompute exactly, from the analyst runs they name"], { fontSize: 12, color: C.text1 }), { x: M + 0.3, y: 4.9, w: 5.4, h: 1.7, isTextBox: true, margin: 0, valign: "top" });
+  s.addText(bullets(["Shock direction: 7 shocks, one input each, the pool must move the right way: 7 of 7", "Noise: 5 irrelevant changes to the snapshot: 0.0 points moved", "Coherence: every ledger entry adds up and every difference is attributable", "Replay: entries under the current spec recompute exactly, from the analyst runs they name"], { fontSize: 12, color: C.text1 }), { x: M + 0.3, y: 4.9, w: 5.4, h: 1.7, isTextBox: true, margin: 0, valign: "top" });
   card(s, 6.9, 4.3, 5.83, 2.4);
   text(s, "What it has already caught", { x: 7.2, y: 4.45, w: 5.3, h: 0.4, fontSize: 14, bold: true, color: C.text2 });
   s.addText(bullets(["Four ledger entries stopped replaying after a model rule changed outside the hashed spec; amendment #5 put every rule inside the hash.", "A shock test was perturbing the wrong odds entry once two were on file; a red cell on the drift table pointed at it.", "Replay was reading the latest analyst runs instead of the runs the entry used; a rerun would have broken an honest entry. Fixed the same day, with a test.", "A verifier false positive (a zero written as 0 in the evidence); fixed, records re-scored without calling the model."], { fontSize: 11, color: C.text1 }), { x: 7.2, y: 4.9, w: 5.3, h: 1.7, isTextBox: true, margin: 0, valign: "top" });
 }
 demo("Evidence", 5, "the scorecard and the drift table", 2,
-  ["Scorecard view", "The snapshot dropdown: pick 24 October, then 26 October", "Expand 'what was checked' under S4", "Scroll to the over-time table"],
-  ["The grid: red in the control columns, green in the judged columns", "S4's seven shocks with their deltas", "The over-time table: one row per snapshot, the marks never move"],
+  ["Scorecard view", "The snapshot dropdown: pick 24 October, then 26 October", "Expand 'what was checked' under Shock direction", "Scroll to the over-time table"],
+  ["The grid: red in the control columns, green in the judged columns", "The seven shocks with their deltas", "The over-time table: one row per snapshot, the marks never move"],
   ["Analysts 1 and 2 are meant to fail. A red cell on the right would be a defect.", "This is the drift check. Two red cells have already pointed at defects and both are fixed."],
   "If time is short, skip the dropdown and go straight to the over-time table.");
 
@@ -398,7 +544,7 @@ pres.addSection({ title: "Limits and next" });
   });
   text(s, "What comes next, in order of value", { x: 6.95, y: 1.5, w: 6.0, h: 0.4, fontSize: 16, bold: true, color: C.text2 });
   const next = [
-    ["The December window, same chain: running now", "The 9 December meeting is less certain (the market prices a hike at about three in four), so reading the evidence has more to add. The chain needed only a new target."],
+    ["The December window, same chain: running now", "The 9 December meeting is less certain (the market prices a hike at about 85%), so reading the evidence has more to add. The chain needed only a new target."],
     ["Pre-registered weight sets, scored live", "Three or four candidate sets written down now, all scored on every live decision; the live set changes only by amendment on that record."],
     ["An events agent for regime shifts", "1987, 1998, 2008, 2020: the Fed cut on financial stress, not the data the models read. A watch-out agent that scans for bank failures, funding stress and dislocations, and raises a watch-out every analyst must answer."],
     ["Reasoning quality and a second model family", "Twenty traces hand-graded, a model grader trusted only once it agrees; a second model family to show the harness, not the model, does the work."],
@@ -419,6 +565,25 @@ pres.addSection({ title: "Limits and next" });
     { text: "The ask: scrutinise the scorecard, challenge a quote, and tell us which other decisions deserve the same chain. The 28 October call is on file; December is already running.", options: { bullet: true } },
   ], { placeholder: "body" });
   s.addNotes("Close on the ask. The forecast for 28 October is on file; the scoring is automatic from here; what the room can add is scrutiny and the next target.");
+}
+
+// =========================================================================================================
+pres.addSection({ title: "Backup" });
+{
+  const s = light("Backup", "Backup: the ladder, four snapshots, five runs each", "Read left to right as an evolution. Analyst 1 wobbles by three to five points between identical runs, cites nothing, and leaks three dozen numbers from memory; it still thinks the Fed is cutting. Adding the evidence (analyst 2) removes the leaks but not the wobble, and nothing can be checked. Adding the answer shape and the verifier (analyst 3) is the step that makes the output stable and fully verifiable. Specialists (4 to 8) keep that and add attribution. Same model, same day; the difference at each step is the one thing added.");
+  const H_ = t => ({ text: t, options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } });
+  const ok = t => ({ text: t, options: { color: THEME.colors.accent3, bold: true, align: "center" } });
+  const bad = t => ({ text: t, options: { color: THEME.colors.accent2, bold: true, align: "center" } });
+  const na = t => ({ text: t, options: { color: THEME.colors.accent4, align: "center" } });
+  const rows = [
+    [{ text: "Dimension (pass mark)", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, H_("Analyst 1: the question only"), H_("Analyst 2: + the evidence"), H_("Analyst 3: + answer shape + verifier"), H_("Analysts 4-8: + one slice each")],
+    ["Repeatability (≤ 2 pp)\nlargest standard deviation of any outcome probability across 5 identical runs", bad("3.4 / 4.5 / 4.9 / 4.1 pp, fail"), bad("3.3 / 2.3 / 4.8 / 3.4 pp, fail"), ok("0.6 / 0.5 / 0.5 / 0.8 bp of tilt, pass"), ok("0.5 / 0.8 / 1.2 / 0.8 bp of tilt, pass")],
+    ["Quotes verified (≥ 95%)\nshare of claims whose quote code found in the evidence", bad("0%, fail"), na("not measurable: no quotes"), ok("100 / 100 / 100 / 99%, pass"), ok("100 / 97 / 100 / 100%, pass")],
+    ["Numbers from memory (exactly 0)\nnumbers in the answer that are not in the snapshot", bad("36 / 36 / 39 / 38, fail"), ok("0, pass"), ok("0, pass"), ok("0, pass")],
+    ["What it concluded", na("Cut 25 bps at 57 to 67%: its memory of the Fed is stale"), na("+25 bps at 50 to 57%: reads the evidence, overshoots the market"), na("+7.0 / +6.6 / +6.4 / +5.8 bp hawkish"), na("+4.4 / +4.1 / +4.4 / +4.0 bp hawkish; labour the lone non-hawk")],
+  ];
+  s.addTable(rows, { x: M, y: 1.55, w: W - 2 * M, colW: [3.3, 2.2, 2.2, 2.2, 2.23], fontSize: 11.5, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.06, rowH: 0.85 });
+  text(s, "Snapshots of 15, 24, 26 and 28 October 2026. Analysts 3 to 8 report repeatability in basis points of their direction call because they output a lean, not a distribution.", { x: M, y: 6.35, w: W - 2 * M, h: 0.5, fontSize: 10.5, color: C.accent4 });
 }
 
 (async () => {
