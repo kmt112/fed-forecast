@@ -1,0 +1,857 @@
+{
+ "analyst": "financial",
+ "analyst_no": 8,
+ "prompt_version": "specialists-v3-repair",
+ "prompt_chars": 4260,
+ "created_at": "2026-10-29T14:36:34+00:00",
+ "snapshot_hash": "5f6a8d193890a1f26cf6880356b8e01abed45789944cd40f36b94eb34b7a7abd",
+ "backend": "replay",
+ "runs": [
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The bond market is pricing the 2-year yield well above the policy rate, with a positive gap of 82 basis points against a policy rate of 3.88 — the market expects rates higher than the current setting, a hawkish signal.",
+       "quote": "\"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "That same gap has narrowed by 22 basis points over the past four weeks, indicating the bond market has drifted toward expecting less tightening — a dovish shift at the margin.",
+       "quote": "\"two_year\": {\"yield\": 4.7, \"date\": \"2026-10-27\", \"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+       "item": "signal.financial",
+       "lean": "dovish"
+      },
+      {
+       "text": "Inflation compensation in the bond market sits 0.49 percentage point above the goal and has risen 0.15 over four weeks, corroborating that inflation pressure persists — hawkish.",
+       "quote": "\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The NFCI is negative, indicating loose overall financial conditions, with only a small 0.031 tightening over four weeks — a broadly neutral-to-easy backdrop.",
+       "quote": "\"nfci\": {\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031}",
+       "item": "signal.financial",
+       "lean": "neutral"
+      },
+      {
+       "text": "Base rates show that conditional on the last decision, a repeat hike carries the highest probability at 0.653 with zero probability of a cut, supporting the hawkish read.",
+       "quote": "\"hike\": {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+       "item": "signal.base_rates",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The most recent decision was a hike of 25 basis points, consistent with the positive 2-year gap the bond market is showing.",
+       "quote": "\"decision\": \"hike\", \"change_bp\": 25.0",
+       "item": "signal.base_rates",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The latest statement held rates but two members dissented preferring a further hike, corroborating the bond market's expectation of rates above the current setting.",
+       "quote": "who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting",
+       "item": "fed.statement.2026-10-28",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The statement reaffirms that inflation remains elevated, consistent with the rising breakevens in the bond market.",
+       "quote": "Inflation remains elevated.",
+       "item": "fed.statement.2026-10-28",
+       "lean": "hawkish"
+      }
+     ],
+     "claims_unused": "",
+     "watchouts": [],
+     "tilt_bp": 3,
+     "confidence": "medium",
+     "summary": "The financial-conditions evidence shows the bond market pricing rates above the current policy setting: the 2-year yield carries a positive 82bp gap over the 3.88 policy rate, and breakevens sit 0.49pp above goal and are rising (+0.15 over 4wk). This corroborates the other hawkish evidence — the September hike, the base-rate conditional probability of a repeat hike at 0.653 with zero cut probability, and the October statement's two dissents preferring a further hike plus 'Inflation remains elevated.' Counterweights are dovish-at-the-margin: the 2-year gap has narrowed 22bp over 4wk, the October decision itself was a hold, and the NFCI is negative (loose conditions) with only a 0.031 tightening. On balance the bond market expects rates at or above current levels and broadly corroborates the hawkish signals, leaving a modest hawkish tilt. Note the question asks about 'what the statement says about financial conditions' specifically — the statements do not contain explicit financial-conditions language beyond inflation/activity descriptions, so that linkage is not directly in the evidence."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 48.3,
+    "prompt_hash": "fd8deffb56af2088",
+    "meta": {
+     "session_id": "324ba776-d039-4156-831f-3c1b6426f10f",
+     "cost_usd": 0.2273115,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 8768,
+      "cache_read_input_tokens": 81323,
+      "output_tokens": 3958,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 8768,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 432,
+        "cache_read_input_tokens": 81323,
+        "cache_creation_input_tokens": 5747,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 5747
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The bond market is pricing the 2-year yield well above the policy rate, with a positive gap of 82 basis points against a policy rate of 3.88 — the market expects rates higher than the current setting, a hawkish signal.",
+      "quote": "\"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "That same gap has narrowed by 22 basis points over the past four weeks, indicating the bond market has drifted toward expecting less tightening — a dovish shift at the margin.",
+      "quote": "\"two_year\": {\"yield\": 4.7, \"date\": \"2026-10-27\", \"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+      "item": "signal.financial",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Inflation compensation in the bond market sits 0.49 percentage point above the goal and has risen 0.15 over four weeks, corroborating that inflation pressure persists — hawkish.",
+      "quote": "\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The NFCI is negative, indicating loose overall financial conditions, with only a small 0.031 tightening over four weeks — a broadly neutral-to-easy backdrop.",
+      "quote": "\"nfci\": {\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031}",
+      "item": "signal.financial",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Base rates show that conditional on the last decision, a repeat hike carries the highest probability at 0.653 with zero probability of a cut, supporting the hawkish read.",
+      "quote": "\"hike\": {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+      "item": "signal.base_rates",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The most recent decision was a hike of 25 basis points, consistent with the positive 2-year gap the bond market is showing.",
+      "quote": "\"decision\": \"hike\", \"change_bp\": 25.0",
+      "item": "signal.base_rates",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The latest statement held rates but two members dissented preferring a further hike, corroborating the bond market's expectation of rates above the current setting.",
+      "quote": "who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting",
+      "item": "fed.statement.2026-10-28",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The statement reaffirms that inflation remains elevated, consistent with the rising breakevens in the bond market.",
+      "quote": "Inflation remains elevated.",
+      "item": "fed.statement.2026-10-28",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 8,
+    "n_verified": 8,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 3.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The 2-year yield sits well above the policy rate, with a positive gap of 82bp, signalling the bond market expects rates to stay elevated or rise — a hawkish lean relative to the current 3.88 policy rate.",
+       "quote": "\"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Over the prior four weeks the 2-year yield fell (change of -22bp), a mild easing in the bond market's expected path that cuts against the hawkish gap level.",
+       "quote": "\"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+       "item": "signal.financial",
+       "lean": "dovish"
+      },
+      {
+       "text": "Breakeven inflation at 2.49 is 0.49pp above the goal and has risen 0.15pp over four weeks, so market-implied inflation expectations are elevated and climbing — corroborating a hawkish read.",
+       "quote": "\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The NFCI is negative at -0.487, indicating accommodative financial conditions, though it tightened slightly (+0.031) over four weeks.",
+       "quote": "\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031",
+       "item": "signal.financial",
+       "lean": "neutral"
+      },
+      {
+       "text": "The base-rate history after the most recent hike puts zero probability on a cut and the majority on another hike (0.653 vs 0.347 hold), consistent with the bond market's elevated 2-year yield.",
+       "quote": "\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653",
+       "item": "signal.base_rates",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The October statement upgraded the economy and kept inflation framing firm, supporting the bond market's hawkish expected path.",
+       "quote": "Economic activity is expanding at a strong pace.",
+       "item": "fed.statement.2026-10-28",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Two members dissented in favour of raising rates further, reinforcing a hawkish tilt that corroborates the positive 2-year gap and rising breakevens.",
+       "quote": "who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting.",
+       "item": "fed.statement.2026-10-28",
+       "lean": "hawkish"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": 3,
+     "confidence": "medium",
+     "summary": "The bond market is pricing a still-elevated rate path: the 2-year yield sits 82bp above the policy rate and breakevens at 2.49 are 0.49pp above goal and rising 0.15pp over four weeks, both corroborating the hawkish signals elsewhere — the base-rate conditional giving 0.653 to another hike and the October statement's \\\"strong pace\\\" language plus two dissents to raise. The main contradiction is a mild dovish counter: the 2-year yield fell 22bp over the past four weeks, and the NFCI remains accommodative at -0.487 despite a small tightening. On balance the financial-conditions evidence leans modestly hawkish, so a net tilt of +3bp."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 44.3,
+    "prompt_hash": "6acef737305377a0",
+    "meta": {
+     "session_id": "b5fa95d0-7d12-4acc-9a53-d57a202e11ad",
+     "cost_usd": 0.17438199999999998,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 4989,
+      "cache_read_input_tokens": 84344,
+      "output_tokens": 3292,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 4989,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 516,
+        "cache_read_input_tokens": 81323,
+        "cache_creation_input_tokens": 4989,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 4989
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The 2-year yield sits well above the policy rate, with a positive gap of 82bp, signalling the bond market expects rates to stay elevated or rise — a hawkish lean relative to the current 3.88 policy rate.",
+      "quote": "\"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Over the prior four weeks the 2-year yield fell (change of -22bp), a mild easing in the bond market's expected path that cuts against the hawkish gap level.",
+      "quote": "\"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+      "item": "signal.financial",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Breakeven inflation at 2.49 is 0.49pp above the goal and has risen 0.15pp over four weeks, so market-implied inflation expectations are elevated and climbing — corroborating a hawkish read.",
+      "quote": "\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The NFCI is negative at -0.487, indicating accommodative financial conditions, though it tightened slightly (+0.031) over four weeks.",
+      "quote": "\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031",
+      "item": "signal.financial",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The base-rate history after the most recent hike puts zero probability on a cut and the majority on another hike (0.653 vs 0.347 hold), consistent with the bond market's elevated 2-year yield.",
+      "quote": "\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653",
+      "item": "signal.base_rates",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The October statement upgraded the economy and kept inflation framing firm, supporting the bond market's hawkish expected path.",
+      "quote": "Economic activity is expanding at a strong pace.",
+      "item": "fed.statement.2026-10-28",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Two members dissented in favour of raising rates further, reinforcing a hawkish tilt that corroborates the positive 2-year gap and rising breakevens.",
+      "quote": "who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting.",
+      "item": "fed.statement.2026-10-28",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 7,
+    "n_verified": 7,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 3.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The 2-year yield (4.7) sits 82 bp above the 3.88 policy rate, meaning the bond market is pricing rates above the current policy level — a hawkish signal — though the gap narrowed 22 bp over 4 weeks, a partial dovish drift.",
+       "quote": "two_year: {\"yield\": 4.7, \"date\": \"2026-10-27\", \"gap_bp\": 82.0, \"change_4wk_bp\": -22.0, \"ago_date\": \"2026-09-28\"}",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Breakevens are above the inflation goal and rising, with the level at 2.49, 0.49 pp over goal and up 0.15 pp in 4 weeks — the bond market expects inflation to stay above target, a hawkish pressure.",
+       "quote": "breakeven: {\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15}",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The NFCI is negative at -0.487 (financial conditions still loose) and barely tightened by 0.031 over 4 weeks, so financial conditions are not restraining — broadly neutral but consistent with room for firmer policy.",
+       "quote": "nfci: {\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031}",
+       "item": "signal.financial",
+       "lean": "neutral"
+      },
+      {
+       "text": "The base policy rate against which the bond-market gap is measured is 3.88.",
+       "quote": "policy_rate: 3.88",
+       "item": "signal.financial",
+       "lean": "neutral"
+      },
+      {
+       "text": "The base-rate history corroborates a hawkish tilt: conditional on the last decision being a hike, the modeled probability of another hike is 0.653 and of a cut is 0.0.",
+       "quote": "given_last: {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+       "item": "signal.base_rates",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The latest statement does not mention financial conditions explicitly; its two dissents preferred a hike, corroborating the hawkish lean from breakevens and the positive 2-year gap.",
+       "quote": "Voting against the monetary policy action were Lisa D. Cook and Beth M. Hammack, who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting.",
+       "item": "fed.statement.2026-10-28",
+       "lean": "hawkish"
+      }
+     ],
+     "watchouts": [],
+     "tilt_bp": 3,
+     "confidence": "medium",
+     "summary": "The bond market is pricing policy above the current 3.88 rate: the 2-year yield (4.7) is 82 bp over the policy rate, and breakevens are above goal (2.49, 0.49 pp over) and still rising (+0.15 pp/4wk), both hawkish. The NFCI remains negative (-0.487, loose conditions) with only a marginal 0.031 tightening, so financial conditions are not restrictive. This corroborates the other evidence's hawkish lean — the base-rate history shows a 0.653 hike probability given the last hike, and the October statement carries two dissents who preferred to raise. The statement itself makes no explicit mention of financial conditions (not in evidence). Offsetting dovish nuance: the 2-year gap narrowed 22 bp over 4 weeks. Net tilt modestly hawkish (+3 bp)."
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 46.5,
+    "prompt_hash": "3f1021c5d0baa496",
+    "meta": {
+     "session_id": "b0656b4f-ba6f-4eb6-a430-cc4b1af63a4c",
+     "cost_usd": 0.183692,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 5305,
+      "cache_read_input_tokens": 84344,
+      "output_tokens": 3538,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 5305,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 454,
+        "cache_read_input_tokens": 81323,
+        "cache_creation_input_tokens": 5305,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 5305
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The 2-year yield (4.7) sits 82 bp above the 3.88 policy rate, meaning the bond market is pricing rates above the current policy level — a hawkish signal — though the gap narrowed 22 bp over 4 weeks, a partial dovish drift.",
+      "quote": "two_year: {\"yield\": 4.7, \"date\": \"2026-10-27\", \"gap_bp\": 82.0, \"change_4wk_bp\": -22.0, \"ago_date\": \"2026-09-28\"}",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Breakevens are above the inflation goal and rising, with the level at 2.49, 0.49 pp over goal and up 0.15 pp in 4 weeks — the bond market expects inflation to stay above target, a hawkish pressure.",
+      "quote": "breakeven: {\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15}",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The NFCI is negative at -0.487 (financial conditions still loose) and barely tightened by 0.031 over 4 weeks, so financial conditions are not restraining — broadly neutral but consistent with room for firmer policy.",
+      "quote": "nfci: {\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031}",
+      "item": "signal.financial",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The base policy rate against which the bond-market gap is measured is 3.88.",
+      "quote": "policy_rate: 3.88",
+      "item": "signal.financial",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The base-rate history corroborates a hawkish tilt: conditional on the last decision being a hike, the modeled probability of another hike is 0.653 and of a cut is 0.0.",
+      "quote": "given_last: {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+      "item": "signal.base_rates",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The latest statement does not mention financial conditions explicitly; its two dissents preferred a hike, corroborating the hawkish lean from breakevens and the positive 2-year gap.",
+      "quote": "Voting against the monetary policy action were Lisa D. Cook and Beth M. Hammack, who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting.",
+      "item": "fed.statement.2026-10-28",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 6,
+    "n_verified": 6,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 3.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The 2-year yield sits well above the policy rate, implying the bond market is priced for rates higher than the current setting over the next two years.",
+       "quote": "policy_rate: 3.88",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The 2-year gap is positive at 82bp, a hawkish read, but it narrowed by 22bp over four weeks, a partly offsetting dovish drift in market expectations.",
+       "quote": "\"yield\": 4.7, \"date\": \"2026-10-27\", \"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Breakeven inflation runs 0.49pp above the 2 percent goal and rose 0.15pp in four weeks, corroborating a hawkish inflation picture.",
+       "quote": "\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The NFCI is negative, indicating loose financial conditions, though it edged up 0.031 over four weeks toward slightly tighter.",
+       "quote": "\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031",
+       "item": "signal.financial",
+       "lean": "dovish"
+      },
+      {
+       "text": "Base rates conditional on the last decision being a hike put zero weight on a cut and the majority on another hike, consistent with the hawkish tilt in the bond-market pre-read.",
+       "quote": "\"given_last\": {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+       "item": "signal.base_rates",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The October statement held the range steady, which tempers the hawkish market signal.",
+       "quote": "The Committee decided to maintain the target range for the federal funds rate at 3-3/4 to 4 percent",
+       "item": "fed.statement.2026-10-28",
+       "lean": "dovish"
+      },
+      {
+       "text": "Two dissenters preferred a hike, corroborating the hawkish read from elevated breakevens and the positive 2-year gap.",
+       "quote": "who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting",
+       "item": "fed.statement.2026-10-28",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The statement notes inflation remains elevated, consistent with the above-goal, rising breakevens in the financial-conditions pre-read.",
+       "quote": "Inflation remains elevated.",
+       "item": "fed.statement.2026-10-28",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The statements do not discuss financial conditions explicitly beyond ample reserves; that specific language is not in the evidence.",
+       "quote": "The Committee is continuing its policy of maintaining ample reserves in the banking system.",
+       "item": "fed.statement.2026-10-28",
+       "lean": "neutral"
+      }
+     ],
+     "tilt_bp": 3,
+     "confidence": "medium",
+     "summary": "The bond-market pre-read leans hawkish: the 2-year yield (4.7) is well above the policy rate (3.88) with a positive 82bp gap, and breakevens sit 0.49pp above the 2 percent goal and rose 0.15pp over four weeks. These corroborate the elevated-inflation statement language, the two hawkish dissents, and base rates that put 0.653 weight on another hike given the last move was a hike. Offsetting (dovish) signals: the 2-year gap narrowed 22bp over four weeks, the NFCI remains loose at -0.487, and the Committee actually held the range at 3-3/4 to 4 percent on October 28. On net the market corroborates a modest hawkish tilt. Note: the statements do not explicitly address financial conditions beyond ample reserves.",
+     "watchouts": []
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 44.8,
+    "prompt_hash": "69708fdd828fd05b",
+    "meta": {
+     "session_id": "cb4bb75d-defa-428d-b4ad-baf9eb511f9c",
+     "cost_usd": 0.189382,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 5464,
+      "cache_read_input_tokens": 84344,
+      "output_tokens": 3702,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 5464,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 443,
+        "cache_read_input_tokens": 81323,
+        "cache_creation_input_tokens": 5464,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 5464
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The 2-year yield sits well above the policy rate, implying the bond market is priced for rates higher than the current setting over the next two years.",
+      "quote": "policy_rate: 3.88",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The 2-year gap is positive at 82bp, a hawkish read, but it narrowed by 22bp over four weeks, a partly offsetting dovish drift in market expectations.",
+      "quote": "\"yield\": 4.7, \"date\": \"2026-10-27\", \"gap_bp\": 82.0, \"change_4wk_bp\": -22.0",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Breakeven inflation runs 0.49pp above the 2 percent goal and rose 0.15pp in four weeks, corroborating a hawkish inflation picture.",
+      "quote": "\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The NFCI is negative, indicating loose financial conditions, though it edged up 0.031 over four weeks toward slightly tighter.",
+      "quote": "\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031",
+      "item": "signal.financial",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Base rates conditional on the last decision being a hike put zero weight on a cut and the majority on another hike, consistent with the hawkish tilt in the bond-market pre-read.",
+      "quote": "\"given_last\": {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+      "item": "signal.base_rates",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The October statement held the range steady, which tempers the hawkish market signal.",
+      "quote": "The Committee decided to maintain the target range for the federal funds rate at 3-3/4 to 4 percent",
+      "item": "fed.statement.2026-10-28",
+      "lean": "dovish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Two dissenters preferred a hike, corroborating the hawkish read from elevated breakevens and the positive 2-year gap.",
+      "quote": "who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting",
+      "item": "fed.statement.2026-10-28",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The statement notes inflation remains elevated, consistent with the above-goal, rising breakevens in the financial-conditions pre-read.",
+      "quote": "Inflation remains elevated.",
+      "item": "fed.statement.2026-10-28",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The statements do not discuss financial conditions explicitly beyond ample reserves; that specific language is not in the evidence.",
+      "quote": "The Committee is continuing its policy of maintaining ample reserves in the banking system.",
+      "item": "fed.statement.2026-10-28",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 9,
+    "n_verified": 9,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 3.0,
+    "tilt_clipped": false
+   }
+  },
+  {
+   "completion": {
+    "output": {
+     "claims": [
+      {
+       "text": "The bond market prices the 2-year yield 82bp above the policy rate, implying expectations of higher short rates ahead (hawkish), though the gap narrowed 22bp over four weeks, a partly dovish drift.",
+       "quote": "two_year: {\"yield\": 4.7, \"date\": \"2026-10-27\", \"gap_bp\": 82.0, \"change_4wk_bp\": -22.0, \"ago_date\": \"2026-09-28\"}",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "Breakeven inflation sits 0.49pp above the 2 percent goal and rose 0.15pp over four weeks, showing market inflation expectations drifting up, which corroborates a hawkish read.",
+       "quote": "breakeven: {\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15}",
+       "item": "signal.financial",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The NFCI is negative, indicating financial conditions that are not tight, with only a small 0.031 move over four weeks; this is a near-neutral backdrop rather than a strong policy signal.",
+       "quote": "nfci: {\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031}",
+       "item": "signal.financial",
+       "lean": "neutral"
+      },
+      {
+       "text": "The policy rate base against which the 2-year gap and breakeven goal-gap are computed is 3.88.",
+       "quote": "policy_rate: 3.88",
+       "item": "signal.financial",
+       "lean": "neutral"
+      },
+      {
+       "text": "The base-rate history after the last decision shows a hike bias with zero cut probability, corroborating the hawkish tilt implied by the bond-market gap.",
+       "quote": "given_last: {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+       "item": "signal.base_rates",
+       "lean": "hawkish"
+      },
+      {
+       "text": "The October statement does not explicitly discuss financial conditions; its only balance-sheet-related language is the ample-reserves line, so it neither corroborates nor contradicts the bond-market read directly.",
+       "quote": "The Committee is continuing its policy of maintaining ample reserves in the banking system.",
+       "item": "fed.statement.2026-10-28",
+       "lean": "neutral"
+      },
+      {
+       "text": "Two members dissented in favor of hiking, a hawkish signal consistent with the positive 2-year gap and rising breakevens.",
+       "quote": "Voting against the monetary policy action were Lisa D. Cook and Beth M. Hammack, who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting.",
+       "item": "fed.statement.2026-10-28",
+       "lean": "hawkish"
+      }
+     ],
+     "tilt_bp": 3,
+     "confidence": "medium",
+     "summary": "The bond market is pricing higher-for-longer / somewhat hawkish: the 2-year yield sits 82bp above the 3.88 policy rate and breakevens are 0.49pp above the 2 percent goal and rising 0.15pp over four weeks. This corroborates the hawkish signals elsewhere — the base-rate history shows a hike-biased conditional (hike 0.653, cut 0.0) and two members dissented in favor of hiking. The main contradicting/softening signals are the 22bp narrowing of the 2-year gap over four weeks and a negative (non-tight) NFCI that moved only 0.031. The October statement itself says nothing explicit about financial conditions. Net: modestly hawkish, +3bp.",
+     "watchouts": []
+    },
+    "backend": "claude-code",
+    "model": "claude-opus-4-8[1m]",
+    "duration_s": 43.5,
+    "prompt_hash": "ddbef03c50523d04",
+    "meta": {
+     "session_id": "ab271286-3b7b-449f-8619-ad761b3ef032",
+     "cost_usd": 0.17899699999999996,
+     "num_turns": 2,
+     "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 5213,
+      "cache_read_input_tokens": 84344,
+      "output_tokens": 3387,
+      "server_tool_use": {
+       "web_search_requests": 0,
+       "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+       "ephemeral_1h_input_tokens": 5213,
+       "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+       {
+        "input_tokens": 2,
+        "output_tokens": 379,
+        "cache_read_input_tokens": 81323,
+        "cache_creation_input_tokens": 5213,
+        "cache_creation": {
+         "ephemeral_5m_input_tokens": 0,
+         "ephemeral_1h_input_tokens": 5213
+        },
+        "type": "message"
+       }
+      ],
+      "speed": "standard"
+     }
+    }
+   },
+   "verification": {
+    "claims": [
+     {
+      "text": "The bond market prices the 2-year yield 82bp above the policy rate, implying expectations of higher short rates ahead (hawkish), though the gap narrowed 22bp over four weeks, a partly dovish drift.",
+      "quote": "two_year: {\"yield\": 4.7, \"date\": \"2026-10-27\", \"gap_bp\": 82.0, \"change_4wk_bp\": -22.0, \"ago_date\": \"2026-09-28\"}",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Breakeven inflation sits 0.49pp above the 2 percent goal and rose 0.15pp over four weeks, showing market inflation expectations drifting up, which corroborates a hawkish read.",
+      "quote": "breakeven: {\"level\": 2.49, \"date\": \"2026-10-28\", \"vs_goal_pp\": 0.49, \"change_4wk_pp\": 0.15}",
+      "item": "signal.financial",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The NFCI is negative, indicating financial conditions that are not tight, with only a small 0.031 move over four weeks; this is a near-neutral backdrop rather than a strong policy signal.",
+      "quote": "nfci: {\"level\": -0.487, \"date\": \"2026-10-23\", \"change_4wk\": 0.031}",
+      "item": "signal.financial",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The policy rate base against which the 2-year gap and breakeven goal-gap are computed is 3.88.",
+      "quote": "policy_rate: 3.88",
+      "item": "signal.financial",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The base-rate history after the last decision shows a hike bias with zero cut probability, corroborating the hawkish tilt implied by the bond-market gap.",
+      "quote": "given_last: {\"cut\": 0.0, \"hold\": 0.347, \"hike\": 0.653}",
+      "item": "signal.base_rates",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "The October statement does not explicitly discuss financial conditions; its only balance-sheet-related language is the ample-reserves line, so it neither corroborates nor contradicts the bond-market read directly.",
+      "quote": "The Committee is continuing its policy of maintaining ample reserves in the banking system.",
+      "item": "fed.statement.2026-10-28",
+      "lean": "neutral",
+      "verified": true,
+      "leaked_numbers": []
+     },
+     {
+      "text": "Two members dissented in favor of hiking, a hawkish signal consistent with the positive 2-year gap and rising breakevens.",
+      "quote": "Voting against the monetary policy action were Lisa D. Cook and Beth M. Hammack, who preferred to raise the target range for the federal funds rate by 1/4 percentage point at this meeting.",
+      "item": "fed.statement.2026-10-28",
+      "lean": "hawkish",
+      "verified": true,
+      "leaked_numbers": []
+     }
+    ],
+    "n_claims": 7,
+    "n_verified": 7,
+    "groundedness_pct": 100.0,
+    "leakage_count": 0,
+    "watchouts_required": [],
+    "watchouts_missing": [],
+    "tilt_bp": 3.0,
+    "tilt_clipped": false
+   }
+  }
+ ],
+ "summary": {
+  "runs": 5,
+  "tilt_mean_bp": 3.0,
+  "tilt_std_bp": 0.0,
+  "groundedness_pct_mean": 100.0,
+  "leakage_total": 0,
+  "watchouts_missing_total": 0,
+  "repairs": 0,
+  "repair_tilt_changes": 0,
+  "groundedness_before_repair_pct_mean": 100.0,
+  "leakage_before_repair_total": 0
+ }
+}
