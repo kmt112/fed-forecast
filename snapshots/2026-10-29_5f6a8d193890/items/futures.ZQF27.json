@@ -1,0 +1,14 @@
+{
+ "id": "futures.ZQF27",
+ "kind": "futures",
+ "source": "finance.yahoo.com/quote/ZQF27.CBT",
+ "fetched_at": "2026-10-29T05:07:20+00:00",
+ "content": {
+  "symbol": "ZQF27.CBT",
+  "contract_month": "2027-01",
+  "price": 95.9,
+  "price_time_unix": 1793246362,
+  "volume": 9552
+ },
+ "sha256": "120474c5bddeac6c21cb53d86f12e30bc966a7557eaf8c0e3b33d67f0ba6c8ca"
+}

@@ -1,0 +1,12 @@
+{
+ "id": "fed.speeches",
+ "kind": "speeches",
+ "source": "federalreserve.gov/feeds/speeches.xml",
+ "fetched_at": "2026-10-29T05:05:45+00:00",
+ "content": {
+  "feed": "https://www.federalreserve.gov/feeds/speeches.xml",
+  "since": "2026-10-28",
+  "speeches": []
+ },
+ "sha256": "c70154b7c5a2d1ed3778ed4da8a2f157459107a34fc6fed4a55b11131e0e43db"
+}

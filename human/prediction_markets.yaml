@@ -47,3 +47,20 @@ markets:
   note: 'Mid prices 26 Oct 08:22 UTC: no change 94.5 (bid 94 / ask 95), +25 4.5 (4
     / 5), -25 0.15, -50 0.05, +50 0.35. Event volume $67.1m, liquidity $9.2m.'
   status: active
+- id: H6-004
+  venue: polymarket
+  meeting: '2026-12-09'
+  observed_at: '2026-10-29T05:20:00'
+  author: tankahming123
+  url: https://polymarket.com/event/fed-decision-in-december-20260729232808632
+  prices:
+    '-50': 0.25
+    '-25': 0.45
+    '0': 19.5
+    '25': 77.5
+    '50': 2.45
+  volume_usd: 7083677.0
+  note: 'Mid prices 29 Oct 05:20 UTC from the public gamma API: +25 77.5, no change
+    19.5, +50 2.45, -25 0.45, -50 0.25. Event volume $7.1m over the five buckets.
+    Kalshi KXFEDDECISION-26DEC listed but no prices in the public feed at this time.'
+  status: active

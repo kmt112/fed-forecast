@@ -1,0 +1,25 @@
+{
+ "id": "human.pm.H6-004",
+ "kind": "prediction_market",
+ "source": "human/prediction_markets.yaml",
+ "fetched_at": "2026-10-29T05:07:39+00:00",
+ "content": {
+  "id": "H6-004",
+  "venue": "polymarket",
+  "meeting": "2026-12-09",
+  "observed_at": "2026-10-29T05:20:00",
+  "author": "tankahming123",
+  "url": "https://polymarket.com/event/fed-decision-in-december-20260729232808632",
+  "prices": {
+   "-50": 0.25,
+   "-25": 0.45,
+   "0": 19.5,
+   "25": 77.5,
+   "50": 2.45
+  },
+  "volume_usd": 7083677.0,
+  "note": "Mid prices 29 Oct 05:20 UTC from the public gamma API: +25 77.5, no change 19.5, +50 2.45, -25 0.45, -50 0.25. Event volume $7.1m over the five buckets. Kalshi KXFEDDECISION-26DEC listed but no prices in the public feed at this time.",
+  "status": "active"
+ },
+ "sha256": "be5aec5c6de8b020a3a661b50e1fc213bb8ea64763034d670e31dfd67a508990"
+}
