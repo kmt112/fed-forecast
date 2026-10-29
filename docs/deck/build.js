@@ -390,45 +390,34 @@ pres.addSection({ title: "The harness" });
   bench.forEach(([k, v], i) => s.addText([{ text: k, options: { bold: true } }, { text: v }], { x: M + 0.17 + i * (bwid + 0.15), y: 6.42, w: bwid, h: 0.45, fontSize: 10, color: C.text1, isTextBox: true, margin: 0, valign: "top" }));
 }
 {
-  const s = light("The harness", "How the five specialists are run, end to end", "Every specialist run passes through the same five stages: tools off and one slice only; immutable evidence plus pre-reads computed by code; a fixed answer shape enforced as a JSON schema; verification by code with one repair round; recorded, five identical runs. The band is analysts 4 to 8 on the 28 October snapshot: 25 runs, 263 claims, all 263 verified with no number from memory, five direction calls. Bottom left: four said hike, labour said no hike; the plain mean is +4.0 bp, which moves 4.0 points of probability toward a hike after the pool, +25 bp from 20.2 to 22.4%. Bottom right: one verified claim exactly as recorded.");
-  const stages = [
-    ["Tools off, slice only", "No browsing, no files, no session: enforced by the runtime. Each specialist sees only its slice of the frozen snapshot. Memory is not off; it is detected: every number is checked against the evidence."],
-    ["Immutable evidence", "One frozen, hashed snapshot; each analyst gets only its slice. Pre-reads are numbers computed by code and handed over as text: the model never does sums."],
-    ["Fixed answer shape", "A JSON schema enforced by the runtime: claims with a verbatim quote and item id, a report on each watch-out, a lean within ±10 bp. Anything else is rejected unread."],
-    ["Verified by code, no LLM", "Each quote string-matched to its item; each number matched to the snapshot; watch-outs by id; lean clipped. A failure goes back once with the report, then stands as it is."],
-    ["Recorded, five times", "Stored under a hash of the prompt with the full output; replays exactly. Five identical runs measure repeatability. Only then may a lean touch the number."],
-  ];
+  const s = light("The harness", "LLM analysts: outcome", "One line of method, then the outcome. Each specialist runs five times on the same frozen snapshot; the five answers must sit within the variance pass mark, every claim must carry a quote code finds, and no number may come from memory. Only then does the lean count. The band is the 28 October run; bottom left is what the five said and what it did to the number; bottom right is one claim as recorded, with the quote code found.");
+  card(s, M, 1.42, W - 2 * M, 0.78);
+  s.addText([{ text: "Each specialist runs five times on the same frozen snapshot. ", options: { bold: true, color: THEME.colors.dk2 } },
+             { text: "The five answers must sit within the variance pass mark (2 points), every claim must carry a quote that code finds in the evidence, character for character, and no number may come from memory. Only then does the lean count toward the number." }],
+            { x: M + 0.22, y: 1.5, w: W - 2 * M - 0.44, h: 0.62, fontSize: 12.5, color: C.text1, isTextBox: true, margin: 0, valign: "middle" });
+  // the flow band: analysts 4 to 8 only, stepping down toward the five leans
   const sg = 0.146, sw = (W - 2 * M - 4 * sg) / 5;
-  stages.forEach(([h, d], i) => {
-    const x = M + i * (sw + sg), y = 1.42;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: sw, h: 1.6, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.1 });
-    text(s, "STAGE " + (i + 1), { x: x + 0.15, y: y + 0.1, w: sw - 0.3, h: 0.2, fontSize: 9, bold: true, color: THEME.colors.accent6, charSpacing: 1 });
-    text(s, h, { x: x + 0.15, y: y + 0.3, w: sw - 0.3, h: 0.3, fontSize: 12.5, bold: true, color: C.background1 });
-    text(s, d, { x: x + 0.15, y: y + 0.6, w: sw - 0.3, h: 0.95, fontSize: 9.5, color: THEME.colors.accent5 });
-  });
-  // the flow band: analysts 4 to 8 only, stepping down toward the five direction calls
-  const band = [["40 runs", ""], ["25 prompts", "one slice each, hashed"], ["263 claims", "every one with a verbatim quote"], ["263 verified", "100%; 0 numbers from memory"], ["5 leans, ±10 bp", "+6.0 · +6.2 · +5.8 · −1.4 · +3.4 bp"]];
-  band[0] = ["25 runs", "5 specialists × 5 identical runs"];
-  const bh = [1.35, 1.27, 1.17, 1.1, 0.82], bfill = ["CADCFC", "B9CEF3", "A8C3EC", "97B7E5", THEME.colors.dk2], cy = 3.9;
+  const band = [["25 runs", "5 specialists × 5 identical runs"], ["25 prompts", "one slice each, hashed"], ["263 claims", "every one with a verbatim quote"], ["263 verified", "100%; 0 numbers from memory"], ["5 leans, ±10 bp", "+6.0 · +6.2 · +5.8 · −1.4 · +3.4 bp"]];
+  const bh = [1.62, 1.5, 1.38, 1.26, 1.0], bfill = ["CADCFC", "B9CEF3", "A8C3EC", "97B7E5", THEME.colors.dk2], cy = 3.25;
   band.forEach(([big, small], i) => {
     const x = M + i * (sw + sg), w = i < 4 ? sw + sg : sw, h = bh[i], y = cy - h / 2;
     s.addShape(pres.shapes.RECTANGLE, { x, y, w, h, fill: { color: bfill[i] }, line: { color: bfill[i] } });
     const dark = i === 4;
-    text(s, big, { x, y: cy - 0.38, w, h: 0.4, fontSize: 18, bold: true, color: dark ? C.background1 : C.text1, align: "center", valign: "middle" });
-    text(s, small, { x, y: cy + 0.02, w, h: 0.3, fontSize: 10, color: dark ? THEME.colors.accent5 : C.text1, align: "center", valign: "middle" });
+    text(s, big, { x, y: cy - 0.42, w, h: 0.44, fontSize: 20, bold: true, color: dark ? C.background1 : C.text1, align: "center", valign: "middle" });
+    text(s, small, { x, y: cy + 0.04, w, h: 0.32, fontSize: 10.5, color: dark ? THEME.colors.accent5 : C.text1, align: "center", valign: "middle" });
   });
   // bottom left: what the five said, and what it did to the number
-  const ly = 4.95, lh = 1.9;
+  const ly = 4.3, lh = 2.6;
   card(s, M, ly, 4.85, lh, "FBEFEA");
-  text(s, "WHAT THE FIVE SAID, AND WHAT IT DID TO THE NUMBER", { x: M + 0.17, y: ly + 0.1, w: 4.5, h: 0.2, fontSize: 9, bold: true, color: THEME.colors.accent2, charSpacing: 1 });
-  const said = [["Communications", "+6.0 hike"], ["Minutes", "+6.2 hike"], ["Inflation", "+5.8 hike"], ["Financial conditions", "+3.4 hike"], ["Labour market", "−1.4 no hike"], ["Equal-weight mean", "+4.0 bp"]];
+  text(s, "WHAT THE FIVE SAID, AND WHAT IT DID TO THE NUMBER", { x: M + 0.17, y: ly + 0.12, w: 4.5, h: 0.2, fontSize: 9, bold: true, color: THEME.colors.accent2, charSpacing: 1 });
+  const said = [["Communications", "+6.0 hike"], ["Minutes", "+6.2 hike"], ["Inflation", "+5.8 hike"], ["Financial conditions", "+3.4 hike"], ["Labour market", "−1.4 hold"], ["Equal-weight mean", "+4.0 bp"]];
   s.addTable(said.map(([a, b], i) => [{ text: a, options: { color: i === 4 ? THEME.colors.accent3 : THEME.colors.dk1, bold: i === 5 } }, { text: b, options: { align: "right", bold: true, color: i === 4 ? THEME.colors.accent3 : THEME.colors.dk1 } }]),
-             { x: M + 0.17, y: ly + 0.38, w: 2.25, colW: [1.45, 0.8], fontSize: 9.5, border: { type: "none" }, margin: 0.02, rowH: 0.22 });
-  s.addText([{ text: "Four say hike, one says hold back. ", options: { bold: true } }, { text: "Plain average, one vote each: +4.0 bp.", options: { breakLine: true } },
-             { text: "+4.0 bp = 4.0 points of probability ", options: { bold: true } }, { text: "moved toward a hike, after the pool:" }],
-            { x: M + 2.55, y: ly + 0.38, w: 2.15, h: 0.9, fontSize: 9.5, color: C.text1, isTextBox: true, margin: 0, valign: "top" });
-  text(s, "+25 bp: 20.2% → 22.4%", { x: M + 2.55, y: ly + 1.3, w: 2.2, h: 0.3, fontSize: 13, bold: true, color: C.text2, fontFace: THEME.headFontFace });
-  text(s, "+50 bp 6.0 → 7.7; no change 70.9 → 67.6; cuts 3.0 → 2.3", { x: M + 2.55, y: ly + 1.6, w: 2.2, h: 0.26, fontSize: 9, color: C.accent4 });
+             { x: M + 0.17, y: ly + 0.42, w: 2.3, colW: [1.4, 0.9], fontSize: 11, border: { type: "none" }, margin: 0.02, rowH: 0.3 });
+  s.addText([{ text: "Four say hike, one says hold back. ", options: { bold: true } }, { text: "Plain average, one vote each: +4.0.", options: { breakLine: true } },
+             { text: "Each point of lean moves one point of probability ", options: { bold: true } }, { text: "from the hold side to the hike side, by rule, capped at 10. So +4.0 moves 4.0 points, after the pool:" }],
+            { x: M + 2.55, y: ly + 0.42, w: 2.15, h: 1.3, fontSize: 10.5, color: C.text1, isTextBox: true, margin: 0, valign: "top" });
+  text(s, "+25 bp: 20.2% → 22.4%", { x: M + 2.55, y: ly + 1.78, w: 2.2, h: 0.36, fontSize: 14, bold: true, color: C.text2, fontFace: THEME.headFontFace });
+  text(s, "+50 bp 6.0 → 7.7; no change 70.9 → 67.6; cuts 3.0 → 2.3", { x: M + 2.55, y: ly + 2.15, w: 2.2, h: 0.4, fontSize: 9.5, color: C.accent4 });
   // bottom right: one verified claim as recorded
   const rx = M + 5.0, rw = W - M - rx;
   card(s, rx, ly, rw, lh);
