@@ -382,7 +382,7 @@ pres.addSection({ title: "The harness" });
     text(s, h, { x: x + 0.56, y: y + 0.06, w: w - 0.66, h: 0.26, fontSize: 12, bold: true, color: C.background1 });
     s.addText([{ text: gets, options: { breakLine: true } }, { text: "Intent: ", options: { bold: true, color: THEME.colors.lt1 } }, { text: intent }], { x: x + 0.56, y: y + 0.3, w: w - 0.66, h: 0.44, fontSize: 9.5, color: THEME.colors.accent5, isTextBox: true, margin: 0, valign: "top" });
   });
-  text(s, "Output per specialist: all claims with verbatim quotes, and a decision on interest-rate direction of at most ±10 bp. The mean of the five model outputs becomes a modifier on the pooled number.", { x: bx + 0.2, y: 5.12, w: bw - 0.4, h: 0.7, fontSize: 11.5, color: THEME.colors.accent5 });
+  text(s, "Each specialist is asked one question about its own slice (above), never for a probability. It returns claims, each with a verbatim quote and item id, and a lean of at most ±10 bp: direction and strength, positive toward a hike. Code averages the five leans; 1 bp of mean lean moves 1 point of probability, capped at 10.", { x: bx + 0.2, y: 5.12, w: bw - 0.4, h: 0.7, fontSize: 11.5, color: THEME.colors.accent5 });
   card(s, M, 6.06, W - 2 * M, 0.85, "F3F4F6");
   s.addText([{ text: "Every analyst runs five times on the same snapshot. ", options: { bold: true } }, { text: "For analysts 1 to 3 those runs are not forecasts: they build the benchmark that 4 to 8 are measured against." }], { x: M + 0.17, y: 6.12, w: W - 2 * M - 0.34, h: 0.26, fontSize: 11.5, color: C.text1, isTextBox: true, margin: 0 });
   const bench = [["1 sets the baseline: ", "variance of the probabilities across runs; numbers from memory (all of them); nothing quoted."], ["2 tests immutable evidence: ", "numbers from memory fall to zero; the variance does not; nothing can be checked."], ["3 tests the answer shape and code verification: ", "variance falls under 1 bp; every claim quoted and checked."]];
@@ -407,7 +407,7 @@ pres.addSection({ title: "The harness" });
     text(s, d, { x: x + 0.15, y: y + 0.6, w: sw - 0.3, h: 0.95, fontSize: 9.5, color: THEME.colors.accent5 });
   });
   // the flow band: analysts 4 to 8 only, stepping down toward the five direction calls
-  const band = [["40 runs", ""], ["25 prompts", "one slice each, hashed"], ["263 claims", "every one with a verbatim quote"], ["263 verified", "100%; 0 numbers from memory"], ["5 direction calls", "+6.0 · +6.2 · +5.8 · −1.4 · +3.4 bp"]];
+  const band = [["40 runs", ""], ["25 prompts", "one slice each, hashed"], ["263 claims", "every one with a verbatim quote"], ["263 verified", "100%; 0 numbers from memory"], ["5 leans, ±10 bp", "+6.0 · +6.2 · +5.8 · −1.4 · +3.4 bp"]];
   band[0] = ["25 runs", "5 specialists × 5 identical runs"];
   const bh = [1.35, 1.27, 1.17, 1.1, 0.82], bfill = ["CADCFC", "B9CEF3", "A8C3EC", "97B7E5", THEME.colors.dk2], cy = 3.9;
   band.forEach(([big, small], i) => {
