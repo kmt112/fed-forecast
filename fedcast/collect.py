@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import date
+from datetime import date, datetime
 
 from fedcast import config
 from fedcast.data import fomc_calendar, fomc_history, sources
@@ -30,7 +30,9 @@ def build(as_of: date) -> Snapshot:
             snap.missing[item_id] = f"{type(exc).__name__}: {exc}"
 
     meetings = fomc_calendar.fetch()
-    nxt = fomc_calendar.next_meeting(meetings, as_of)
+    # the target is the first meeting not yet announced on the real clock, not on the (FRED-capped) evidence date:
+    # a pull on the evening of a decision day must forecast the next meeting, not the one just decided
+    nxt = fomc_calendar.next_meeting(meetings, max(as_of, fomc_calendar.decision_cutoff(datetime.now(config.DATA_TZ))))
     past = [m for m in meetings if m.decision_date < as_of]
     snap.add(Item.make("calendar", "calendar", fomc_calendar.URL, {
         "next_meeting": nxt.decision_date.isoformat(),

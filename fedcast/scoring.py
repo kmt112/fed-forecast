@@ -16,7 +16,8 @@ from __future__ import annotations
 import math
 from datetime import date, datetime, timezone
 
-from fedcast import OUTCOMES_BP
+from fedcast import config, OUTCOMES_BP
+from fedcast.data.fomc_calendar import DECISION_TIME
 from fedcast.scorecard import spec_hash
 from fedcast.snapshot import Snapshot
 
@@ -57,14 +58,35 @@ def score_entries(entries: list[dict], meeting: date, decision: dict, target_hig
     scored = []
     for e in entries:
         f = e["forecast"]
+        if not recorded_before_decision(e, meeting):
+            scored.append({"seq": e["seq"], "created_at": e["created_at"], "snapshot": f["snapshot_hash"][:12],
+                           "spec_hash": e.get("spec_hash"), "tracks": {}, "models": {}, "after_decision": True,
+                           "note": "recorded after the decision was announced: not scored"})
+            continue
         tracks = {k: score_vector(f[k], realised) for k in ("pooled", "machine_only", "human_adjusted") if k in f}
         models = {name: score_vector(m["probabilities"], realised) for name, m in f["models"].items() if "probabilities" in m}
         scored.append({"seq": e["seq"], "created_at": e["created_at"], "snapshot": f["snapshot_hash"][:12],
-                       "spec_hash": e.get("spec_hash"), "tracks": tracks, "models": models})
+                       "spec_hash": e.get("spec_hash"), "tracks": tracks, "models": models, "after_decision": False})
+    before = [x for x in scored if not x["after_decision"]]
     return {"meeting": meeting.isoformat(), "realised_bp": realised,
             "decision": {**decision, "target_high_before": target_high_before},
             "scored_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "spec_hash": spec_hash(),
-            "entries": scored, "final_entry": scored[-1]["seq"] if scored else None}
+            "entries": scored, "final_entry": before[-1]["seq"] if before else None}
+
+
+def announced_at(meeting: date) -> datetime:
+    """When the decision became public: 2:00 pm US Eastern on the meeting's decision day."""
+    return datetime.combine(meeting, DECISION_TIME, tzinfo=config.DATA_TZ)
+
+
+def recorded_before_decision(entry: dict, meeting: date) -> bool:
+    """A forecast counts only if it was recorded before the decision was announced. An entry recorded after that
+    (for example a snapshot pulled on the evening of the decision day while FRED's clock still read that date) stays
+    in the ledger but is labelled and never scored."""
+    created = datetime.fromisoformat(entry["created_at"])
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    return created < announced_at(meeting)
 
 
 def score_meeting(meeting: date | None, ledger_path, scores_path, snap: Snapshot, find_snapshot) -> dict:
@@ -91,7 +113,10 @@ def score_meeting(meeting: date | None, ledger_path, scores_path, snap: Snapshot
     mine = [e for e in entries if e["forecast"]["meeting"] == meeting.isoformat()]
     if not mine:
         raise ValueError(f"no ledger entry forecasts the {meeting} meeting")
-    before_snap = find_snapshot(mine[-1]["forecast"]["snapshot_hash"])
+    timely = [e for e in mine if recorded_before_decision(e, meeting)]
+    if not timely:
+        raise ValueError(f"every ledger entry for the {meeting} meeting was recorded after the decision was announced")
+    before_snap = find_snapshot(timely[-1]["forecast"]["snapshot_hash"])
     if before_snap is None:
         raise ValueError("the final entry's snapshot is missing")
     target_before = before_snap.get("effr")["latest"]["target_high"]

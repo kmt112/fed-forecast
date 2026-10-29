@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, time, timedelta
 
 from fedcast.data import http
 
@@ -62,6 +62,16 @@ def parse(html: str) -> list[Meeting]:
 
 def fetch() -> list[Meeting]:
     return parse(http.get_text(URL))
+
+
+DECISION_TIME = time(14, 0)  # FOMC statements are released at 2:00 pm Eastern on the decision day
+
+
+def decision_cutoff(now_et: datetime) -> date:
+    """The first date whose meeting is still undecided at `now_et` (US Eastern). A meeting on today's date counts as
+    decided from 2:00 pm, so a snapshot pulled after the announcement targets the following meeting. The evidence
+    date (as_of) can lag this by a day when FRED's real-time clock has not rolled over; the target must not."""
+    return now_et.date() if now_et.time() < DECISION_TIME else now_et.date() + timedelta(days=1)
 
 
 def next_meeting(meetings: list[Meeting], as_of: date) -> Meeting:
