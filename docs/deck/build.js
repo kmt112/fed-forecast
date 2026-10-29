@@ -533,7 +533,7 @@ pres.addSection({ title: "Limits and next" });
     card(s, x, y, w, 1.45);
     numCircle(s, x + 0.2, y + 0.18, i + 1);
     text(s, h, { x: x + 0.75, y: y + 0.12, w: w - 0.95, h: 0.4, fontSize: 13, bold: true, color: C.text2, valign: "middle" });
-    text(s, b, { x: x + 0.2, y: y + 0.55, w: w - 0.4, h: 0.88, fontSize: 10, color: C.text1 });
+    text(s, b, { x: x + 0.2, y: y + 0.64, w: w - 0.4, h: 0.8, fontSize: 10, color: C.text1 });
   });
 }
 {
