@@ -553,7 +553,7 @@ pres.addSection({ title: "Limits and next" });
     ["An events agent for regime shifts", "1987, 1998, 2008, 2020: the Fed cut on financial stress, not the data the models read. A watch-out agent that scans for bank failures, funding stress and market dislocations and raises a typed watch-out every analyst must answer."],
     ["A second model family", "The same harness, the same snapshots, a different language model. If the ladder reads the same, the harness is doing the work, not the model."],
     ["Other central banks and geographies", "ECB, Bank of England, MAS. The chain needs four things: a meeting calendar, a policy-rate series, the bank's own statements and minutes, and a futures or swap curve. The scorecard, the ledger and the analysts transfer unchanged; only the evidence sources change."],
-    ["Better classical models", "The probit's successor: features written down before fitting, a regularised ordinal model, a reliability check beside the log score, and the expanding window as the only judge. A regularised boosted model as one pre-registered candidate. About 130 usable decisions, 68% holds: small models, honestly tested, not big ones."],
+    ["Better classical models", "Our probit scored poorly. The cause is the data: 68% of decisions are holds and the cuts bunch into a few episodes, so the model learns hold and misses the rest. Replace it with a model built for that imbalance (class weights, or an ordinal model that shrinks toward the base rate), tested only on decisions it has not seen. About 130 usable decisions, so small models."],
   ];
   next.forEach(([h, b], i) => {
     const col = i % 2, row = Math.floor(i / 2);
