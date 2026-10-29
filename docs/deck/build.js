@@ -567,13 +567,13 @@ pres.addSection({ title: "Backup" });
 }
 
 {
-  const s = light("Backup", "Appendix: how the analysts' score moves the number", "Three parts. The score and why it stops at 10: it is already in points of probability, and 10 is the most any single input may move the number, the same cap as a human view; a wider range would let the analysts write the number, which the design forbids. The average: one vote each. The spread: the points leave every bucket on the hold-or-cut side and land on both hike buckets, in proportion to size and distance from the middle, so the shape of the distribution is kept and nothing goes to zero.");
+  const s = light("Backup", "Appendix: how the analysts' score moves the number", "Three parts. The score: already in points of probability, capped at 10 like a human view. The average: one vote each. The spread: the points leave every bucket on the hold-or-cut side and land on both hike buckets, in proportion to size and distance from the middle, so the shape of the distribution is kept and nothing goes to zero.");
   // left: the score and the average
   card(s, M, 1.45, 5.9, 5.3);
   text(s, "1. The score", { x: M + 0.25, y: 1.55, w: 5.4, h: 0.35, fontSize: 14, bold: true, color: C.text2 });
   s.addText(bullets([
     "Each specialist returns one number from −10 to +10: how many points of probability its evidence says should move toward a hike (positive) or a cut (negative). It is not a probability and not a rate forecast.",
-    "Why it stops at 10: ten points is the most any single input may move the number, the same cap a human view has. A range of −100 to +100 would let the analysts write the number; the design lets them shift it, never write it.",
+    "Ten is the cap any single input has on the number, the same as a human view.",
   ], { fontSize: 10.5, color: C.text1, paraSpaceAfter: 4 }), { x: M + 0.25, y: 1.92, w: 5.4, h: 1.5, isTextBox: true, margin: 0, valign: "top" });
   text(s, "2. The average", { x: M + 0.25, y: 3.45, w: 5.4, h: 0.35, fontSize: 14, bold: true, color: C.text2 });
   s.addText(bullets([
@@ -598,7 +598,7 @@ pres.addSection({ title: "Backup" });
     [{ text: "Hike side", options: { bold: true } }, c("26.14", true), c(""), c("30.14", true), c("+4.00", true, THEME.colors.accent3)],
   ];
   s.addTable(rows, { x: rx, y: 1.95, w: rw, colW: [1.7, 1.3, 1.1, 1.1, 1.08], fontSize: 11, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.05, rowH: 0.42 });
-  text(s, "Multiplier = e^(0.153 × bucket number) ÷ 1.0486, the rescaling total. Exactly 4.00 points crossed; the after column is the machine forecast recorded as entry #18. The cruder alternative, taking all 4 points from no change and giving them to +25, is easier to say and would be amendment #9 if preferred.", { x: rx, y: 5.45, w: rw, h: 1.2, fontSize: 10, color: C.accent4 });
+  text(s, "Multiplier = e^(0.153 × position) ÷ 1.0486, where position is −2, −1, 0, +1, +2 and 1.0486 is what the five re-weighted buckets add up to before rescaling. Exactly 4.00 points crossed; the after column is the machine forecast recorded as entry #18.", { x: rx, y: 5.45, w: rw, h: 1.2, fontSize: 10, color: C.accent4 });
 }
 {
   const s = light("Backup", "Appendix: the ordered probit, and why it sits at weight 0", "The quant side's own test. A first ordered probit, spec frozen before fitting, failed its out-of-sample gate and was reported, not tuned. A second version beats the base rate on the expanding window but was specified after seeing the first fail, so it carries a contamination caveat and waits for live decisions. The base rates, which need no fitting, beat the fitted model and are the yardstick. Below: why no gradient-boosted anything.");
