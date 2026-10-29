@@ -355,8 +355,8 @@ pres.addSection({ title: "The harness" });
     s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M + 0.17, y: y + 0.16, w: 0.42, h: 0.42, fill: { color: THEME.colors.accent4 }, line: { color: THEME.colors.accent4 }, rectRadius: 0.1 });
     text(s, n, { x: M + 0.17, y: y + 0.16, w: 0.42, h: 0.42, fontSize: 15, bold: true, color: C.background1, align: "center", valign: "middle", fontFace: THEME.headFontFace });
     text(s, h, { x: M + 0.72, y: y + 0.12, w: 3.3, h: 0.3, fontSize: 13, bold: true, color: C.text1 });
-    text(s, gets, { x: M + 0.72, y: y + 0.42, w: 3.3, h: 0.32, fontSize: 11, color: C.text1 });
-    s.addText([{ text: "Intent: ", options: { bold: true } }, { text: intent }], { x: M + 0.72, y: y + 0.74, w: 3.3, h: 0.48, fontSize: 10.5, color: THEME.colors.accent4, isTextBox: true, margin: 0, valign: "top" });
+    text(s, gets, { x: M + 0.72, y: y + 0.4, w: 3.3, h: 0.42, fontSize: 10.5, color: C.text1 });
+    s.addText([{ text: "Intent: ", options: { bold: true } }, { text: intent }], { x: M + 0.72, y: y + 0.84, w: 3.3, h: 0.38, fontSize: 10.5, color: THEME.colors.accent4, isTextBox: true, margin: 0, valign: "top" });
   });
   s.addShape(pres.shapes.LINE, { x: 4.95, y: 3.45, w: 0.5, h: 0, line: { color: THEME.colors.dk2, width: 2.5, endArrowType: "triangle" } });
   text(s, "SPECIALISTS · THE FIVE THAT ENTER THE NUMBER", { x: 5.65, y: 1.46, w: 3.6, h: 0.24, fontSize: 9.5, bold: true, color: C.accent4, charSpacing: 1, valign: "middle" });
@@ -544,7 +544,7 @@ pres.addSection({ title: "Limits and next" });
   });
   text(s, "What comes next, in order of value", { x: 6.95, y: 1.5, w: 6.0, h: 0.4, fontSize: 16, bold: true, color: C.text2 });
   const next = [
-    ["The December window, same chain: running now", "The 9 December meeting is less certain (the market prices a hike at about 85%), so reading the evidence has more to add. The chain needed only a new target."],
+    ["The December window, same chain: on file", "Entry #23 for the 9 December meeting: +25 bps 73.6%, no change 16.7%, +50 bps 7.8%. Futures 84.5% and Polymarket 77.4% for a hike; the specialists lean +4.0 bp, labour again the lone dove. The chain needed only a new target, and the repair round fired twice on the inflation reader, both fixed."],
     ["Pre-registered weight sets, scored live", "Three or four candidate sets written down now, all scored on every live decision; the live set changes only by amendment on that record."],
     ["An events agent for regime shifts", "1987, 1998, 2008, 2020: the Fed cut on financial stress, not the data the models read. A watch-out agent that scans for bank failures, funding stress and dislocations, and raises a watch-out every analyst must answer."],
     ["Reasoning quality and a second model family", "Twenty traces hand-graded, a model grader trusted only once it agrees; a second model family to show the harness, not the model, does the work."],
@@ -562,7 +562,7 @@ pres.addSection({ title: "Limits and next" });
   s.addText([
     { text: "The harness is the product. Same model, same evidence, same day: naive it wobbles and leaks; harnessed it is stable, quoted and checked.", options: { bullet: true, breakLine: true, paraSpaceAfter: 8 } },
     { text: "Judge the process. Eight decisions a year cannot prove skill; a pre-registered scorecard measured on every snapshot can show discipline and catch drift.", options: { bullet: true, breakLine: true, paraSpaceAfter: 8 } },
-    { text: "The ask: scrutinise the scorecard, challenge a quote, and tell us which other decisions deserve the same chain. The 28 October call is on file; December is already running.", options: { bullet: true } },
+    { text: "The ask: scrutinise the scorecard, challenge a quote, and tell us which other decisions deserve the same chain. The 28 October call is on file; the 9 December forecast is too.", options: { bullet: true } },
   ], { placeholder: "body" });
   s.addNotes("Close on the ask. The forecast for 28 October is on file; the scoring is automatic from here; what the room can add is scrutiny and the next target.");
 }
