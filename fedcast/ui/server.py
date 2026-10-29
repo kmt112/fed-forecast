@@ -191,7 +191,7 @@ def _analysis_job(names: list[str], runs: int) -> None:
                 rec = analyst_mod.run_specialist(analyst_mod.SPECIALISTS[name], snap, backend, watchlist, runs=runs, log=log)
             analyst_mod.save(rec)
             s = rec["summary"]
-            JOB["progress"].append(f"{name}: " + (f"tilt {s['tilt_mean_bp']:+.1f} bp, {s['groundedness_pct_mean']:.0f}% grounded, "
+            JOB["progress"].append(f"{name}: " + (f"score {s['tilt_mean_bp']:+.1f}, {s['groundedness_pct_mean']:.0f}% grounded, "
                                                   f"{s['leakage_total']} leaked" if "tilt_mean_bp" in s else "done"))
     except Exception as exc:  # the UI shows the failure; nothing is half-written
         JOB["error"] = f"{type(exc).__name__}: {exc}"

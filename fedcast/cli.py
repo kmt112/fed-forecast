@@ -56,7 +56,7 @@ def _cmd_forecast(args: argparse.Namespace) -> None:
           f"snapshot {fc['snapshot_hash'][:12]}  code {entry['code_version']}")
     an = fc.get("analysts") or {}
     m = an.get('mean_bp', 0)
-    print(f"machine_only (specialists' tilt {m:+.1f} bp {'hawkish' if m > 0 else 'dovish' if m < 0 else 'neutral'}: {abs(an.get('applied_pp', 0)):.1f} pp moved {'toward a hike' if m > 0 else 'toward a cut' if m < 0 else 'nowhere'}"
+    print(f"machine_only (specialists' score {m:+.1f} {'hawkish' if m > 0 else 'dovish' if m < 0 else 'neutral'}: {abs(an.get('applied_pp', 0)):.1f} pp moved {'toward a hike' if m > 0 else 'toward a cut' if m < 0 else 'nowhere'}"
           + (f"; {an['note']}" if an.get("note") else "") + "):")
     _bars(fc["machine_only"])
     n = len(fc["human"]["views_applied"])
@@ -128,7 +128,7 @@ def _cmd_analyse(args: argparse.Namespace) -> None:
                 latest_file.write_text(json.dumps(rec, indent=1, ensure_ascii=False), encoding="utf-8")
                 s = rec["summary"]
                 if "tilt_mean_bp" in s:
-                    print(f"  {name:15s} tilt {s['tilt_mean_bp']:+.1f} bp, grounded {s['groundedness_pct_mean']}%, leaked {s['leakage_total']}, watch-outs missing {s['watchouts_missing_total']}")
+                    print(f"  {name:15s} score {s['tilt_mean_bp']:+.1f}, grounded {s['groundedness_pct_mean']}%, leaked {s['leakage_total']}, watch-outs missing {s['watchouts_missing_total']}")
                 else:
                     print(f"  {name:15s} max std {s['max_std_pp']} pp, leaked {s['leakage_total']}")
         return
