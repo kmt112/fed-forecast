@@ -461,10 +461,10 @@ pres.addSection({ title: "The harness" });
 }
 
 demo("The harness", 3, "what each analyst is asked and given", 2,
-  ["Analyst prompts view", "Analyst 1: open the full prompt", "Analyst 6: open the full prompt"],
-  ["Analyst 1: 195 characters, no evidence", "Analyst 6: the system prompt, the enforced answer schema, the inflation pre-read, the item ids", "The prompt hash: five repeats share it"],
-  ["If it is not on this page, the analyst does not get it.", "Same model. The only difference between analyst 1 and analyst 6 is this page."],
-  "Open analyst 1 first so the contrast with analyst 6 lands. Scroll the full prompt slowly past the schema and the pre-read; do not read it out.");
+  ["Analyst prompts view, snapshot of 29 October: the December call", "Analyst 1: open the full prompt", "Analyst 4, Communications: open the full prompt"],
+  ["Analyst 1: 195 characters, no evidence, asked for probabilities", "Analyst 4: 45,000 characters. The answer schema. The tone pre-read: vote 10 to 2, Cook and Hammack; the diff: 'raise by 1/4 percentage point' removed, 'maintain' added; seven hawkish terms counted, no dovish ones", "The prompt hash: five repeats share it"],
+  ["The pre-read is code, not the model: it parsed the vote, diffed the two statements, counted the words. The model is handed the result and must quote.", "Its answer, next demo: 8 claims, 8 quotes found; the first quotes the dissent sentence; opinion +4.", "Same model. The only difference between analyst 1 and analyst 4 is this page."],
+  "DEMO 3, 2 MIN. Analyst prompts view on the 29 October snapshot. Open analyst 1: 195 characters, the question and the date, asked for probabilities. Open analyst 4: 45,000 characters; scroll past the schema to the tone pre-read and stop there. Say: the vote (10 to 2, Cook and Hammack), the diff (the September 'raise by 1/4 percentage point' is gone, 'maintain' and the dissent sentence are new), the lexicon (seven hawkish terms, no dovish). That block was computed by code; the model is handed it and must quote. Then: 'if it is not on this page, the analyst does not get it; the only difference between analyst 1 and analyst 4 is this page.' Its answer comes in the next demo.");
 
 // =========================================================================================================
 pres.addSection({ title: "Evidence" });
@@ -509,10 +509,10 @@ pres.addSection({ title: "Evidence" });
   text(s, "Item fed.statement.2026-09-16 · quote found by code, character for character · 12 of 12 claims in this run verified, none from memory.", { x: 8.7, y: 4.05, w: 3.8, h: 1.1, fontSize: 11, color: C.text1 });
 }
 demo("Evidence", 4, "what the analysts concluded", 2,
-  ["Analyst results view", "Analyst 1 (naive) card", "Analyst 4 (communications) card"],
-  ["Analyst 1: cut 25 at 57%, numbers from memory flagged", "Analyst 4: the opinion, grounded, leaked, watch-outs badges; one claim with its quote and the 'quote verified' mark", "Hover a badge for its definition"],
-  ["Every claim you see has a quote that code found character for character in the item named.", "The naive analyst still thinks the Fed is cutting. Same model, no evidence."],
-  "If asked where a quote comes from, open the statement claim on analyst 4: the quote is the statement's own line, found by code in item fed.statement.2026-09-16.");
+  ["Analyst results view, same snapshot of 29 October", "Analyst 1 (naive) card", "Analyst 4 (communications) card, run 1"],
+  ["Analyst 1: cut 25 at 52%, 64 numbers from memory across five runs, nothing quoted", "Analyst 4: 8 claims, 8 quotes found, 0 numbers from memory; five runs mean +5.0, spread 0.6", "Claim 1: the dissenters wanted to tighten, quoting the dissent sentence in the 28 October statement. Claim 6, dovish: the committee chose to hold"],
+  ["Every claim you see has a quote that code found character for character in the item named.", "The analyst read the diff the pre-read flagged and quoted it. It also argued the other side: the hold itself, and the wait-for-data line.", "The naive analyst still thinks the Fed is cutting. Same model, no evidence."],
+  "DEMO 4, 2 MIN. Analyst results view, 29 October snapshot. Analyst 1 first: cut 25 at 52%, 64 numbers from memory, nothing quoted; its memory of the Fed is stale. Then analyst 4, run 1: 8 claims, 8 verified, opinion +4; the mean of five runs +5.0 with a spread of 0.6. Open the first claim: the dissent sentence, found by code in the 28 October statement. Open the sixth: 'the committee actually chose to hold', its own dovish offset. Say: the analyst was handed the diff and quoted it, and it argued both sides; the number it gives is an opinion, bounded, and the code decides what it is worth.");
 {
   const s = light("Evidence", "The scorecard: eight of ten dimensions measured by code", "Ten dimensions fixed before any forecasting code existed. Eight are now measured automatically on each new snapshot. The over-time table is the drift check: the marks never move, so a cell that turns red is a change in the system. It has already caught two things, bottom right.");
   const dims = [
@@ -570,14 +570,23 @@ pres.addSection({ title: "Limits and next" });
   });
 }
 {
-  const s = pres.addSlide({ masterName: "DARK", sectionTitle: "Limits and next" });
-  s.addText("Three things to take away", { placeholder: "title" });
-  s.addText([
-    { text: "The harness is the product. Same model, same evidence, same day: naive it wobbles and leaks; harnessed it is stable, quoted and checked.", options: { bullet: true, breakLine: true, paraSpaceAfter: 8 } },
-    { text: "Judge the process. Eight decisions a year cannot prove skill; a pre-registered scorecard measured on every snapshot can show discipline and catch drift.", options: { bullet: true, breakLine: true, paraSpaceAfter: 8 } },
-    { text: "The ask: scrutinise the scorecard, challenge a quote, and tell us which other decisions deserve the same chain. The 28 October call is on file; the 9 December forecast is too.", options: { bullet: true } },
-  ], { placeholder: "body" });
-  s.addNotes("Close on the ask. The forecast for 28 October is on file; the scoring is automatic from here; what the room can add is scrutiny and the next target.");
+  const s = light("Limits and next", "Three things to take away", "1 MIN. Three lines, then the ask. One: the model's limits are designed around, not removed. Two: the engineering is in the chain around the model, not in the model. Three: the model lifts, the architecture decides whether the result can be trusted; judge the process. The ask: open the December entry, challenge a quote, grade an answer, pick the first follow-up. Questions.");
+  const items = [
+    ["Design around the model's limits", "It remembers: so it reads only the frozen evidence, and every number in its answer is matched to the snapshot. It varies: so it answers in a fixed shape, five times, and the spread is measured against a pass mark. It invents: so every claim carries a verbatim quote that code finds character for character, with one repair round. Nothing is removed. Everything is checked."],
+    ["The engineering is in the harness", "The model is one component in a chain: frozen evidence, pre-reads computed by code, a fixed answer shape, a verifier, a bounded opinion, a pool at fixed weights, an append-only ledger. The chain decides what the model may read, what shape it must answer in, and what happens when it is wrong. Swap the model and the chain stands. Remove the chain and the same model wobbles and leaks."],
+    ["Process is what you can judge", "The model does the heavy lifting: it reads the statements, the minutes and the transcript in a minute and comes back with quoted claims. The architecture decides whether that work can be trusted, repeated and replayed. Eight decisions a year cannot prove skill. A scorecard written before the first run and measured on every snapshot shows discipline and catches drift."],
+  ];
+  const cw = (W - 2 * M - 2 * 0.2) / 3;
+  items.forEach(([h, b], i) => {
+    const x = M + i * (cw + 0.2), y = 1.5;
+    card(s, x, y, cw, 3.9);
+    numCircle(s, x + 0.25, y + 0.25, i + 1);
+    text(s, h, { x: x + 0.8, y: y + 0.22, w: cw - 1.0, h: 0.5, fontSize: 16, bold: true, color: C.text2, valign: "middle" });
+    text(s, b, { x: x + 0.25, y: y + 0.95, w: cw - 0.5, h: 2.85, fontSize: 14, color: C.text1 });
+  });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: M, y: 5.7, w: W - 2 * M, h: 0.75, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.1 });
+  s.addText([{ text: "The ask. ", options: { bold: true, color: THEME.colors.accent6 } }, { text: "Open the app on the 9 December entry. Challenge a quote. Grade one analyst's answer. Tell us which of the six follow-ups to do first.", options: { color: THEME.colors.lt1 } }],
+            { x: M + 0.3, y: 5.7, w: W - 2 * M - 0.6, h: 0.75, fontSize: 14, isTextBox: true, margin: 0, valign: "middle" });
 }
 
 // =========================================================================================================
