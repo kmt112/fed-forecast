@@ -263,7 +263,7 @@ pres.addSection({ title: "How it works" });
   const s = light("How it works", "Model architecture", "Left: the diagram from the brief. Four families of input, combined by code with fixed, published weights; no model writes the number. The language-model family enters only as a bounded opinion. Right: the chain in order, each line a view in the app. Walk the diagram first, then the chain.");
   const fam = [
     ["Economic predictors", "Fed funds futures (the anchor), the Fed's own four Taylor rules with r* from the NY Fed DSGE model, prediction-market odds", THEME.colors.dk2],
-    ["Empirical data", "What followed each kind of decision over 32 years of FOMC history, conditioned on the last move", THEME.colors.dk2],
+    ["Empirical data", "What the Fed did next after each kind of decision, 266 scheduled meetings since 1994. After a hike: hiked again 64%, held 36%, never cut", THEME.colors.dk2],
     ["Classic ML", "An ordered probit fitted on data as first published; computed and shown, weight 0 until it has a live record", THEME.colors.accent4],
     ["LLM-derived", "Five specialist analysts reading the Fed's own words; every claim quoted and verified by code; a bounded opinion, not a weight", THEME.colors.accent2],
   ];
@@ -308,11 +308,11 @@ pres.addSection({ title: "How it works" });
   const r = (a, b, c, d, e, f, g, bold) => [{ text: a, options: { bold: !!bold } }, { text: b, options: { fontSize: 10.5 } }, ...[c, d, e, f, g].map(v => ({ text: v, options: { align: "center", bold: !!bold } }))];
   const rows = [
     [{ text: "Model", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, { text: "What it reads", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, hdr("−25"), hdr("no change"), hdr("+25"), hdr("+50"), hdr("weight")],
-    r("Market-implied", "November fed-funds future against the overnight rate: +2.5 bp expected, split between the two nearest outcomes", "0", "90", "10", "0", "0.6"),
-    r("Taylor family", "12-month core PCE 3.0%, unemployment 4.2%, r* from the NY Fed DSGE model (0.65 / 1.86 / 3.06%); three level rules × nine r*/u* pairs plus the first-difference rule × three u*: 30 prescriptions, mean +22.5 bp", "4.5", "26.9", "44.6", "23.8", "0.2"),
-    r("Prediction market", "Polymarket, 26 Oct, $67m traded: 94.5% no change at the mid price, 94.9% once the five prices are renormalised", "0.2", "94.9", "4.5", "0.4", "0.1"),
-    r("Historical base rates", "What followed a hike at the 49 scheduled meetings since 1994 that came after one", "0", "34.7", "52.2", "13.1", "0.1"),
-    r("Ordered probit v2", "Nine features on first-published data; failed v1, caveated v2", "0", "24.2", "63.8", "12.0", "0"),
+    r("Market-implied", "The November fed-funds futures price", "0", "90", "10", "0", "0.6"),
+    r("Taylor family", "Core PCE inflation, unemployment, the NY Fed natural rate, through the Fed's own four policy rules", "4.5", "26.9", "44.6", "23.8", "0.2"),
+    r("Prediction market", "Polymarket odds on each outcome, 26 October", "0.2", "94.9", "4.5", "0.4", "0.1"),
+    r("Historical base rates", "What the Fed did at the 49 meetings since 1994 that followed a hike", "0", "34.7", "52.2", "13.1", "0.1"),
+    r("Ordered probit v2", "Nine macro features, as first published; fitted on decisions since 2000", "0", "24.2", "63.8", "12.0", "0"),
     r("Pooled", "Weighted average, then the 1.5% floor", "1.5", "70.9", "20.2", "6.0", "", true),
     [{ text: "After pooling", options: { bold: true, color: THEME.colors.accent2, fill: { color: "FBEFEA" } } },
      { text: [{ text: "Specialists' opinion: a modifier on the pooled number, not a model in the pool. ", options: { bold: true } }, { text: "Mean of analysts 4 to 8, +4.0, hawkish: 4.0 points of probability moved toward a hike, capped at 10." }], options: { fontSize: 10, fill: { color: "FBEFEA" } } },
@@ -334,37 +334,33 @@ demo("How it works", 2, "the evidence graph and the pool", 3,
 // =========================================================================================================
 pres.addSection({ title: "The harness" });
 {
-  const s = light("The harness", "Working around the model's limits", "Three things a language model cannot be made to stop doing: it remembers, it varies between runs, and it can invent support. None is removed; each is designed around. The proof is on the harness slide later.");
-  text(s, "Three things a language model cannot be made to stop doing. None is removed; each is designed around, and the design is measured on every snapshot.", { x: M, y: 1.38, w: W - 2 * M, h: 0.3, fontSize: 12, color: C.accent4 });
+  const s = light("The harness", "Working around the model's limits", "Two things a language model cannot be made to stop doing: it answers from memory and it answers differently each time; and it can invent support. Left column, the first two together, because the same design fixes both: break the one big question into small fixed ones, like a multiple-choice and short-answer paper, and make every answer quote its source. Right column: verification by code. The proof is on the harness slide later.");
+  text(s, "Two things a language model cannot be made to stop doing. Neither is removed; each is designed around, and the design is measured on every snapshot.", { x: M, y: 1.38, w: W - 2 * M, h: 0.3, fontSize: 12, color: C.accent4 });
   const cols = [
-    { limit: "Memory cannot be switched off", sub: "It knows the Fed from its training and will use that unless stopped.",
-      items: [["Instruction: ", "use only the evidence; nothing remembered about the economy, the Fed or markets."],
-              ["Answer shape: ", "every claim carries a verbatim quote from a named item, so a remembered fact has nowhere to stand."],
-              ["Check: ", "every number is matched to the snapshot by code; one not found is flagged as from memory and sent back once."]] },
-    { limit: "Answers vary between runs", sub: "Ask twice and the number moves.",
-      items: [["Answer shape: ", "a fixed JSON schema; anything else is rejected unread."],
-              ["Five identical runs ", "per analyst per snapshot, each stored under its prompt hash."],
-              ["Measured: ", "the spread of the five answers. Pass mark: 2 points."]] },
+    { limit: "It answers from memory, and differently each time", sub: "It knows the Fed from its training and will use that unless stopped; ask the same question twice and the number moves.",
+      items: [["Break the question down: ", "instead of one big 'what will the Fed do', each analyst gets small fixed questions with a fixed answer shape, like a multiple-choice and short-answer paper. Less room to wander, so less variation between runs."],
+              ["Evidence only: ", "the instruction says use only the evidence; every claim must carry a verbatim quote from a named item, so a remembered fact has nowhere to stand."],
+              ["Measured: ", "every number in the answer is matched to the snapshot by code; five identical runs per analyst, and the spread between them must stay within 2 points."]] },
     { limit: "It can invent its own support", sub: "A fluent quote or figure that was never in the document.",
-      items: [["Check: ", "every quote matched to its item character for character, by code; a quote stitched from two places fails."],
+      items: [["Check by code, not by a model: ", "every quote is matched to its item character for character; a quote stitched from two places fails."],
               ["Bounds: ", "every watch-out answered by id; the opinion clipped to −10 to +10."],
-              ["One repair round: ", "the verifier's report goes back once; both answers are kept; what still fails stays unverified."]] },
+              ["One repair round: ", "the verifier's report goes back once; both answers are kept; what still fails stays unverified, never hidden."]] },
   ];
-  const cw = (W - 2 * M - 2 * 0.17) / 3;
+  const cw = (W - 2 * M - 0.25) / 2;
   cols.forEach((c, i) => {
-    const x = M + i * (cw + 0.17);
+    const x = M + i * (cw + 0.25);
     let y = 1.8;
-    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: cw, h: 1.15, fill: { color: THEME.colors.accent2 }, line: { color: THEME.colors.accent2 }, rectRadius: 0.1 });
-    s.addShape(pres.shapes.RECTANGLE, { x, y: y + 0.95, w: cw, h: 0.2, fill: { color: THEME.colors.accent2 }, line: { color: THEME.colors.accent2 } });
-    text(s, "LIMIT", { x: x + 0.2, y: y + 0.12, w: cw - 0.4, h: 0.2, fontSize: 9, bold: true, color: "F8D7CE", charSpacing: 1 });
-    text(s, c.limit, { x: x + 0.2, y: y + 0.34, w: cw - 0.4, h: 0.36, fontSize: 15, bold: true, color: C.background1 });
-    text(s, c.sub, { x: x + 0.2, y: y + 0.7, w: cw - 0.4, h: 0.42, fontSize: 11, color: "F8D7CE" });
-    y += 1.15;
-    s.addShape(pres.shapes.RECTANGLE, { x, y, w: cw, h: 3.0, fill: { color: THEME.colors.lt2 }, line: { color: THEME.colors.lt2 } });
-    text(s, "WHAT WE DO", { x: x + 0.2, y: y + 0.15, w: cw - 0.4, h: 0.2, fontSize: 9, bold: true, color: C.accent4, charSpacing: 1 });
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: cw, h: 1.2, fill: { color: THEME.colors.accent2 }, line: { color: THEME.colors.accent2 }, rectRadius: 0.1 });
+    s.addShape(pres.shapes.RECTANGLE, { x, y: y + 1.0, w: cw, h: 0.2, fill: { color: THEME.colors.accent2 }, line: { color: THEME.colors.accent2 } });
+    text(s, "LIMIT", { x: x + 0.25, y: y + 0.12, w: cw - 0.5, h: 0.2, fontSize: 9, bold: true, color: "F8D7CE", charSpacing: 1 });
+    text(s, c.limit, { x: x + 0.25, y: y + 0.34, w: cw - 0.5, h: 0.36, fontSize: 16, bold: true, color: C.background1 });
+    text(s, c.sub, { x: x + 0.25, y: y + 0.72, w: cw - 0.5, h: 0.45, fontSize: 11, color: "F8D7CE" });
+    y += 1.2;
+    s.addShape(pres.shapes.RECTANGLE, { x, y, w: cw, h: 3.4, fill: { color: THEME.colors.lt2 }, line: { color: THEME.colors.lt2 } });
+    text(s, "WHAT WE DO", { x: x + 0.25, y: y + 0.15, w: cw - 0.5, h: 0.2, fontSize: 9, bold: true, color: C.accent4, charSpacing: 1 });
     const runs = [];
     c.items.forEach(([k, v], j) => { runs.push({ text: k, options: { bullet: true, bold: true, color: THEME.colors.dk1 } }); runs.push({ text: v, options: { breakLine: j < c.items.length - 1, paraSpaceAfter: 10 } }); });
-    s.addText(runs, { x: x + 0.2, y: y + 0.45, w: cw - 0.4, h: 2.45, fontSize: 13, color: C.text1, isTextBox: true, margin: 0, valign: "top" });
+    s.addText(runs, { x: x + 0.25, y: y + 0.45, w: cw - 0.5, h: 2.85, fontSize: 13, color: C.text1, isTextBox: true, margin: 0, valign: "top" });
   });
 }
 {
@@ -653,6 +649,34 @@ pres.addSection({ title: "Backup" });
   text(s, "For each decision from 2010 on: fit on all decisions before it, predict it. Log score: ln of the probability given to what happened (0 is perfect). The base rate given the previous decision beat the fitted model and joined the pool at 0.1 (amendment #6).", { x: rx, y: 4.15, w: rw, h: 0.75, fontSize: 10, color: C.accent4 });
   text(s, "Why not a bigger model", { x: rx, y: 4.95, w: rw, h: 0.35, fontSize: 14, bold: true, color: C.text2 });
   text(s, "About 130 scheduled decisions with full features, roughly 250 in all; 68% are holds and the cuts cluster in three short episodes. On a sample that small and that unbalanced a boosted tree or a random forest memorises the episodes and a calibration curve on a few dozen non-hold cases is noise. The route is a better-specified small model: features written down before fitting, heavy regularisation, a reliability check beside the log score, the expanding window as the only judge. A regularised boosted model can be one pre-registered candidate, judged the same way.", { x: rx, y: 5.3, w: rw, h: 1.45, fontSize: 10, color: C.text1 });
+}
+
+{
+  const s = light("Backup", "Appendix: historical base rates", "The simplest model in the pool and the only one with no parameters. Take every scheduled decision since 1994, group them by what the Fed had done at the previous meeting, and count what it did next. That count is the forecast. After a hike the Fed hiked again at two meetings in three and never cut; after a hold it held 85% of the time; after a cut it cut again two times in three and never hiked. It beat the fitted probit on the expanding-window test, which is why it is in the pool at 0.1.");
+  card(s, M, 1.45, 5.9, 5.3);
+  text(s, "What it is", { x: M + 0.25, y: 1.55, w: 5.4, h: 0.35, fontSize: 14, bold: true, color: C.text2 });
+  s.addText(bullets([
+    "The simplest model in the pool, and the only one with no parameters: nothing is fitted, nothing can be tuned.",
+    "Take the 266 scheduled decisions since 1994. Group them by what the Fed had done at the previous meeting: a hike, a hold or a cut. Count what it did next. That count is the forecast.",
+    "Today the last decision was a hike, so the model reads the 49 meetings that followed a hike: hold 35%, hike 65%. The hike share is split 80/20 between +25 and +50, the historical share of large moves.",
+    "Why it is in the pool: on the expanding-window test it beat the fitted probit (log score −0.584 against −0.788), so it earned 0.1 (amendment #6). Why not more: it knows nothing about today; it is the prior the other models update.",
+    "Intermeeting moves (28 since 1994) are counted separately and never as a scheduled decision.",
+  ], { fontSize: 10.5, color: C.text1, paraSpaceAfter: 5 }), { x: M + 0.25, y: 1.92, w: 5.4, h: 4.7, isTextBox: true, margin: 0, valign: "top" });
+  const rx = M + 6.15, rw = W - M - rx;
+  text(s, "What the Fed did next, 266 scheduled meetings since 1994", { x: rx, y: 1.5, w: rw, h: 0.35, fontSize: 14, bold: true, color: C.text2 });
+  const H_ = t => ({ text: t, options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } });
+  const c = (t, col, bold) => ({ text: t, options: { align: "center", color: col || THEME.colors.dk1, bold: !!bold } });
+  const rows = [
+    [{ text: "Previous decision", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, H_("Cases"), H_("Next: cut"), H_("Next: hold"), H_("Next: hike")],
+    [{ text: "A hike (today's case)", options: { bold: true } }, c("50", null, true), c("0%", null, true), c("36%", null, true), c("64%", THEME.colors.accent2, true)],
+    ["A hold", c("183"), c("6%"), c("85%", THEME.colors.accent3), c("9%")],
+    ["A cut", c("32"), c("66%", THEME.colors.accent3), c("34%"), c("0%")],
+    [{ text: "All decisions", options: { color: THEME.colors.accent4 } }, c("266", THEME.colors.accent4), c("12%", THEME.colors.accent4), c("69%", THEME.colors.accent4), c("19%", THEME.colors.accent4)],
+  ];
+  s.addTable(rows, { x: rx, y: 1.95, w: rw, colW: [2.1, 1.0, 1.05, 1.05, 1.08], fontSize: 11.5, color: THEME.colors.dk1, border: { type: "solid", color: "D5DBE5", pt: 0.5 }, valign: "middle", margin: 0.05, rowH: 0.46 });
+  text(s, "Read the first row: of the 50 meetings that came right after a hike, the Fed hiked again at 32 and held at 18; it never cut straight after a hike. The pool uses the 49 cases known at the time of the 28 October snapshot.", { x: rx, y: 4.4, w: rw, h: 0.9, fontSize: 10.5, color: C.accent4 });
+  text(s, "Why a prior matters", { x: rx, y: 5.35, w: rw, h: 0.35, fontSize: 14, bold: true, color: C.text2 });
+  text(s, "The Fed moves in runs. A hike is usually followed by another hike, a cut by another cut, and a hold by a hold. Any forecast that ignores this starts from the wrong place; the base rate is the place to start, and the market, the rules and the analysts move it from there.", { x: rx, y: 5.7, w: rw, h: 1.0, fontSize: 10.5, color: C.text1 });
 }
 
 (async () => {
