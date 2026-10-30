@@ -474,7 +474,7 @@ def describe_agents(snap: Snapshot, watchlist: list[dict]) -> list[dict]:
         out.append({"name": name, "analyst_no": ANALYST_NO[name], "question": spec.question,
                     "items": spec.items(snap), "pre_reads": list(spec.pre_reads(snap)), "system": SYSTEM,
                     "schema": SCHEMA, "prompt": prompt, "prompt_chars": len(prompt),
-                    "prompt_hash": prompt_hash(SYSTEM, prompt, SCHEMA, 0), "output": "claims with quotes, watch-outs, tilt ±10 bp"})
+                    "prompt_hash": prompt_hash(SYSTEM, prompt, SCHEMA, 0), "output": "claims with quotes, watch-outs, an opinion from −10 to +10"})
     b_parts = [f"Snapshot date: {snap.as_of.isoformat()}. Next FOMC decision: {cal['next_meeting']}.",
                "Using ONLY the evidence below, give a probability for each outcome in basis points of change "
                "(-50, -25, 0, 25, 50), summing to 1, and a short reasoning."]
