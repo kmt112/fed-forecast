@@ -104,7 +104,7 @@ pres.addSection({ title: "Opening" });
   const s = light("Opening", "What we will cover", "One minute. The thread: a decision was made, here is how we called it, why we built the tool this way, how the number is put together, what the language model is allowed to do and how we prove it behaves, and what comes next. Six stops, with the app opened between them.");
   const stops = [
     ["The question, and what happened", "The 28 October decision, our final number before it, and what the outcome says. The app: the forecast as it stands today."],
-    ["Why this approach", "Four kinds of signal already exist; where FedCast sits among them, and the three reasons we built it this way."],
+    ["Why this approach", "Four kinds of signal already exist and where FedCast sits among them. Why an ensemble, why a harnessed language model on top, why the process is what we judge."],
     ["How the number is built", "Four families of input pooled by code at fixed weights, and the arithmetic from five models to one number. The app: the evidence graph and the pool."],
     ["The LLM analysts", "What a language model cannot stop doing and how the harness works around it; the eight analysts; what each is asked and what it returned. The app: the prompts and the results."],
     ["How good is the harness", "What each step of the harness bought, measured on four snapshots. The app: the scorecard, the drift table, the ledger and replay."],
@@ -167,94 +167,30 @@ demo("Objective", 1, "the forecast", 1,
   ["This number was made at <time> from evidence frozen at <time>. Everything I show next is how it got there."],
   "Keep this to one minute. The point is only that the number exists, is dated, and is traceable. Do not explain the models yet.");
 {
-  const s = light("Objective", "Why build this", "Three reasons, the first is the one to land. Eight decisions a year cannot tell skill from luck, so we judge the process with a scorecard fixed before any code. Second, auditable means concrete: an analyst that says inflation is elevated must quote the line it read and code must find it. Third, because everything is quotable and the analysts can read only the evidence, a wrong call is a traceable wrong call, and because the harness is repeatable it goes wrong the same way every time, so a fix can be tested and stays fixed. Details later in the deck: the ladder, the scorecard, the drift table.");
+  const s = light("Objective", "Why this approach ?", "2 MIN. Three whys. One, why an ensemble: each signal is good at one thing and fails in a known way, futures the best single predictor but a price, rules transparent but built on an unobservable r*, base rates blind to today, odds fast but thin; pooled at fixed published weights no single failure owns the number, the floor keeps every outcome alive, and nothing is fitted because eight decisions a year would fit noise; the backtest only decides who enters, and the probit failed it. Two, why a language model on top: the pool cannot read, and the dissent sentence or a changed word lives only in the text; the model reads it in a minute but remembers, varies and invents, so it never writes the number, it returns quoted claims code verifies and an opinion capped at 10 points. Three, why judge the process: a good year proves nothing; the scorecard was fixed before any code; outcomes are logged, never used to tune; a wrong call is traceable and a fix stays fixed.");
   const cards = [
-    ["1", "We judge the process, not the luck", [
-      "Eight decisions a year: a good year proves nothing",
-      "The yardstick is a ten-point scorecard, fixed before any code: same evidence, same answer? every claim quoted? any number from memory? a shock moves the number the right way?",
-      "Outcomes are logged after each decision and never used to tune",
+    ["1", "Why an ensemble, not one model", [
+      "Each signal is good at one thing and fails in a known way. Futures: the best single predictor at 30 days, about 88% right, but a price that moves with the market on the day. The Fed's rules: transparent, but built on an r* nobody observes. Base rates: what the Fed usually does next, nothing about today. Prediction markets: fast, but thin.",
+      "Pooled at fixed, published weights (0.6 / 0.2 / 0.1 / 0.1), no single input's failure owns the number. A 1.5% floor keeps every outcome alive, so a surprise is never scored at zero.",
+      "Nothing is fitted: eight decisions a year would fit noise. The backtest decides only which models enter; the probit failed it and sits at weight 0.",
     ]],
-    ["2", "Every step is auditable", [
-      "An analyst that says 'inflation remains elevated' must quote the statement line it read, and code checks the quote is there, character for character",
-      "Every number it uses must exist in the frozen evidence, or it is flagged as from memory",
-      "Every model lists the items it read; every ledger entry recomputes from its snapshot. If it is not quoted, it does not count",
+    ["2", "Why a language model on top, harnessed", [
+      "The pool cannot read. The dissent sentence, a changed word, 'the accumulation of more information': that is in the Fed's text and in no price or rule.",
+      "A model reads it in a minute. But it remembers, varies and invents, so it never writes the number. It returns claims that each quote a line code finds, and an opinion that moves the pool by at most 10 points.",
+      "Five identical runs, the spread measured. Boxed and checked this way, a cheaper model can do the job.",
     ]],
-    ["3", "A harness that compounds", [
-      "Everything is quotable and the analysts can read only the evidence, so a wrong call is a traceable wrong call: we see which quote led where",
-      "The harness is repeatable, so it goes wrong the same way every time; a fix can be tested, and the drift table shows it stayed fixed",
-      "That is the virtuous cycle: audit, fix, re-measure. The ladder, the scorecard and the drift table later in the deck are that cycle",
+    ["3", "Why judge the process, not the luck", [
+      "We are early, and eight decisions a year: a good year proves nothing. The yardstick is a ten-point scorecard fixed before any code: same evidence, same answer? every claim quoted? any number from memory? does a shock move the number the right way?",
+      "Outcomes are logged after each decision and never used to tune.",
+      "A wrong call is a traceable wrong call: we see which input or quote led where. Repeatable means it goes wrong the same way every time, so a fix can be tested and the drift table shows it stayed fixed. Audit, fix, re-measure.",
     ]],
   ];
   cards.forEach(([n, h, items], i) => {
-    const x = M + i * 4.1; card(s, x, 1.55, 3.85, 4.35);
-    numCircle(s, x + 0.3, 1.75, n);
-    text(s, h, { x: x + 0.85, y: 1.7, w: 2.8, h: 0.55, fontSize: 15, bold: true, color: C.text2, valign: "middle" });
-    s.addText(bullets(items, { fontSize: 13, color: C.text1, paraSpaceAfter: 8 }), { x: x + 0.3, y: 2.45, w: 3.3, h: 3.35, isTextBox: true, margin: 0, valign: "top" });
+    const x = M + i * 4.1; card(s, x, 1.5, 3.85, 5.1);
+    numCircle(s, x + 0.3, 1.7, n);
+    text(s, h, { x: x + 0.85, y: 1.65, w: 2.8, h: 0.55, fontSize: 15, bold: true, color: C.text2, valign: "middle" });
+    s.addText(bullets(items, { fontSize: 12, color: C.text1, paraSpaceAfter: 8 }), { x: x + 0.3, y: 2.4, w: 3.3, h: 4.05, isTextBox: true, margin: 0, valign: "top" });
   });
-}
-{
-  const s = light("Objective", "Four kinds of signal, and where FedCast sits", "Four kinds of signal exist already; each is good at one thing. Market prices are the best single predictor at thirty days and are the anchor of the pool. Surveys carry judgement; FedCast takes the data the committee reads instead, as history and a fitted model. The rules are the Fed's own benchmarks. The LLM papers show a model can read the Fed, on sixteen meetings. FedCast's claim is not a better guess but the combination: one of each kind, pooled by code at fixed weights, every number traceable to frozen evidence.");
-  // --- four signal groups ---------------------------------------------------------------------------------
-  const groups = [
-    { name: "Market signals", color: THEME.colors.accent1,
-      who: "Fed funds futures (CME FedWatch); prediction markets (Polymarket, Kalshi)",
-      what: "Prices and crowd odds on each outcome",
-      strength: "Futures about 88% right at 30 days, 1994 to 2024; odds move fast" },
-    { name: "Economic signals", color: THEME.colors.accent3,
-      who: "Economist surveys; the macro data itself",
-      what: "The median of polled forecasters; the data the committee reads",
-      strength: "Broad human judgement; the data is the Fed's own input" },
-    { name: "Policy rules", color: THEME.colors.accent6,
-      who: "The Taylor family",
-      what: "The rate a formula says is appropriate given inflation and unemployment",
-      strength: "Transparent; the Fed's own published benchmarks" },
-    { name: "ML / AI signals", color: THEME.colors.accent2,
-      who: "LLM 'FOMC agent' papers (2025)",
-      what: "Models that read the Fed's text and vote",
-      strength: "Reported 90%+ accuracy on 2023 to 2024" },
-  ];
-  const gw = 2.86, gap = (W - 2 * M - 4 * gw) / 3, gy = 1.55, gh = 2.55;
-  groups.forEach((g, i) => {
-    const x = M + i * (gw + gap);
-    card(s, x, gy, gw, gh);
-    s.addShape(pres.shapes.RECTANGLE, { x: x + 0.25, y: gy + 0.3, w: 0.16, h: 0.16, fill: { color: g.color }, line: { color: g.color } });
-    text(s, g.name, { x: x + 0.5, y: gy + 0.18, w: gw - 0.7, h: 0.4, fontSize: 15, bold: true, color: C.text2 });
-    text(s, g.who, { x: x + 0.25, y: gy + 0.68, w: gw - 0.5, h: 0.62, fontSize: 12, bold: true, color: C.text1 });
-    text(s, [{ text: "What it is  ", options: { bold: true, color: THEME.colors.accent4 } }, { text: g.what }],
-         { x: x + 0.25, y: gy + 1.32, w: gw - 0.5, h: 0.6, fontSize: 11.5, color: C.text1 });
-    text(s, [{ text: "Strength  ", options: { bold: true, color: THEME.colors.accent4 } }, { text: g.strength }],
-         { x: x + 0.25, y: gy + 1.94, w: gw - 0.5, h: 0.58, fontSize: 11.5, color: C.text1 });
-  });
-
-  // --- the spectrum: pure data at one end, pure model at the other, FedCast in the middle -----------------
-  const ly = 4.98, lx0 = M + 0.2, lx1 = W - M - 0.2, L = lx1 - lx0;
-  s.addShape(pres.shapes.LINE, { x: lx0, y: ly, w: L, h: 0, line: { color: THEME.colors.accent4, width: 1.75, beginArrowType: "triangle", endArrowType: "triangle" } });
-  text(s, "Pure data", { x: M, y: ly + 0.12, w: 2.4, h: 0.3, fontSize: 12, bold: true, color: C.accent4 });
-  text(s, "prices and formulas; no reading of the Fed's words", { x: M, y: ly + 0.4, w: 2.6, h: 0.5, fontSize: 10.5, color: C.accent4 });
-  text(s, "Pure model", { x: W - M - 2.4, y: ly + 0.12, w: 2.4, h: 0.3, fontSize: 12, bold: true, color: C.accent4, align: "right" });
-  text(s, "one model's judgement; nothing it reads is checked", { x: W - M - 2.6, y: ly + 0.4, w: 2.6, h: 0.5, fontSize: 10.5, color: C.accent4, align: "right" });
-  // where each kind of signal sits (markers above the line)
-  const marks = [
-    [0.11, THEME.colors.accent1, "Futures, prediction markets"],
-    [0.30, THEME.colors.accent6, "Policy rules"],
-    [0.70, THEME.colors.accent3, "Economist surveys"],
-    [0.90, THEME.colors.accent2, "LLM 'FOMC agents'"],
-  ];
-  marks.forEach(([f, col, label]) => {
-    const x = lx0 + f * L;
-    s.addShape(pres.shapes.OVAL, { x: x - 0.1, y: ly - 0.1, w: 0.2, h: 0.2, fill: { color: col }, line: { color: THEME.colors.lt1, width: 1 } });
-    text(s, label, { x: x - 1.15, y: ly - 0.52, w: 2.3, h: 0.3, fontSize: 11.5, bold: true, color: C.text1, align: "center", valign: "bottom" });
-  });
-  // FedCast in the middle (below the line)
-  const fx = lx0 + 0.5 * L;
-  s.addShape(pres.shapes.LINE, { x: fx, y: ly, w: 0, h: 0.28, line: { color: THEME.colors.dk2, width: 1.75 } });
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: fx - 0.7, y: ly + 0.28, w: 1.4, h: 0.4, fill: { color: THEME.colors.dk2 }, line: { color: THEME.colors.dk2 }, rectRadius: 0.2 });
-  text(s, "FedCast", { x: fx - 0.7, y: ly + 0.28, w: 1.4, h: 0.4, fontSize: 13, bold: true, color: C.background1, align: "center", valign: "middle", fontFace: THEME.headFontFace });
-  text(s, "Takes one input from each area, prices, 32 years of decisions, the Fed's own rules and a language model that must quote what it reads, and combines them by code at fixed weights. Neither a formula nor an oracle.",
-       { x: fx - 3.9, y: ly + 0.8, w: 7.8, h: 0.6, fontSize: 11.5, color: C.text1, align: "center" });
-
-  text(s, "Sources: Bonini, Huang and Simaan, 'Watching the FedWatch' (232 meetings, May 1994 to March 2024); FedSight AI preprint, December 2025; Takano, Hirano and Nakagawa, arXiv 2511.02469.",
-       { x: M, y: 6.62, w: W - 2 * M, h: 0.3, fontSize: 9.5, color: C.accent4 });
 }
 
 // =========================================================================================================
