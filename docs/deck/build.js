@@ -432,16 +432,25 @@ pres.addSection({ title: "The harness" });
   });
   // bottom left: what the five said, and what it did to the number
   const ly = 4.3, lh = 2.6;
-  card(s, M, ly, 4.85, lh, "FBEFEA");
+  card(s, M, ly, 4.85, lh + 0.1, "FBEFEA");
   text(s, "WHAT THE FIVE SAID, AND WHAT IT DID TO THE NUMBER", { x: M + 0.17, y: ly + 0.12, w: 4.5, h: 0.2, fontSize: 9, bold: true, color: THEME.colors.accent2, charSpacing: 1 });
   const said = [["Communications", "+6.0 hike"], ["Minutes", "+6.2 hike"], ["Inflation", "+5.8 hike"], ["Financial conditions", "+3.4 hike"], ["Labour market", "−1.4 hold"], ["Equal-weight mean", "+4.0"]];
   s.addTable(said.map(([a, b], i) => [{ text: a, options: { color: i === 4 ? THEME.colors.accent3 : THEME.colors.dk1, bold: i === 5 } }, { text: b, options: { align: "right", bold: true, color: i === 4 ? THEME.colors.accent3 : THEME.colors.dk1 } }]),
              { x: M + 0.17, y: ly + 0.42, w: 2.3, colW: [1.4, 0.9], fontSize: 11, border: { type: "none" }, margin: 0.02, rowH: 0.3 });
-  s.addText([{ text: "Four say hike, one says hold back. ", options: { bold: true } }, { text: "Plain average, one vote each: +4.0.", options: { breakLine: true } },
-             { text: "Each point of opinion moves one point of probability ", options: { bold: true } }, { text: "from the hold side to the hike side, by rule, capped at 10. So +4.0 moves 4.0 points, after the pool:" }],
-            { x: M + 2.55, y: ly + 0.42, w: 2.15, h: 1.3, fontSize: 10.5, color: C.text1, isTextBox: true, margin: 0, valign: "top" });
-  text(s, "+25 bps: 20.2% → 22.4%", { x: M + 2.55, y: ly + 1.78, w: 2.2, h: 0.36, fontSize: 14, bold: true, color: C.text2, fontFace: THEME.headFontFace });
-  text(s, "+50 bps 6.0 → 7.7; no change 70.9 → 67.6; cuts 3.0 → 2.3", { x: M + 2.55, y: ly + 2.15, w: 2.2, h: 0.4, fontSize: 9.5, color: C.accent4 });
+  s.addText([{ text: "Four say hike, one says hold: ", options: { bold: true } }, { text: "+4.0.", options: { breakLine: true } },
+             { text: "+4.0 moves 4 points of probability to the hike side. ", options: { bold: true } }, { text: "Each bucket is scaled by a factor rising from the cut end to the hike end, so the hikes gain 4.0 and hold plus the cuts lose 4.0:" }],
+            { x: M + 2.55, y: ly + 0.42, w: 2.2, h: 1.1, fontSize: 10, color: C.text1, isTextBox: true, margin: 0, valign: "top" });
+  const sh = t => ({ text: t, options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 }, align: "center" } });
+  const sc = (t, col) => ({ text: t, options: { align: "right", color: col || THEME.colors.dk1 } });
+  const spread = [
+    [{ text: "Outcome", options: { bold: true, color: THEME.colors.lt1, fill: { color: THEME.colors.dk2 } } }, sh("Before"), sh("After"), sh("Change")],
+    ["−50 bps", sc("1.5"), sc("1.1"), sc("−0.45", THEME.colors.accent3)],
+    ["−25 bps", sc("1.5"), sc("1.2"), sc("−0.27", THEME.colors.accent3)],
+    ["no change", sc("70.9"), sc("67.6"), sc("−3.28", THEME.colors.accent3)],
+    ["+25 bps", sc("20.2"), sc("22.4"), sc("+2.24", THEME.colors.accent2)],
+    ["+50 bps", sc("6.0"), sc("7.7"), sc("+1.76", THEME.colors.accent2)],
+  ];
+  s.addTable(spread, { x: M + 2.55, y: ly + 1.6, w: 2.2, colW: [0.75, 0.45, 0.45, 0.55], fontSize: 8.5, color: THEME.colors.dk1, border: { type: "solid", color: "E7CFC5", pt: 0.5 }, valign: "middle", margin: 0.02, rowH: 0.17 });
   // bottom right: one verified claim as recorded
   const rx = M + 5.0, rw = W - M - rx;
   card(s, rx, ly, rw, lh);
